@@ -103,3 +103,8 @@ Login, signup, and password-recovery forms do not run the session-refresh proxy.
 See [foundation and operations](docs/foundation.md) for deployment, immutable financial history, permissions, moderation, rate limits and logging. Owners and authorized moderators can open City Hall from their game sidebar. Community chat, reports and support tickets are available under Community & support. Gameplay values now come from database settings and can be edited by Owners.
 
 Separate development and staging infrastructure remains deferred. GitHub Actions runs all app and database tests remotely.
+
+
+## Seasons
+
+See [seasons and leaderboards](docs/seasons.md) for the Owner lifecycle, reset guarantees, ranking formulas, archived profiles and Hall of Fame. Existing gameplay starts in the founding season; deployment does not reset it.
