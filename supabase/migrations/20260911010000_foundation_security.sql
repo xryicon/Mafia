@@ -8,6 +8,7 @@ alter table public.game_events add constraint game_events_player_id_fkey foreign
 alter table public.game_listings drop constraint game_listings_seller_id_fkey;
 alter table public.game_listings add constraint game_listings_seller_id_fkey foreign key(seller_id) references public.game_players(id) on delete restrict;
 
+alter table public.game_players alter column cash drop default;
 create table public.game_ledger (
  id bigint generated always as identity primary key, player_id uuid not null references public.game_players(id),
  balance_before bigint not null, delta bigint not null, balance_after bigint not null,
@@ -348,6 +349,7 @@ begin
  when 'setting' then
  update public.game_settings set value=(payload->>'value')::integer where key=payload->>'key';
  if not found then raise exception 'Unknown setting.'; end if;
+ if game_private.setting('rank_soldier')>=game_private.setting('rank_caporegime') or game_private.setting('rank_caporegime')>=game_private.setting('rank_underboss') then raise exception 'Rank thresholds must remain in ascending order.'; end if;
  when 'job' then
  update public.game_jobs set reward=(payload->>'reward')::integer,xp=(payload->>'xp')::integer,cooldown=(payload->>'cooldown')::integer where id=payload->>'id';
  when 'good' then

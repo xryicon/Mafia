@@ -96,3 +96,10 @@ Browser CI builds against a loopback Supabase fixture and tests the signed-in ga
 ## Cloudflare public auth pages
 
 Login, signup, and password-recovery forms do not run the session-refresh proxy. Protected pages, callbacks, and APIs keep their server-side authentication checks. If both public Supabase variables are absent, the app uses the connected Mafia project's public URL and publishable key. To connect another project, set **both** variables at build time and runtime; partial overrides intentionally produce a configuration error rather than mixing projects. No service-role credentials are bundled.
+
+
+## Security foundation and City Hall
+
+See [foundation and operations](docs/foundation.md) for deployment, immutable financial history, permissions, moderation, rate limits and logging. Owners and authorized moderators can open City Hall from their game sidebar. Community chat, reports and support tickets are available under Community & support. Gameplay values now come from database settings and can be edited by Owners.
+
+Separate development and staging infrastructure remains deferred. GitHub Actions runs all app and database tests remotely.

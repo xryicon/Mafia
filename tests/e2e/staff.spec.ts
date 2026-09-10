@@ -1,0 +1,23 @@
+import {test,expect} from "@playwright/test";
+import {cookie} from "../fixtures/identity.mjs";
+test("Owner settings and community support work on mobile",async({page,context})=>{
+ test.skip(process.env.GAME_TEST_FIXTURE!=="1","Requires isolated fixture");
+ await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto("/staff");
+ await expect(page.getByRole("heading",{name:"Owner panel"})).toBeVisible();
+ const settings=page.locator("form").filter({has:page.getByRole("heading",{name:"market fee percent",exact:true})});
+ await settings.getByLabel("Value",{exact:true}).fill("7");
+ await settings.getByLabel("Reason",{exact:true}).fill("Browser settings test");
+ await settings.getByRole("button").click();
+ await expect(page.getByRole("status")).toContainText("Saved.");
+ await page.goto("/community");
+ await page.getByLabel("Message",{exact:true}).fill("Hello Blackwater");
+ await page.getByRole("button",{name:"Send message",exact:true}).click();
+ await expect(page.getByText("Hello Blackwater",{exact:true})).toBeVisible();
+ await page.getByLabel("Subject",{exact:true}).fill("Test support request");
+ await page.getByLabel("Details",{exact:true}).fill("Please review this support request.");
+ await page.getByRole("button",{name:"Submit request",exact:true}).click();
+ await expect(page.getByText("Test support request · open",{exact:true})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});

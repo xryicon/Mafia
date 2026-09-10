@@ -4,7 +4,7 @@ import { playerId, token, user } from "./identity.mjs";
 const state = {
  jobs:[{"id":"docks","name":"Dock errand","district":"THE DOCKS","description":"Build connections.","reward":250,"xp":10,"cooldown":60},{"id":"warehouse","name":"Warehouse shift","district":"INDUSTRIAL QUARTER","description":"Keep goods moving.","reward":600,"xp":20,"cooldown":180},{"id":"courier","name":"Night courier","district":"OLD TOWN","description":"Work the night shift.","reward":1100,"xp":40,"cooldown":360}],
  settings:{market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
- permissions:[],ledger:[],
+ permissions:['economy.manage','roles.manage'],ledger:[],
  player:{id:playerId,handle:"Rookie-11111111",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
  goods:[
   {id:"whiskey",name:"Whiskey crates",business_name:"Backroom distillery",business_cost:3000,batch_size:3,cycle_seconds:300},
@@ -15,6 +15,10 @@ const state = {
  my_listings:[],events:[{id:"welcome",description:"Arrived in Blackwater",cash_delta:10000,created_at:user.created_at}],
  server_time:new Date().toISOString(),
 };
+const community={chat:[],cases:[],sanctions:[]};
+const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
+ settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
+ moderator_permissions:["players.warn"],permission_catalog:[{id:"players.warn",owner_only:false}],audit:[]});
 const server = http.createServer(async(req,res) => {
  res.setHeader("Access-Control-Allow-Origin","http://localhost:3000");
  res.setHeader("Access-Control-Allow-Headers",req.headers["access-control-request-headers"] || "*");
@@ -28,6 +32,16 @@ const server = http.createServer(async(req,res) => {
  if(req.headers.authorization!=="Bearer "+token){send(401,{code:"bad_jwt",message:"Invalid session"});return;}
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
+ if(url.pathname==="/rest/v1/rpc/community_state"){send(200,community);return;}
+ if(url.pathname==="/rest/v1/rpc/staff_action"||url.pathname==="/rest/v1/rpc/community_action"){
+ let raw="";for await(const chunk of req)raw+=chunk;
+ const {action,payload:p}=JSON.parse(raw);
+ if(action==="setting")state.settings[p.key]=Number(p.value);
+ if(action==="chat")community.chat.unshift({id:String(Date.now()),player_id:playerId,handle:state.player.handle,body:p.body});
+ if(action==="ticket"||action==="report")community.cases.unshift({id:String(Date.now()),player_id:playerId,kind:action,subject:p.subject,body:p.body,status:"open"});
+ send(200,{message:"Saved."});return;
+ }
  if(url.pathname==="/rest/v1/rpc/game_action"){
   let raw="";for await(const chunk of req)raw+=chunk;
   const {p_action:action,p_payload:p}=JSON.parse(raw);
