@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { cookie } from "../fixtures/supabase.mjs";
+import { cookie } from "../fixtures/identity.mjs";
 
 test("player can navigate the game, earn, trade, and buy production", async ({ page, context }) => {
   test.skip(process.env.GAME_TEST_FIXTURE !== "1", "Requires the isolated Supabase fixture, never a real account.");
