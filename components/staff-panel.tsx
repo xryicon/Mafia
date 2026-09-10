@@ -8,10 +8,10 @@ export type StaffState = {
  settings:Row[]; jobs:Row[]; goods:Row[]; moderator_permissions:string[]; permission_catalog:Row[]; audit:Row[];
 };
 type Field = {name:string;label:string;value?:string|number;type?:string;min?:number;max?:number;options?:{value:string;label:string}[]};
-function ActionForm({title,action,fields,send}:{title:string;action:string;fields:Field[];send:(action:string,payload:Record<string,string>)=>Promise<void>}) {
+export function ActionForm({title,action,fields,send}:{title:string;action:string;fields:Field[];send:(action:string,payload:Record<string,string>)=>Promise<void>}) {
  const [busy,setBusy]=useState(false);
  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);const data=Object.fromEntries(new FormData(e.currentTarget)) as Record<string,string>;try{await send(action,data);}finally{setBusy(false);}}
- return <form className="control-card" onSubmit={submit}><h3>{title}</h3>{fields.map(f=>f.type==="hidden"?<input key={f.name} type="hidden" name={f.name} value={f.value}/>:<label key={f.name}>{f.label}{f.options?<select name={f.name} defaultValue={f.value} required>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:<input name={f.name} type={f.type||"text"} defaultValue={f.value} min={f.min} max={f.max} required maxLength={4000}/>}</label>)}<label>Reason<input name="reason" required minLength={3} maxLength={2000} placeholder="Explain this change for the audit log"/></label><button className="button small" disabled={busy}>{busy?"Saving…":"Save "+title.toLowerCase()}</button></form>;
+ return <form className="control-card" onSubmit={submit}><h3>{title}</h3>{fields.map(f=>f.type==="hidden"?<input key={f.name} type="hidden" name={f.name} value={f.value}/>:<label key={f.name}>{f.label}{f.options?<select name={f.name} defaultValue={f.value} required>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:<input name={f.name} type={f.type==="optional"?"text":f.type||"text"} defaultValue={f.value} min={f.min} max={f.max} required={f.type!=="optional"} maxLength={4000}/>}</label>)}<label>Reason<input name="reason" required minLength={3} maxLength={2000} placeholder="Explain this change for the audit log"/></label><button className="button small" disabled={busy}>{busy?"Saving…":"Save "+title.toLowerCase()}</button></form>;
 }
 const hidden=(name:string,value:string|number):Field=>({name,label:name,value,type:"hidden"});
 export function StaffPanel({initial}:{initial:StaffState}) {
@@ -28,7 +28,7 @@ export function StaffPanel({initial}:{initial:StaffState}) {
  const players:Field={name:"player_id",label:"Player",options:data.players.map(p=>({value:String(p.id),label:String(p.handle)+" · "+p.role_id}))};
  return <main className="control-layout"><div className="control-heading"><div><p className="eyebrow">BLACKWATER / CITY HALL</p><h1>{can("roles.manage")?"Owner panel":"Staff panel"}</h1><p>Every change is checked and recorded.</p></div><Link className="button ghost" href="/dashboard">Return to empire</Link></div>
  {notice&&<p className={"game-notice "+(failed?"error":"")} role={failed?"alert":"status"}>{notice}</p>}
- <section><h2>Player moderation</h2><div className="control-grid">{[
+ {can('seasons.reset')&&<p><Link className="button" href="/seasons">Manage seasons & leaderboards</Link></p>}<section><h2>Player moderation</h2><div className="control-grid">{[
  ["warn","players.warn","Warning"],["mute","players.mute","Mute"],["kick","players.kick","Session kick"],
  ["ban_temporary","players.ban_temporary","Temporary ban"],["ban_permanent","players.ban_permanent","Permanent ban"]
  ].filter(([,permission])=>can(permission)).map(([action,,title])=><ActionForm key={action} title={title} action={action} send={send} fields={[players,...(["mute","ban_temporary"].includes(action)?[{name:"minutes",label:"Duration in minutes",type:"number",min:1,max:525600,value:60}]:[])]}/>)}</div></section>

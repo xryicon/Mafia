@@ -4,6 +4,7 @@ export type Business = { player_id: string; good_id: string; collected_at: strin
 export type Job = {id:string;name:string;district:string;description:string;reward:number;xp:number;cooldown:number};
 export type Settings = Record<string,number>;
 export type GameState = {
+ season: import('./seasons').Season;
  jobs: Job[]; settings:Settings; permissions:string[];
  ledger:{id:number;reason:string;delta:number;balance_after:number;created_at:string}[];
   player: { id: string; handle: string; cash: number; xp: number; job_ready_at: string; created_at: string };

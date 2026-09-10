@@ -465,7 +465,7 @@ returns table(player_id uuid,handle text,score numeric,rank bigint) language sql
 $$;
 
 create function game_private.season_action(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare s public.game_seasons; current_s public.game_seasons; target uuid; reason text:=trim(payload->>'reason'); b public.game_leaderboards;
+declare s public.game_seasons; current_s public.game_seasons; target uuid; reason text:=trim(payload->>'reason'); board_config public.game_leaderboards;
 begin
  perform game_private.require_active();
  if not game_private.has_permission(case when action in ('reset','launch_next') then 'seasons.reset'
@@ -518,9 +518,9 @@ begin
  update public.game_seasons set status='open',opened_at=coalesce(opened_at,clock_timestamp()),locked_at=null where id=target;
  when 'snapshot' then
  if target<>current_s.id or s.status<>'locked' then raise exception 'Lock the current season before capturing final results.'; end if;
- for b in select * from public.game_leaderboards where season_id=target and enabled loop
+ for board_config in select * from public.game_leaderboards where season_id=target and enabled loop
  insert into public.game_season_results(season_id,metric,player_id,handle,label,score,rank)
- select target,b.metric,r.player_id,r.handle,b.label,r.score,r.rank from game_private.season_ranking(target,b.metric) r;
+ select target,board_config.metric,r.player_id,r.handle,board_config.label,r.score,r.rank from game_private.season_ranking(target,board_config.metric) r;
  end loop;
  update public.game_seasons set status='finalized',finalized_at=clock_timestamp() where id=target;
  when 'archive' then
@@ -563,13 +563,13 @@ begin
 end $$;
 
 create function game_private.season_state(p_season uuid,p_metric text,p_offset integer) returns jsonb language plpgsql security definer set search_path='' as $$
-declare target uuid:=coalesce(p_season,game_private.current_season()); s public.game_seasons; rows jsonb; total bigint; my_rank jsonb;
+declare target uuid:=coalesce(p_season,game_private.current_season()); selected public.game_seasons; rows jsonb; total bigint; my_rank jsonb;
 begin
  perform game_private.require_active(); perform game_private.season_guard(false);
  if p_offset is null or p_offset<0 or p_offset>1000000 then raise exception 'Invalid page.'; end if;
- select * into strict s from public.game_seasons where id=target;
+ select * into strict selected from public.game_seasons where id=target;
  if exists(select 1 from public.game_leaderboards where season_id=target and metric=p_metric and enabled) then
- if s.status in ('finalized','archived') then
+ if selected.status in ('finalized','archived') then
  select count(*) into total from public.game_season_results where season_id=target and metric=p_metric;
  select coalesce(jsonb_agg(r order by r.rank,r.player_id),'[]') into rows from
  (select player_id,handle,score,rank from public.game_season_results where season_id=target and metric=p_metric order by rank,player_id limit 100 offset p_offset) r;
@@ -582,7 +582,7 @@ begin
  end if;
  end if;
  return jsonb_build_object(
- 'current_season_id',game_private.current_season(),'season',to_jsonb(s),
+ 'current_season_id',game_private.current_season(),'season',to_jsonb(selected),
  'seasons',(select jsonb_agg(s order by s.created_at desc) from public.game_seasons s),
  'boards',(select jsonb_agg(b order by b.metric) from
  (select b.*,c.available,c.description from public.game_leaderboards b join public.game_metric_catalog c on c.id=b.metric where b.season_id=target) b),
