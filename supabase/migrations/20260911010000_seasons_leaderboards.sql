@@ -420,7 +420,7 @@ begin
  return jsonb_build_object('error','This action could not be completed. Refresh and check your values.');
  end;
 end $$;
-create or replace function game_private.staff_action(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $
+create or replace function game_private.staff_action(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
 begin
  perform game_private.require_active(); perform game_private.season_guard(false);
  if action in ('setting','job','good','grant_money','spawn_asset') then
