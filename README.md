@@ -1,0 +1,74 @@
+# Mafia
+
+A Next.js App Router starter with Supabase email/password authentication and a private dashboard. Responsive cream-and-olive interface, accessible forms, error states, email confirmation, password recovery, logout, and server-enforced access checks.
+
+## Run locally
+
+Use Node.js 22 or newer.
+
+```sh
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+On PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`.
+Open http://localhost:3000. The example environment points at **xryicon's Project** (`pyyyceomujtzfzkytizd`) and contains only its browser-safe publishable key. Never substitute a service-role or secret key.
+
+After the first successful install, commit the generated `package-lock.json` and use `npm ci` for reproducible installs.
+
+## Supabase Auth configuration — required before email flows
+
+Open [Auth URL Configuration](https://supabase.com/dashboard/project/pyyyceomujtzfzkytizd/auth/url-configuration).
+
+- Set Site URL to `http://localhost:3000` during development, then your actual HTTPS app origin for production.
+- Add these Redirect URLs: `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/callback?next=/update-password`.
+- When deploying, add the same two URLs with the production origin.
+- Keep email/password sign-up enabled and Confirm email enabled in the Email provider settings.
+- Use the standard Confirm signup and Reset password email templates, with their link pointing to `{{ .ConfirmationURL }}`. The SDK sends the appropriate redirect URL. Custom templates must preserve that destination.
+- Use a production SMTP provider before public release; Supabase's built-in email delivery has testing restrictions and rate limits.
+
+The app uses PKCE. Open confirmation/reset links in the same browser and device where you requested them. An invalid, expired, or cross-browser link leads to a recoverable login message.
+
+Dashboard settings have **not** been changed by this repository. They must match the origin where you run the app; no production origin has been selected yet.
+
+## Routes
+
+| Route | Access |
+| --- | --- |
+| `/` | Public landing page |
+| `/signup` | Public registration |
+| `/login` | Public login |
+| `/forgot-password` | Public recovery request |
+| `/auth/callback` | PKCE code exchange; accepts only explicit local destinations |
+| `/dashboard` | Authenticated user only |
+| `/update-password` | Authenticated user only |
+| `/api/me` | Returns current user's id/email; anonymous requests return 401 |
+
+Proxy refreshes session cookies and validates claims for navigation. Protected pages and the private API independently call `getUser()` with Supabase to validate the session before returning user data. Proxy redirects preserve refreshed/cleared cookies. Authenticated responses are dynamic and use private/no-store cache headers. Server clients are created per request.
+
+There are no custom database tables yet. When adding data, enable Row Level Security and ownership policies; a route guard alone does not protect direct database API calls. No database migration is required for this authentication starter.
+
+## Validation
+
+```sh
+npm run typecheck
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+GitHub Actions runs these checks. Tests cover redirect allowlisting, anonymous route protection, forged sessions, private API responses, callback errors, form validation, and mobile overflow. They do not create users or send email.
+
+Before release, manually verify with a real inbox:
+1. Sign up, confirm the email in the same browser, and reach the dashboard.
+2. Log out; dashboard navigation and `/api/me` must deny access.
+3. Log in, reload, and confirm the session persists.
+4. Request a password reset, follow the link, save a new password, and log in with it.
+5. Let the access token expire and confirm refresh preserves the session.
+6. Confirm invalid credentials, expired links, and email delivery failures have useful feedback.
+
+## Deployment
+
+Deploy using a host that supports Next.js server rendering (not static GitHub Pages). Set both variables from `.env.example` in the host, run `npm run build`, and start with `npm run start`. Configure Supabase URLs as above. Avoid caching authenticated HTML or Set-Cookie responses at a CDN.
