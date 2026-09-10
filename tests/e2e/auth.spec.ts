@@ -36,7 +36,7 @@ test("sign-up catches mismatched passwords before submitting", async ({ page }) 
   await page.getByLabel("New password", { exact: true }).fill("a long passphrase one");
   await page.getByLabel("Confirm password").fill("a long passphrase two");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("alert")).toContainText("both passwords match");
+  await expect(page.locator("form").getByRole("alert")).toContainText("both passwords match");
 });
 test("mobile layout stays within the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
