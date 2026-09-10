@@ -1,10 +1,12 @@
 
 begin;
 do $$
-declare owner_id uuid:=gen_random_uuid(); player uuid:=gen_random_uuid(); old_season uuid; next_season uuid; listing uuid; res jsonb; frozen jsonb; v bigint; blocked boolean; gang uuid;
+declare owner_id uuid:=gen_random_uuid(); player uuid:=gen_random_uuid(); old_season uuid; next_season uuid; listing uuid; banned_id uuid:=gen_random_uuid(); res jsonb; frozen jsonb; v bigint; blocked boolean; gang uuid;
 begin
  old_season:=game_private.current_season();
- insert into auth.users(id) values(owner_id),(player);
+ insert into auth.users(id) values(owner_id),(player),(banned_id);
+ perform set_config('request.jwt.claim.sub',banned_id::text,true); perform public.game_state();
+ insert into public.game_sanctions(player_id,kind,reason,actor_id) values(banned_id,'ban','Persistent ban',owner_id);
  perform set_config('request.jwt.claim.sub',owner_id::text,true); perform public.game_state();
  perform set_config('request.jwt.claim.sub',player::text,true); perform public.game_state();
  update public.game_user_roles set role_id='owner' where player_id=owner_id;
@@ -32,6 +34,15 @@ begin
  select (r->>'score')::bigint into v from jsonb_array_elements(res->'rankings') r where r->>'player_id'=player::text;
  if v<>1 then raise exception 'Authoritative metric not recorded'; end if;
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
+ res:=public.game_action('business','{"good_id":"whiskey"}');
+ if res ? 'error' then raise exception 'Business failed: %',res; end if;
+ reset role; update public.game_businesses set collected_at=now()-interval '5 minutes' where season_id=old_season and player_id=owner_id;
+ set local role authenticated;
+ res:=public.game_action('collect','{"good_id":"whiskey"}');
+ if res ? 'error' then raise exception 'Collection failed: %',res; end if;
+ res:=public.season_state(old_season,'production',0);
+ select (r->>'score')::bigint into v from jsonb_array_elements(res->'rankings') r where r->>'player_id'=owner_id::text;
+ if v<>3 then raise exception 'Production metric failed'; end if;
  res:=public.season_action('create','{"name":"Next Blackwater","reason":"Create test season"}');
  if res ? 'error' then raise exception 'Create failed: %',res; end if;
  next_season:=(res->>'season_id')::uuid;
@@ -68,6 +79,8 @@ begin
  if not res ? 'error' then raise exception 'Old market order carried forward'; end if;
  res:=public.season_state(old_season,'cash',0);
  if res->'rankings'<>frozen then raise exception 'Archived rankings changed'; end if;
+ res:=public.season_state(next_season,'cash',0);
+ if exists(select 1 from jsonb_array_elements(res->'rankings') r where (r->>'rank')::integer<>1) then raise exception 'Ties received unequal ranks'; end if;
  res:=public.season_profile(player);
  if jsonb_array_length(res->'previous')=0 or jsonb_array_length(res->'current')=0 then raise exception 'Profile missing seasonal rankings'; end if;
  if exists(select 1 from public.game_inventory where season_id=old_season) then raise exception 'Old inventory exposed through REST'; end if;
@@ -75,6 +88,7 @@ begin
  if not exists(select 1 from public.game_season_players where player_id=player and season_id=next_season and level=1 and skills='{}') then raise exception 'Skills/level reset failed'; end if;
  if exists(select 1 from public.game_season_assets where season_id=next_season) or exists(select 1 from public.game_season_loans where season_id=next_season)
  or exists(select 1 from public.game_season_jobs where season_id=next_season) or exists(select 1 from public.game_season_gang_members where season_id=next_season) or exists(select 1 from public.game_season_stats where season_id=next_season) then raise exception 'Season state carried forward'; end if;
+ if not exists(select 1 from public.game_sanctions where player_id=banned_id and kind='ban' and revoked_at is null) then raise exception 'Ban reset'; end if;
  if not exists(select 1 from public.game_sanctions where player_id=player) or not exists(select 1 from public.game_hall_of_fame where season_id=old_season) then raise exception 'Preserved history missing'; end if;
  if (select cash from public.game_season_players where season_id=old_season and player_id=player)<>10250 then raise exception 'Old season wallet lost'; end if;
  if (select sum(delta) from public.game_ledger where player_id=player)<>2000 then raise exception 'Ledger broken by reset'; end if;

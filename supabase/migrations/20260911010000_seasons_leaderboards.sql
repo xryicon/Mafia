@@ -420,8 +420,9 @@ begin
  return jsonb_build_object('error','This action could not be completed. Refresh and check your values.');
  end;
 end $$;
-create or replace function game_private.staff_action(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+create or replace function game_private.staff_action(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $
 begin
+ perform game_private.require_active(); perform game_private.season_guard(false);
  if action in ('setting','job','good','grant_money','spawn_asset') then
  perform game_private.require_active();
  begin perform game_private.season_guard(); exception when raise_exception then return jsonb_build_object('error',SQLERRM); end;
@@ -473,6 +474,9 @@ begin
  if not game_private.rate('season_admin',20) then return jsonb_build_object('error','Too many requests. Wait a minute.'); end if;
  begin
  perform pg_advisory_xact_lock(4704001);
+ perform game_private.require_active();
+ if not game_private.has_permission(case when action in ('reset','launch_next') then 'seasons.reset'
+ when action in ('leaderboard','valuation') then 'leaderboards.manage' else 'seasons.manage' end) then raise exception 'Permission denied.'; end if;
  if length(coalesce(reason,'')) not between 3 and 2000 then raise exception 'Provide an audit reason of 3–2000 characters.'; end if;
  perform set_config('game.reason',reason,true);
  select * into strict current_s from public.game_seasons where id=game_private.current_season() for update;
@@ -487,11 +491,11 @@ begin
  select * into strict s from public.game_seasons where id=target for update;
  case action
  when 'configure' then
+ if s.status='open' and s.ends_at is not null and clock_timestamp()>=s.ends_at then raise exception 'Lock the expired season before changing its configuration.'; end if;
  if s.status not in ('draft','open','locked') then raise exception 'Finalized season configuration is immutable.'; end if;
- if s.id=current_s.id and s.status='draft' then raise exception 'Reset is already prepared. Launch this season before editing it.'; end if;
  update public.game_seasons set name=trim(payload->>'name'),
- starting_cash=case when s.status='draft' then (payload->>'starting_cash')::bigint else starting_cash end,
- starting_crates=case when s.status='draft' then (payload->>'starting_crates')::integer else starting_crates end,
+ starting_cash=case when s.status='draft' and s.id<>current_s.id then (payload->>'starting_cash')::bigint else starting_cash end,
+ starting_crates=case when s.status='draft' and s.id<>current_s.id then (payload->>'starting_crates')::integer else starting_crates end,
  starts_at=nullif(payload->>'starts_at','')::timestamptz,ends_at=nullif(payload->>'ends_at','')::timestamptz,
  hall_of_fame_places=(payload->>'hall_of_fame_places')::integer where id=target;
  when 'leaderboard' then
@@ -612,7 +616,7 @@ begin
  ) r;
  select coalesce(jsonb_agg(r order by r.archived_at desc,r.metric),'[]') into past_rows from (
  select r.*,s.name as season_name,s.archived_at from public.game_season_results r join public.game_seasons s on s.id=r.season_id
- where r.player_id=p_player and s.status='archived'
+ where r.player_id=p_player and s.status='archived' and s.id<>game_private.current_season()
  ) r;
  return jsonb_build_object('player_id',p_player,'handle',profile_handle,'current',current_rows,'previous',past_rows,
  'current_season',(select name from public.game_seasons where id=game_private.current_season()),
