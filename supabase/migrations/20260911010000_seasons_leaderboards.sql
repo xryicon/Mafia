@@ -672,3 +672,6 @@ game_private.staff_state(),game_private.staff_action(text,jsonb),game_private.co
 game_private.season_state(uuid,text,integer),game_private.season_action(text,jsonb),game_private.season_profile(uuid) to authenticated;
 revoke all on function public.season_state(uuid,text,integer),public.season_action(text,jsonb),public.season_profile(uuid) from public,anon;
 grant execute on function public.season_state(uuid,text,integer),public.season_action(text,jsonb),public.season_profile(uuid) to authenticated;
+
+create trigger retain_loan_history before delete on public.game_season_loans for each row execute function game_private.no_delete();
+create trigger retain_loan_truncate before truncate on public.game_season_loans for each statement execute function game_private.no_delete();
