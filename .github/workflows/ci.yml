@@ -15,6 +15,7 @@ jobs:
       NEXT_PUBLIC_APP_ENV: test
       NEXT_TELEMETRY_DISABLED: 1
       GAME_TEST_FIXTURE: 1
+      VISUAL_REVIEW: 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

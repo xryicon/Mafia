@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function Brand({className=""}:{className?:string}){return <Link href="/" className={"bw-brand "+className} aria-label="Blackwater Mafia home"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 2 45 14v28L24 54 3 42V14Z" fill="none" stroke="currentColor"/><path d="M11 18h9c9 0 9 10 1 10h-9m0-10v21h10c10 0 10-11-1-11m7-9 4 18 5-18" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M17 9h14M17 47h14" stroke="currentColor"/></svg><span>BLACKWATER<small>MAFIA</small></span></Link>;}

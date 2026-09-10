@@ -1,0 +1,8 @@
+"use client";
+import {useState} from "react";
+import Link from "next/link";
+import {GameIcon} from "@/components/game-icon";
+export function EconomyPreview(){
+ const [price,setPrice]=useState(120),[good,setGood]=useState("Whiskey");
+ return <div className="deal-preview"><div className="deal-preview-head"><span className="eyebrow">THE BLACKWATER EXCHANGE</span><span className="preview-label">TRADE EXAMPLE</span></div><div className="deal-preview-title"><span className="deal-seal">BW</span><div><small>YOUR GOODS. YOUR TERMS.</small><h3>Make the market.</h3></div></div><div className="preview-commodities" aria-label="Example commodity">{["Whiskey","Silk","Steel"].map(g=><button aria-pressed={good===g} className={good===g?"selected":""} key={g} onClick={()=>setGood(g)}>{g}</button>)}</div><div className="preview-lot"><div><span>COMMODITY</span><strong>{good} · 12 units</strong></div><div><span>YOUR ASKING PRICE</span><strong className="gold">${price}<small> / unit</small></strong></div></div><label className="price-label" htmlFor="example-price">Set your price<span>Try it →</span></label><input id="example-price" type="range" min="20" max="300" step="10" value={price} onChange={e=>setPrice(Number(e.target.value))}/><div className="preview-total"><span>Your lot. Your price.</span><strong>${(price*12).toLocaleString("en-US")}</strong></div><p>A real player decides whether to buy. Supply, timing, and the price you set shape the deal.</p><Link className="button full" href="/signup">Take a seat at the table <GameIcon name="arrow" size={17}/></Link><small className="preview-note">Illustrative listing. Sale totals shown before seller fees.</small></div>;
+}
