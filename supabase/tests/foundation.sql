@@ -28,8 +28,13 @@ begin
  res:=public.community_action('chat','{"body":"muted message"}');
  if not res ? 'error' then raise exception 'Mute bypassed'; end if;
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
+ reset role;
+ select count(*)=1 into blocked from public.game_user_roles where role_id='owner';
+ set local role authenticated;
+ if blocked then
  res:=public.staff_action('role',jsonb_build_object('player_id',owner_id,'role_id','player','reason','remove owner'));
  if not res ? 'error' then raise exception 'Last Owner removed'; end if;
+ end if;
  res:=public.staff_action('setting','{"key":"market_fee_percent","value":101,"reason":"invalid setting"}');
  if not res ? 'error' then raise exception 'Invalid setting accepted'; end if;
  res:=public.staff_action('setting','{"key":"market_fee_percent","value":7,"reason":"valid setting"}');

@@ -25,3 +25,5 @@ Next.js instrumentation emits structured server error records without request bo
 
 ## Verification
 GitHub Actions checks TypeScript, unit tests, production build, browser workflows, migration/seed repeatability and SQL economic/authorization tests. PostgreSQL CI uses a minimal Auth identity contract, so real Supabase Auth token issuance is not mocked as proven. Connected-database rollback tests additionally verify the production schema. Browser fixtures never ship as app routes.
+
+Supabase security advisor reports the new tables as RLS-enabled with no policies: this is intentional deny-by-default access, with all client grants revoked and permission-checked RPCs providing access. Its existing [leaked-password protection recommendation](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) is an Auth project setting outside the app migration; it remains disabled.

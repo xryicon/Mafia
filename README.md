@@ -10,7 +10,7 @@ A dark browser strategy game with persistent Supabase-backed cash, respect, busi
 - The ledger records each player's own actions. Marketplace data refreshes every 30 seconds and after your actions.
 - Cash, quantities, fees, cooldowns, and ownership are enforced inside Postgres transactions. Wallets lock in consistent order; an offer can sell only once. Direct client writes are revoked and all tables have RLS.
 
-The migration in `supabase/migrations/20260910220000_mafia_player_economy.sql` was applied to `pyyyceomujtzfzkytizd`. For a different Supabase project, apply it first. `supabase/tests/player_economy.sql` tests trading, conservation, access control, cooldowns, and production in a transaction that rolls back all fixtures.
+The migration in `supabase/migrations/20260910205112_mafia_player_economy.sql` was applied to `pyyyceomujtzfzkytizd`. For a different Supabase project, apply it first. `supabase/tests/player_economy.sql` tests trading, conservation, access control, cooldowns, and production in a transaction that rolls back all fixtures.
 
 This is an initial playable economy, not a complete MMO. Rank currently reflects earned respect; crews, combat, territory ownership, banking, and anti-multi-account balancing are not implemented. Currency has no purchase or cash-out flow.
 
