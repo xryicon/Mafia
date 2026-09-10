@@ -10,7 +10,7 @@ A dark browser strategy game with persistent Supabase-backed cash, respect, busi
 - The ledger records each player's own actions. Marketplace data refreshes every 30 seconds and after your actions.
 - Cash, quantities, fees, cooldowns, and ownership are enforced inside Postgres transactions. Wallets lock in consistent order; an offer can sell only once. Direct client writes are revoked and all tables have RLS.
 
-The migration in `supabase/migrations/20260910220000_mafia_player_economy.sql` was applied to `pyyyceomujtzfzkytizd`. For a different Supabase project, apply it first. `supabase/tests/player_economy.sql` tests trading, conservation, access control, cooldowns, and production in a transaction that rolls back all fixtures.
+The migration in `supabase/migrations/20260910205112_mafia_player_economy.sql` was applied to `pyyyceomujtzfzkytizd`. For a different Supabase project, apply it first. `supabase/tests/player_economy.sql` tests trading, conservation, access control, cooldowns, and production in a transaction that rolls back all fixtures.
 
 This is an initial playable economy, not a complete MMO. Rank currently reflects earned respect; crews, combat, territory ownership, banking, and anti-multi-account balancing are not implemented. Currency has no purchase or cash-out flow.
 
@@ -96,3 +96,10 @@ Browser CI builds against a loopback Supabase fixture and tests the signed-in ga
 ## Cloudflare public auth pages
 
 Login, signup, and password-recovery forms do not run the session-refresh proxy. Protected pages, callbacks, and APIs keep their server-side authentication checks. If both public Supabase variables are absent, the app uses the connected Mafia project's public URL and publishable key. To connect another project, set **both** variables at build time and runtime; partial overrides intentionally produce a configuration error rather than mixing projects. No service-role credentials are bundled.
+
+
+## Security foundation and City Hall
+
+See [foundation and operations](docs/foundation.md) for deployment, immutable financial history, permissions, moderation, rate limits and logging. Owners and authorized moderators can open City Hall from their game sidebar. Community chat, reports and support tickets are available under Community & support. Gameplay values now come from database settings and can be edited by Owners.
+
+Separate development and staging infrastructure remains deferred. GitHub Actions runs all app and database tests remotely.
