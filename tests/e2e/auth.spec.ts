@@ -2,9 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test("public landing page and sign-up are accessible", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Every circle");
-  await page.getByRole("link", { name: "Take your seat" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pull up a chair.");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("The city is");
+  await page.getByRole("link", { name: "Build your empire" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Make your name.");
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Confirm password")).toBeVisible();
 });
@@ -12,7 +12,7 @@ test("private pages redirect anonymous visitors to login", async ({ page }) => {
   for (const path of ["/dashboard", "/dashboard/private", "/update-password"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login\?next=/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, boss.");
   }
 });
 test("private API rejects anonymous and forged sessions", async ({ request }) => {
