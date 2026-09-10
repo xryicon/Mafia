@@ -63,7 +63,7 @@ test("illustrated game uses real market offers and reachable mobile navigation",
  const nav=page.getByRole("navigation",{name:"Game navigation"});
  await page.locator(".pulse-card.silk").click();
  await expect(page.getByRole("heading",{level:1})).toHaveText("The black market.");
- await expect(page.getByRole("button",{name:"Silk",exact:true})).toHaveAttribute("aria-pressed","true");
+ await expect(page.getByRole("button",{name:"Silk bolts",exact:true})).toHaveAttribute("aria-pressed","true");
  await loaded(page,".market-scene img");
  await capture(page,"market-desktop");
  await page.setViewportSize({width:375,height:812});
@@ -77,5 +77,6 @@ test("illustrated game uses real market offers and reachable mobile navigation",
  for(const name of ["Businesses","Operations","Inventory","Ledger"]){
   await nav.getByRole("button",{name,exact:true}).click();
   await noOverflow(page);
+  if(name==="Businesses"){await loaded(page,".business-card.whiskey img");await page.locator(".business-section,.business-grid").first().scrollIntoViewIfNeeded();await capture(page,"business-mobile");}
  }
 });
