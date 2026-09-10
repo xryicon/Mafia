@@ -1,0 +1,34 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { supabaseConfig } from "@/lib/supabase/config";
+import { isProtectedPage, safeNext } from "@/lib/auth-paths";
+
+export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({ request });
+  const { url, key } = supabaseConfig();
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll(values, headers) {
+        values.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        values.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        Object.entries(headers ?? {}).forEach(([name, value]) => response.headers.set(name, value));
+      },
+    },
+  });
+  const { data, error } = await supabase.auth.getClaims();
+  if ((error || !data?.claims) && isProtectedPage(request.nextUrl.pathname)) {
+    const destination = new URL("/login", request.url);
+    destination.searchParams.set("next", safeNext(request.nextUrl.pathname));
+    const redirected = NextResponse.redirect(destination);
+    response.cookies.getAll().forEach(cookie => redirected.cookies.set(cookie));
+    response = redirected;
+  }
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/update-password", "/api/:path*", "/auth/:path*", "/login", "/signup", "/forgot-password"],
+};
