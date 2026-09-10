@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test("public landing page and sign-up are accessible", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("The city is");
-  await page.getByRole("link", { name: "Build your empire" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Every fortune");
+  await page.getByRole("link", { name: "Enter Blackwater", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Make your name.");
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Confirm password")).toBeVisible();

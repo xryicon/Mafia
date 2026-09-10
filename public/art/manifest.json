@@ -1,0 +1,32 @@
+[
+  {
+    "name": "harbor",
+    "sourceBytes": 2407817,
+    "webpBytes": 213592,
+    "mobileBytes": 43502
+  },
+  {
+    "name": "distillery",
+    "sourceBytes": 2424857,
+    "webpBytes": 148556,
+    "mobileBytes": 48618
+  },
+  {
+    "name": "textile",
+    "sourceBytes": 2558281,
+    "webpBytes": 161274,
+    "mobileBytes": 54302
+  },
+  {
+    "name": "foundry",
+    "sourceBytes": 2326800,
+    "webpBytes": 137356,
+    "mobileBytes": 47314
+  },
+  {
+    "name": "exchange",
+    "sourceBytes": 2171790,
+    "webpBytes": 112018,
+    "mobileBytes": 38774
+  }
+]

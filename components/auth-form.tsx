@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { Artwork } from "@/components/artwork";
 import { safeNext } from "@/lib/auth-paths";
 
 export type AuthMode = "login" | "signup" | "forgot-password" | "update-password";
 const labels = {
   login: ["Welcome back, boss.", "Blackwater is still moving. Log in and pick up where you left off.", "Log in"],
-  signup: ["Make your name.", "Start with $10,000 and five whiskey crates. What you build next is up to you.", "Create account"],
+  signup: ["Make your name.", "Your first deal is waiting. Create an account and enter a city whose economy is built by its players.", "Create account"],
   "forgot-password": ["Let's get you back.", "Enter your email and we'll send a password reset link.", "Send reset link"],
   "update-password": ["A fresh start.", "Choose a new password for your account.", "Save new password"],
 };
@@ -74,9 +75,9 @@ export function AuthForm({ mode, next = "/dashboard", initialMessage = "" }: { m
   }
 
   return <section className="auth-shell">
-    <div className="auth-intro"><p className="eyebrow">BLACKWATER / PLAYER ACCESS</p><h1>{title}</h1><p>{subtitle}</p><div className="auth-symbol" aria-hidden="true">♠</div></div>
+    <div className="auth-intro"><Artwork name="exchange" priority/><div className="auth-art-shade"/><div className="auth-intro-copy"><p className="eyebrow">BLACKWATER / PLAYER ACCESS</p><h1>{title}</h1><p>{subtitle}</p><div className="auth-world-note"><span>PRODUCE.</span><span>TRADE.</span><span>RISE.</span></div></div></div>
     <div className="auth-panel"><form onSubmit={submit} aria-busy={busy}>
-      <p className="eyebrow">ENTER THE CITY</p>
+      <p className="eyebrow">YOUR SEAT AT THE TABLE</p><h2>{mode==="signup"?"Join Blackwater":mode==="login"?"Enter Blackwater":"Account access"}</h2>
       {mode !== "update-password" && <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} /></label>}
       {hasPassword && <label htmlFor="password">{newPassword ? "New password" : "Password"}<input id="password" name="password" type="password" autoComplete={newPassword ? "new-password" : "current-password"} required minLength={newPassword ? 12 : 1} maxLength={128} aria-describedby={newPassword ? "password-hint" : undefined} /></label>}
       {newPassword && <><p className="hint" id="password-hint">At least 12 characters. A memorable passphrase works well.</p><label htmlFor="confirm">Confirm password<input id="confirm" name="confirm" type="password" autoComplete="new-password" required minLength={12} maxLength={128} /></label></>}
