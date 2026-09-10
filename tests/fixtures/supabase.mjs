@@ -14,7 +14,7 @@ const state = {
 };
 const server = http.createServer(async(req,res) => {
  res.setHeader("Access-Control-Allow-Origin","http://localhost:3000");
- res.setHeader("Access-Control-Allow-Headers","authorization, apikey, content-type, x-client-info, x-supabase-api-version, prefer");
+ res.setHeader("Access-Control-Allow-Headers",req.headers["access-control-request-headers"] || "*");
  res.setHeader("Access-Control-Allow-Methods","GET, POST, OPTIONS");
  res.setHeader("Content-Type","application/json");
  if(req.method==="OPTIONS"){res.writeHead(204);res.end();return;}

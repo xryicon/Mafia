@@ -4,11 +4,14 @@ import { cookie } from "../fixtures/identity.mjs";
 test("player can navigate the game, earn, trade, and buy production", async ({ page, context }) => {
   test.skip(process.env.GAME_TEST_FIXTURE !== "1", "Requires the isolated Supabase fixture, never a real account.");
   await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
+  page.on("pageerror", error => console.log("Browser error:",error.message));
+  page.on("requestfailed", request => console.log("Request failed:",request.url(),request.failure()?.errorText));
   await page.goto("/dashboard");
   await expect(page.getByRole("heading",{level:1})).toHaveText("Your empire.");
   await expect(page.locator(".stats-grid")).toContainText("$10,000");
   await page.screenshot({path:"test-results/blackwater-desktop.png",fullPage:true});
   await page.getByRole("button",{name:"Complete dock errand",exact:true}).click();
+  await expect(page.locator(".game-notice")).toContainText("Dock errand complete");
   await expect(page.locator(".stats-grid")).toContainText("$10,250");
   await expect(page.getByRole("button",{name:/Crew ready in/})).toBeDisabled();
   const nav=page.getByRole("navigation",{name:"Game navigation"});
