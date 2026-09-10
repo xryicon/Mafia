@@ -7,8 +7,8 @@ import { safeNext } from "@/lib/auth-paths";
 
 export type AuthMode = "login" | "signup" | "forgot-password" | "update-password";
 const labels = {
-  login: ["Welcome back.", "Your seat is waiting. Log in to enter your dashboard.", "Log in"],
-  signup: ["Pull up a chair.", "Create your account and join the inner circle.", "Create account"],
+  login: ["Welcome back, boss.", "Blackwater is still moving. Log in and pick up where you left off.", "Log in"],
+  signup: ["Make your name.", "Start with $10,000 and five whiskey crates. What you build next is up to you.", "Create account"],
   "forgot-password": ["Let's get you back.", "Enter your email and we'll send a password reset link.", "Send reset link"],
   "update-password": ["A fresh start.", "Choose a new password for your account.", "Save new password"],
 };
@@ -74,16 +74,16 @@ export function AuthForm({ mode, next = "/dashboard", initialMessage = "" }: { m
   }
 
   return <section className="auth-shell">
-    <div className="auth-intro"><p className="eyebrow">THE INNER CIRCLE</p><h1>{title}</h1><p>{subtitle}</p><div className="auth-symbol" aria-hidden="true">♠</div></div>
+    <div className="auth-intro"><p className="eyebrow">BLACKWATER / PLAYER ACCESS</p><h1>{title}</h1><p>{subtitle}</p><div className="auth-symbol" aria-hidden="true">♠</div></div>
     <div className="auth-panel"><form onSubmit={submit} aria-busy={busy}>
-      <p className="eyebrow">MEMBER ACCESS</p>
+      <p className="eyebrow">ENTER THE CITY</p>
       {mode !== "update-password" && <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} /></label>}
       {hasPassword && <label htmlFor="password">{newPassword ? "New password" : "Password"}<input id="password" name="password" type="password" autoComplete={newPassword ? "new-password" : "current-password"} required minLength={newPassword ? 12 : 1} maxLength={128} aria-describedby={newPassword ? "password-hint" : undefined} /></label>}
       {newPassword && <><p className="hint" id="password-hint">At least 12 characters. A memorable passphrase works well.</p><label htmlFor="confirm">Confirm password<input id="confirm" name="confirm" type="password" autoComplete="new-password" required minLength={12} maxLength={128} /></label></>}
       {mode === "login" && <Link className="forgot" href="/forgot-password">Forgot password?</Link>}
       {message && <p className={failed ? "notice error" : "notice"} role={failed ? "alert" : "status"}>{message}</p>}
       <button className="button full" type="submit" disabled={busy}>{busy ? "Please wait…" : button}<span aria-hidden="true">↗</span></button>
-      <p className="form-bottom">{mode === "login" ? <>New to the circle? <Link href="/signup">Create an account</Link></> : <Link href="/login">Back to log in</Link>}</p>
+      <p className="form-bottom">{mode === "login" ? <>New to Blackwater? <Link href="/signup">Create an account</Link></> : <Link href="/login">Back to log in</Link>}</p>
     </form></div>
   </section>;
 }
