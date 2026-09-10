@@ -72,3 +72,4 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/player_economy.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/foundation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/seasons.sql
