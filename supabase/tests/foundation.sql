@@ -106,6 +106,6 @@ begin
  reset role;
  blocked:=false; begin truncate public.game_ledger; exception when raise_exception then blocked:=true; end;
  if not blocked then raise exception 'Ledger truncation permitted'; end if;
-end $;
+end $$;
 select 'PASS: permissions, escalation denial, Owner protection, last Owner, settings validation, permission revocation, mute, session kick, REST denial, re-login, ledger conservation, immutable history, soft deletion, failure rate limit' as result;
 rollback;
