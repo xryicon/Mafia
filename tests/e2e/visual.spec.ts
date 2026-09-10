@@ -77,6 +77,6 @@ test("illustrated game uses real market offers and reachable mobile navigation",
  for(const name of ["Businesses","Operations","Inventory","Ledger"]){
   await nav.getByRole("button",{name,exact:true}).click();
   await noOverflow(page);
-  if(name==="Businesses"){await loaded(page,".business-card.whiskey img");await page.locator(".business-section,.business-grid").first().scrollIntoViewIfNeeded();await capture(page,"business-mobile");}
+  if(name==="Businesses"){await page.locator(".business-grid").scrollIntoViewIfNeeded();for(const good of ["whiskey","silk","steel"])await loaded(page,".business-card."+good+" img");await capture(page,"business-mobile");}
  }
 });

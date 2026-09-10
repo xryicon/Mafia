@@ -26,3 +26,4 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.bw-hero>.bw-art img{transform:none!important}}
 
 @media(min-width:601px){.game-sidebar{overflow-y:auto}}
+.market-scene h2{text-wrap:balance}.silk .business-art,.steel .business-art{background:#172523;border-color:#3a4b3c}.stats-grid article>div{min-width:0}.stats-grid strong{overflow-wrap:anywhere}
