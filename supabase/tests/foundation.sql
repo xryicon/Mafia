@@ -77,6 +77,35 @@ begin
  for i in 1..65 loop res:=public.game_action('invalid','{}'); end loop;
  if res->>'error' <> 'Too many actions. Try again in a minute.' then raise exception 'Failed requests bypass limiter: %',res; end if;
  reset role;
-end $$;
+ -- A permanent ban must block both RPC mutations and direct reads.
+ perform set_config('request.jwt.claim.sub',owner_id::text,true);
+ set local role authenticated;
+ res:=public.staff_action('ban_permanent',jsonb_build_object('player_id',player,'reason','ban regression'));
+ if res ? 'error' then raise exception 'Ban failed'; end if;
+ perform set_config('request.jwt.claim.sub',player::text,true);
+ blocked:=false; begin perform public.game_action('job','{"job":"docks"}'); exception when raise_exception then blocked:=true; end;
+ if not blocked then raise exception 'Banned player acted'; end if;
+ if exists(select 1 from public.game_goods) then raise exception 'Ban bypassed via REST'; end if;
+ reset role;
+ update public.game_sanctions set expires_at=now()-interval '1 second' where player_id=player and kind='ban';
+ set local role authenticated; perform public.game_state(); reset role;
+ -- Evidence access and report management are separately enforced.
+ perform set_config('request.jwt.claim.sub',owner_id::text,true);
+ set local role authenticated;
+ res:=public.community_action('report','{"subject":"Evidence test","body":"Report for permission testing"}');
+ if res ? 'error' then raise exception 'Report failed'; end if;
+ reset role;
+ select id into msg_id from public.game_cases where player_id=owner_id limit 1;
+ set local role authenticated;
+ res:=public.staff_action('evidence',jsonb_build_object('case_id',msg_id,'body','Private staff evidence','reason','investigation'));
+ if res ? 'error' then raise exception 'Evidence failed: %',res; end if;
+ res:=public.staff_action('permission','{"role_id":"moderator","permission_id":"evidence.view","enabled":false,"reason":"restricted evidence"}');
+ perform set_config('request.jwt.claim.sub',mod_id::text,true);
+ res:=public.staff_state();
+ if jsonb_array_length(res->'evidence')<>0 then raise exception 'Private evidence leaked'; end if;
+ reset role;
+ blocked:=false; begin truncate public.game_ledger; exception when raise_exception then blocked:=true; end;
+ if not blocked then raise exception 'Ledger truncation permitted'; end if;
+end $;
 select 'PASS: permissions, escalation denial, Owner protection, last Owner, settings validation, permission revocation, mute, session kick, REST denial, re-login, ledger conservation, immutable history, soft deletion, failure rate limit' as result;
 rollback;

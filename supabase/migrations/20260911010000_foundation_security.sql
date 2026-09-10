@@ -295,7 +295,7 @@ begin
  return game_private.act(p_action,p_payload);
  exception when others then
  if SQLSTATE='P0001' then return jsonb_build_object('error',SQLERRM); end if;
- raise log 'game_action failed code=% action=%',SQLSTATE,left(p_action,40);
+ raise log 'game_action failed code=% action=%',SQLSTATE,case when p_action in ('job','business','collect','list','buy','cancel') then p_action else 'unknown' end;
  return jsonb_build_object('error','This action could not be completed. Refresh and check your values.');
  end;
 end $$;
@@ -387,7 +387,7 @@ begin
  return jsonb_build_object('message','Saved. The action has been audited.');
  exception when others then
  if SQLSTATE='P0001' then return jsonb_build_object('error',SQLERRM); end if;
- raise log 'staff_action failed code=% action=%',SQLSTATE,left(action,40);
+ raise log 'staff_action failed code=% action=%',SQLSTATE,required;
  return jsonb_build_object('error','Invalid request. Check the identifiers and allowed values.');
  end;
 end $$;
@@ -430,7 +430,7 @@ begin
  'permissions',(select coalesce(jsonb_agg(id),'[]') from public.game_permissions where game_private.has_permission(id)),
  'players',(select coalesce(jsonb_agg(p),'[]') from (select p.id,p.handle,coalesce(u.role_id,'player') as role_id from public.game_players p left join public.game_user_roles u on u.player_id=p.id order by p.created_at desc limit 500) p),
  'sanctions',case when game_private.has_permission('evidence.view') then (select coalesce(jsonb_agg(s),'[]') from (select * from public.game_sanctions order by created_at desc limit 200) s) else '[]'::jsonb end,
- 'cases',(select coalesce(jsonb_agg(c),'[]') from (select * from public.game_cases where game_private.has_permission(case kind when 'report' then 'reports.review' else 'tickets.manage' end) order by created_at desc limit 200) c),
+ 'cases',(select coalesce(jsonb_agg(c),'[]') from (select * from public.game_cases where (deleted_at is null or game_private.has_permission('evidence.view')) and game_private.has_permission(case kind when 'report' then 'reports.review' else 'tickets.manage' end) order by created_at desc limit 200) c),
  'evidence',(select coalesce(jsonb_agg(e),'[]') from (select e.* from public.game_evidence e join public.game_cases c on c.id=e.case_id where game_private.has_permission('evidence.view') and game_private.has_permission(case c.kind when 'report' then 'reports.review' else 'tickets.manage' end) order by e.created_at desc limit 200) e),
  'chat',(select coalesce(jsonb_agg(c),'[]') from (select * from public.game_chat where (deleted_at is null and game_private.has_permission('chat.delete')) or game_private.has_permission('evidence.view') order by created_at desc limit 100) c),
  'settings',case when game_private.has_permission('economy.manage') then (select jsonb_agg(s order by key) from public.game_settings s) else '[]'::jsonb end,
