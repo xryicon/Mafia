@@ -12,6 +12,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54329
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_browser_test_fixture
+      NEXT_PUBLIC_APP_ENV: test
       NEXT_TELEMETRY_DISABLED: 1
       GAME_TEST_FIXTURE: 1
     steps:

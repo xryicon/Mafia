@@ -1,0 +1,44 @@
+"use client";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+type Row = Record<string, string | number | boolean | null>;
+export type StaffState = {
+ permissions:string[]; players:Row[]; sanctions:Row[]; cases:Row[]; evidence:Row[]; chat:Row[];
+ settings:Row[]; jobs:Row[]; goods:Row[]; moderator_permissions:string[]; permission_catalog:Row[]; audit:Row[];
+};
+type Field = {name:string;label:string;value?:string|number;type?:string;min?:number;max?:number;options?:{value:string;label:string}[]};
+function ActionForm({title,action,fields,send}:{title:string;action:string;fields:Field[];send:(action:string,payload:Record<string,string>)=>Promise<void>}) {
+ const [busy,setBusy]=useState(false);
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);const data=Object.fromEntries(new FormData(e.currentTarget)) as Record<string,string>;try{await send(action,data);}finally{setBusy(false);}}
+ return <form className="control-card" onSubmit={submit}><h3>{title}</h3>{fields.map(f=>f.type==="hidden"?<input key={f.name} type="hidden" name={f.name} value={f.value}/>:<label key={f.name}>{f.label}{f.options?<select name={f.name} defaultValue={f.value} required>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:<input name={f.name} type={f.type||"text"} defaultValue={f.value} min={f.min} max={f.max} required maxLength={4000}/>}</label>)}<label>Reason<input name="reason" required minLength={3} maxLength={2000} placeholder="Explain this change for the audit log"/></label><button className="button small" disabled={busy}>{busy?"Saving…":"Save "+title.toLowerCase()}</button></form>;
+}
+const hidden=(name:string,value:string|number):Field=>({name,label:name,value,type:"hidden"});
+export function StaffPanel({initial}:{initial:StaffState}) {
+ const [data,setData]=useState(initial),[notice,setNotice]=useState(""),[failed,setFailed]=useState(false);
+ const can=(p:string)=>data.permissions.includes(p);
+ async function send(action:string,payload:Record<string,string>){
+  setNotice("");setFailed(false);
+  try{const {data:result,error}=await createClient().rpc("staff_action",{action,payload});
+   if(error||result?.error)throw new Error(result?.error||error?.message);
+   setNotice(result.message);
+   const next=await createClient().rpc("staff_state");if(next.error)throw new Error(next.error.message);setData(next.data);
+  }catch(e){setFailed(true);setNotice(e instanceof Error?e.message:"Action failed.");}
+ }
+ const players:Field={name:"player_id",label:"Player",options:data.players.map(p=>({value:String(p.id),label:String(p.handle)+" · "+p.role_id}))};
+ return <main className="control-layout"><div className="control-heading"><div><p className="eyebrow">BLACKWATER / CITY HALL</p><h1>{can("roles.manage")?"Owner panel":"Staff panel"}</h1><p>Every change is checked and recorded.</p></div><Link className="button ghost" href="/dashboard">Return to empire</Link></div>
+ {notice&&<p className={"game-notice "+(failed?"error":"")} role={failed?"alert":"status"}>{notice}</p>}
+ <section><h2>Player moderation</h2><div className="control-grid">{[
+ ["warn","players.warn","Warning"],["mute","players.mute","Mute"],["kick","players.kick","Session kick"],
+ ["ban_temporary","players.ban_temporary","Temporary ban"],["ban_permanent","players.ban_permanent","Permanent ban"]
+ ].filter(([,permission])=>can(permission)).map(([action,,title])=><ActionForm key={action} title={title} action={action} send={send} fields={[players,...(["mute","ban_temporary"].includes(action)?[{name:"minutes",label:"Duration in minutes",type:"number",min:1,max:525600,value:60}]:[])]}/>)}</div></section>
+ {can("roles.manage")&&<section><h2>Roles and permissions</h2><div className="control-grid"><ActionForm title="Player role" action="role" send={send} fields={[players,{name:"role_id",label:"Role",options:["player","moderator","owner"].map(value=>({value,label:value}))}]}/><ActionForm title="Moderator permission" action="permission" send={send} fields={[hidden("role_id","moderator"),{name:"permission_id",label:"Permission",options:data.permission_catalog.filter(p=>!p.owner_only).map(p=>({value:String(p.id),label:String(p.id)}))},{name:"enabled",label:"Access",options:[{value:"true",label:"Allow"},{value:"false",label:"Revoke"}]}]}/></div><p>Current Moderator permissions: {data.moderator_permissions.join(", ")||"None"}. Financial controls and Owner permissions are reserved for Owners.</p></section>}
+ {can("economy.manage")&&<section><h2>Economy settings</h2><p>Changes apply to future actions. Existing balances and transactions are retained.</p><div className="control-grid">{data.settings.map(s=><ActionForm key={String(s.key)} title={String(s.key).replaceAll("_"," ")} action="setting" send={send} fields={[hidden("key",String(s.key)),{name:"value",label:"Value",value:Number(s.value),type:"number",min:Number(s.minimum),max:Number(s.maximum)}]}/>)}</div><h2>Operations</h2><div className="control-grid">{data.jobs.map(j=><ActionForm key={String(j.id)} title={String(j.name)} action="job" send={send} fields={[hidden("id",String(j.id)),...["reward","xp","cooldown"].map(name=>({name,label:name,value:Number(j[name]),type:"number",min:name==="cooldown"?1:0}))]}/>)}</div><h2>Businesses</h2><div className="control-grid">{data.goods.map(g=><ActionForm key={String(g.id)} title={String(g.business_name)} action="good" send={send} fields={[hidden("id",String(g.id)),...["business_cost","batch_size","cycle_seconds"].map(name=>({name,label:name.replaceAll("_"," "),value:Number(g[name]),type:"number",min:1}))]}/>)}</div></section>}
+ {(can("money.grant")||can("assets.spawn"))&&<section><h2>Owner adjustments</h2><div className="control-grid">{can("money.grant")&&<ActionForm title="Cash grant" action="grant_money" send={send} fields={[players,{name:"amount",label:"Amount",type:"number",min:1,max:100000000}]}/>}
+ {can("assets.spawn")&&<ActionForm title="Asset grant" action="spawn_asset" send={send} fields={[players,{name:"good_id",label:"Commodity",options:data.goods.map(g=>({value:String(g.id),label:String(g.name)}))},{name:"quantity",label:"Quantity",type:"number",min:1,max:1000}]}/>}</div></section>}
+ <section><h2>Reports and tickets</h2>{!data.cases.length&&<p>No cases to review.</p>}<div className="control-grid">{data.cases.map(c=><article className="control-card" key={String(c.id)}><p className="eyebrow">{c.kind} · {c.status}{c.deleted_at?" · removed by player":""}</p><h3>{c.subject}</h3><p className="preserve-text">{c.body}</p><small>Player: {c.player_id}</small><ActionForm title="Case response" action="case" send={send} fields={[hidden("id",String(c.id)),{name:"status",label:"Status",value:String(c.status),options:["open","investigating","resolved"].map(value=>({value,label:value}))},{name:"response",label:"Response to player",value:String(c.response||"")}]}/>{can("evidence.view")&&<><h4>Private evidence</h4>{data.evidence.filter(e=>e.case_id===c.id).map(e=><p className="preserve-text" key={String(e.id)}>{e.body}</p>)}<ActionForm title="Evidence note" action="evidence" send={send} fields={[hidden("case_id",String(c.id)),{name:"body",label:"Staff evidence note"}]}/></>}</article>)}</div></section>
+ {can("evidence.view")&&<section><h2>Sanctions and evidence</h2><div className="control-grid">{data.sanctions.map(s=><article className="control-card" key={String(s.id)}><h3>{s.kind} · {s.revoked_at?"Revoked":s.expires_at?"Until "+s.expires_at:"No expiry"}</h3><p>{s.reason}</p><small>{s.player_id}</small>{!s.revoked_at&&can("players.ban_permanent")&&<ActionForm title="Revoke sanction" action="revoke_sanction" send={send} fields={[hidden("id",String(s.id))]}/>}</article>)}</div></section>}
+ {(can("chat.delete")||can("evidence.view"))&&<section><h2>Chat moderation</h2><div className="control-grid">{data.chat.map(c=><article className="control-card" key={String(c.id)}><p className="preserve-text">{c.body}</p><small>{c.player_id} · {c.deleted_at?"Removed; evidence retained":"Visible"}</small>{!c.deleted_at&&can("chat.delete")&&<ActionForm title="Remove message" action="delete_chat" send={send} fields={[hidden("id",String(c.id))]}/>}</article>)}</div></section>}
+ {can("audit.view")&&<section><h2>Recent audit history</h2><p>Latest 200 records. Full history is retained in the database.</p>{data.audit.map(a=><details className="control-card" key={String(a.id)}><summary>{String(a.created_at)} · {a.action}</summary><pre>{JSON.stringify(a,null,2)}</pre></details>)}</section>}
+ </main>;
+}

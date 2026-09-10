@@ -2,6 +2,9 @@
 import http from "node:http";
 import { playerId, token, user } from "./identity.mjs";
 const state = {
+ jobs:[{"id":"docks","name":"Dock errand","district":"THE DOCKS","description":"Build connections.","reward":250,"xp":10,"cooldown":60},{"id":"warehouse","name":"Warehouse shift","district":"INDUSTRIAL QUARTER","description":"Keep goods moving.","reward":600,"xp":20,"cooldown":180},{"id":"courier","name":"Night courier","district":"OLD TOWN","description":"Work the night shift.","reward":1100,"xp":40,"cooldown":360}],
+ settings:{market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
+ permissions:[],ledger:[],
  player:{id:playerId,handle:"Rookie-11111111",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
  goods:[
   {id:"whiskey",name:"Whiskey crates",business_name:"Backroom distillery",business_cost:3000,batch_size:3,cycle_seconds:300},
