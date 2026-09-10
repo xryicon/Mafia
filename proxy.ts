@@ -29,6 +29,8 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// Public forms must render even if session refresh or deployment configuration fails.
+// Protected pages and the API still validate users independently on the server.
 export const config = {
-  matcher: ["/dashboard/:path*", "/update-password", "/api/:path*", "/auth/:path*", "/login", "/signup", "/forgot-password"],
+  matcher: ["/dashboard/:path*", "/update-password", "/api/:path*", "/auth/:path*"],
 };

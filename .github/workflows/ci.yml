@@ -31,3 +31,14 @@ jobs:
           name: browser-checks
           path: test-results/
           retention-days: 7
+
+  deployment-probe:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tests/deployment-probe.mjs
