@@ -91,3 +91,8 @@ Deploy using a host that supports Next.js server rendering (not static GitHub Pa
 
 
 Browser CI builds against a loopback Supabase fixture and tests the signed-in game flows without real accounts or email. The fixture is only started by Playwright when GAME_TEST_FIXTURE=1; it is not an app route, and production continues using the real project values in .env.example. Database correctness is verified separately by the rollback SQL tests. Browser screenshots and traces are saved as GitHub Actions artifacts.
+
+
+## Cloudflare public auth pages
+
+Login, signup, and password-recovery forms do not run the session-refresh proxy. Protected pages, callbacks, and APIs keep their server-side authentication checks. If both public Supabase variables are absent, the app uses the connected Mafia project's public URL and publishable key. To connect another project, set **both** variables at build time and runtime; partial overrides intentionally produce a configuration error rather than mixing projects. No service-role credentials are bundled.
