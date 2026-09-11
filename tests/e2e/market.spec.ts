@@ -41,7 +41,15 @@ test("players create auctions, reserve bids, receive goods, and keep the command
  await page.getByLabel("Search goods or seller").fill("");
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await page.goto("/market");await expect(page.getByRole("heading",{name:"The Exchange",exact:true})).toBeVisible();
+ await expect.poll(()=>page.locator(".market-stock-preview img").evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  await capture(page,"market-exchange-desktop");
+ await sections.getByRole("button",{name:"Inventory",exact:true}).click();
+ await expect(page.locator(".market-inventory .commodity-art img")).toHaveCount(3);
+ await expect.poll(()=>page.locator(".market-inventory .commodity-art img").evaluateAll(imgs=>imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
+ await capture(page,"market-commodity-inventory");
+ await sections.getByRole("button",{name:"Auctions",exact:true}).click();
+ await capture(page,"market-commodity-auctions");
+ await sections.getByRole("button",{name:"Trading floor",exact:true}).click();
  for(const width of [1448,1024,768,375]){
   await page.setViewportSize({width,height:width===375?812:1000});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Market overflow at "+width).toBe(true);

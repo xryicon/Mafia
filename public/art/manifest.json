@@ -28,5 +28,26 @@
     "sourceBytes": 2171790,
     "webpBytes": 112018,
     "mobileBytes": 38774
+  },
+  {
+    "name": "commodities/whiskey",
+    "sourceBytes": 2649603,
+    "webpBytes": 69576,
+    "thumbnailBytes": 3018,
+    "previewBytes": 19068
+  },
+  {
+    "name": "commodities/silk",
+    "sourceBytes": 2706525,
+    "webpBytes": 51226,
+    "thumbnailBytes": 2878,
+    "previewBytes": 14110
+  },
+  {
+    "name": "commodities/steel",
+    "sourceBytes": 2594453,
+    "webpBytes": 56014,
+    "thumbnailBytes": 2578,
+    "previewBytes": 14654
   }
 ]
