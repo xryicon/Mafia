@@ -85,7 +85,7 @@ begin
  r:=public.district_action('buy',q);if not(r?'error') then raise exception 'Locked season permits trading';end if;
  if exists(select 1 from public.game_players where cash<0) then raise exception 'Negative wallet found';end if;
 end $$;
-do $
+do $$
 declare next_season uuid; old_season uuid:=game_private.current_season();
 begin
  insert into public.game_seasons(name,starting_cash,starting_crates) values('Rollback-only next season',10000,5) returning id into next_season;
@@ -93,6 +93,6 @@ begin
  if (select count(*) from public.game_district_plots where season_id=next_season)<>24 then raise exception 'Fresh season map not initialized';end if;
  if exists(select 1 from public.game_district_plots where season_id=next_season and owner_type='player') then raise exception 'Player ownership carried across seasons';end if;
  if not exists(select 1 from public.game_property_sales where season_id=old_season) then raise exception 'Old season sales were deleted';end if;
-end $;
+end $$;
 select 'PASS: district seed, RLS, forged quotes, duplicate purchases, zoning, construction, escrow offers, competing bids, attached title transfer, ledger, permissions, audit, multi-gang control, immutable events and season lock' as result;
 rollback;

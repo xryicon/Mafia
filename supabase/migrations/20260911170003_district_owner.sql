@@ -130,6 +130,7 @@ begin
   on conflict(event_id) do update set hidden=excluded.hidden,reason=excluded.reason;
  else raise exception 'Unknown management action.';
  end case;
+ insert into public.game_audit(actor_id,action,target,after_data,reason) values(auth.uid(),'district_manage.'||p_action,coalesce(new_id::text,payload->>'district_id','district configuration'),payload,reason);
  return jsonb_build_object('message','Saved. The change is recorded in the audit history.','id',new_id);
  exception when others then
   if SQLSTATE='P0001' then return jsonb_build_object('error',SQLERRM); end if;

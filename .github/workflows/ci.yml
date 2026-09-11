@@ -22,9 +22,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - name: Optimize city illustration for review
-        if: github.event_name == 'pull_request'
-        run: node scripts/prepare-city-art.mjs
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
