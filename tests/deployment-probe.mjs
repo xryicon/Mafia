@@ -18,7 +18,7 @@ for(const href of sheets){
 }
 console.log(JSON.stringify({deployedLayout:styles.includes(".header-power")&&styles.includes(".brand-online")?"clear-city-header":styles.includes(".fresh-canvas")&&styles.includes(".header-wallet")?"fresh-icon-header":styles.includes(".estate-city")?"reference-property-screen":"previous-layout",stylesheets:sheets.length}));
 
-for(const path of ["/dashboard","/districts","/districts/the-waterfront","/districts/manage","/telegrams"]){
+for(const path of ["/dashboard","/market","/properties","/gangs","/seasons","/support","/players","/districts","/districts/the-waterfront","/districts/manage","/telegrams"]){
  const response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
  const location=response.headers.get("location")||"";
  const protectedRoute=[302,303,307,308].includes(response.status)&&new URL(location,origin).pathname==="/login";
@@ -44,7 +44,7 @@ if(telegramsDeployed){
 }
 
 const commandDashboardDeployed=styles.includes(".command-dashboard")&&styles.includes(".command-atlas");
-console.log(JSON.stringify({commandDashboardDeployed}));
+console.log(JSON.stringify({commandDashboardDeployed,sharedCommandHudDeployed:styles.includes(".command-city.command-dashboard-page"),cityWideOfficeMarkerRemoved:!styles.includes(".command-office-marker")}));
 if(commandDashboardDeployed){
  for(const name of ["command-city","command-portrait"]){
   const art=await fetch(origin+"/art/"+name+".jpg",{signal:AbortSignal.timeout(20000)});
