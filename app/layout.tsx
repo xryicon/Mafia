@@ -6,6 +6,8 @@ import "./telegrams.css";
 import "./dashboard.css";
 import "./market.css";
 import "./commodities.css";
+import "./mining.css";
+import "./mining.css";
 export const metadata:Metadata={
  metadataBase:new URL("https://mafia.xryicon.workers.dev"),
  title:{default:"Blackwater Mafia — A player-driven crime economy",template:"%s · Blackwater Mafia"},

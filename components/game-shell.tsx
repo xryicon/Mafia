@@ -137,7 +137,7 @@ export function GameShell({ initial, initialTab="overview", initialGood, initial
   }
 
   function businessCards() {
-    return <div className="business-grid">{state.goods.map(good => {
+    return <div className="business-grid">{state.goods.filter(g=>g.business_available!==false).map(good => {
       const owned = state.businesses.find(b => b.good_id === good.id);
       const units = owned ? readyUnits(owned, good, playing ? now : Date.parse(state.season.locked_at || state.season.ends_at || state.server_time), settings.offline_batches) : 0;
       const next = owned ? Math.max(0, good.cycle_seconds - Math.floor((now - Date.parse(owned.collected_at)) / 1000)) : 0;
