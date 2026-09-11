@@ -79,8 +79,12 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/city_layout.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/districts.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/telegrams.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/market_auctions.sql
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh
 
       - name: Concurrent Telegram retry test
         run: bash supabase/tests/telegram_races.sh
+
+      - name: Concurrent market auction bids and settlement
+        run: bash supabase/tests/market_races.sh

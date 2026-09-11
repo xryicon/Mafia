@@ -1,5 +1,6 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    search: "M10 3a7 7 0 1 1 0 14 7 7 0 0 1 0-14 M15 15l7 7",
     coins: "M20 5c0 2-16 2-16 0s16-2 16 0v14c0 3-16 3-16 0V5 M4 10c0 3 16 3 16 0 M4 15c0 3 16 3 16 0",
     pickaxe: "m4 21 12-15 M8 2c6 0 10 4 14 10L10 5 M14 6l3 3",
     tools: "m3 21 15-15 M14 3l5-2-1 5 4 2-3 4-5-5 M4 3l17 17-2 2L2 5z",

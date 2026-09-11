@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {marketWorld} from "./market.mjs";
 import {telegramWorld} from "./telegrams.mjs";
 import {districtWorld} from "./districts.mjs";
 import { playerId, token, user } from "./identity.mjs";
@@ -20,8 +21,9 @@ const state = {season,
 };
 let districts=districtWorld(playerId,season,state.goods);
 let telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);
+let market=marketWorld(state,playerId);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -72,6 +74,9 @@ const server = http.createServer(async(req,res) => {
   send(200,{message:"Saved. The change is recorded in the audit history."});return;
  }
 
+ if(url.pathname==="/rest/v1/rpc/market_state"){send(200,market.read(districts));return;}
+ if(url.pathname==="/rest/v1/rpc/market_auction_action"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);send(200,market.action(p.p_action,p.p_payload));return;}
+ if(url.pathname==="/__close_auctions"&&process.env.GAME_TEST_FIXTURE==="1"){market.expire();send(200,{ok:true});return;}
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
