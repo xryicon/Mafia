@@ -77,6 +77,11 @@ begin
  r:=public.telegram_room_action('transfer',jsonb_build_object('request_id',gen_random_uuid(),'thread_id',t,'player_id',c));if r?'error' then raise exception 'Owner transfer failed %',r;end if;
  r:=public.telegram_room_action('leave',jsonb_build_object('request_id',gen_random_uuid(),'thread_id',t));if r?'error' then raise exception 'Former owner cannot leave';end if;
  if not exists(select 1 from game_private.telegram_room_events where thread_id=t and action='transfer') then raise exception 'Missing private membership history';end if;
+ perform set_config('request.jwt.claim.sub',c::text,true);
+ r:=public.telegram_room_action('close',jsonb_build_object('request_id',gen_random_uuid(),'thread_id',t));if r?'error' then raise exception 'Close group failed: %',r;end if;
+ r:=public.telegram_state(t);if not (r->'thread'->>'closed')::boolean or jsonb_array_length(r->'messages')=0 then raise exception 'Closure removed history';end if;
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid()));if not(r?'error') then raise exception 'Closed group accepts messages';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
  -- Gang channels use the actual seasonal gang roster, never supplied member lists.
  insert into public.game_season_gangs(season_id,name,data) values(s,'Telegram Test Gang',jsonb_build_object('owner_id',a)) returning id into g;
  insert into public.game_season_gang_members(season_id,player_id,gang_id) values(s,a,g),(s,b,g);
@@ -91,5 +96,6 @@ begin
  if exists(select 1 from public.game_audit where before_data::text like '%PRIVATE GROUP CONTENT%' or after_data::text like '%PRIVATE GROUP CONTENT%') then raise exception 'Private group message in public audit';end if;
  denied:=false;begin delete from game_private.telegram_deliveries where message_id=m;exception when others then denied:=true;end;if not denied then raise exception 'Private delivery evidence deleted';end if;
 end $$;
+select 'PASS: group invitations, privacy, avatars, membership, gang authorization, closures, blocks, reports and office fee conservation' as result;
 rollback;
 

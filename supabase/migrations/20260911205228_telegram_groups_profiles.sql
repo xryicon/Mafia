@@ -29,7 +29,7 @@ create table game_private.telegram_rooms(
  thread_id uuid primary key references game_private.telegram_threads(id),
  kind text not null check(kind in ('group','gang')), name text not null check(length(name) between 3 and 100),
  owner_id uuid not null references public.game_players(id), gang_id uuid references public.game_season_gangs(id),
- season_id uuid references public.game_seasons(id), created_at timestamptz not null default now(),
+ season_id uuid references public.game_seasons(id), closed_at timestamptz, created_at timestamptz not null default now(),
  check((kind='gang' and gang_id is not null and season_id is not null) or (kind='group' and gang_id is null and season_id is null))
 );
 create unique index telegram_one_gang_room on game_private.telegram_rooms(gang_id) where kind='gang';
@@ -129,7 +129,7 @@ begin
   else
    title:=trim(coalesce(p_payload->>'name',''));
    if length(title) not between 3 and game_private.setting('telegram_group_name_limit') then raise exception 'Check the group name length.';end if;
-   if (select count(*) from game_private.telegram_rooms where owner_id=auth.uid() and kind='group')>=game_private.setting('telegram_group_limit') then raise exception 'Your group ownership limit has been reached.';end if;
+   if (select count(*) from game_private.telegram_rooms where owner_id=auth.uid() and kind='group' and closed_at is null)>=game_private.setting('telegram_group_limit') then raise exception 'Your group ownership limit has been reached.';end if;
    insert into game_private.telegram_threads(first_player,subject) values(auth.uid(),title) returning id into t;
    insert into game_private.telegram_rooms(thread_id,kind,name,owner_id) values(t,'group',title,auth.uid()) returning * into r;
    insert into game_private.telegram_members(thread_id,player_id,status,invited_by,joined_at) values(t,auth.uid(),'active',auth.uid(),clock_timestamp());
@@ -137,6 +137,7 @@ begin
  else
   select * into r from game_private.telegram_rooms where thread_id=(p_payload->>'thread_id')::uuid for update;
   if r.thread_id is null or r.kind<>'group' then raise exception 'Group unavailable. Gang chat follows the gang roster.';end if;
+  if r.closed_at is not null then raise exception 'This group is closed. Its history is retained.';end if;
   if p_action in ('accept','decline') then
    if not exists(select 1 from game_private.telegram_members where thread_id=r.thread_id and player_id=auth.uid() and status='invited') then raise exception 'Invitation unavailable.';end if;
    update game_private.telegram_members set status=case when p_action='accept' then 'active' else 'declined' end,joined_at=case when p_action='accept' then clock_timestamp() else null end,updated_at=clock_timestamp() where thread_id=r.thread_id and player_id=auth.uid();
@@ -161,9 +162,11 @@ begin
      if target is null or target=auth.uid() or not exists(select 1 from game_private.telegram_members where thread_id=r.thread_id and player_id=target and status in ('active','invited')) then raise exception 'Choose another group member.';end if;
      if p_action='transfer' then
       if not exists(select 1 from game_private.telegram_members where thread_id=r.thread_id and player_id=target and status='active') then raise exception 'Ownership requires an active member.';end if;
-      if (select count(*) from game_private.telegram_rooms where owner_id=target and kind='group')>=game_private.setting('telegram_group_limit') then raise exception 'This player has reached their group ownership limit.';end if;
+      if (select count(*) from game_private.telegram_rooms where owner_id=target and kind='group' and closed_at is null)>=game_private.setting('telegram_group_limit') then raise exception 'This player has reached their group ownership limit.';end if;
       update game_private.telegram_rooms set owner_id=target where thread_id=r.thread_id;
      else update game_private.telegram_members set status='removed',updated_at=clock_timestamp() where thread_id=r.thread_id and player_id=target;end if;
+    elsif p_action='close' then
+     update game_private.telegram_rooms set closed_at=clock_timestamp() where thread_id=r.thread_id;
     elsif p_action='rename' then
      title:=trim(coalesce(p_payload->>'name',''));
      if length(title) not between 3 and game_private.setting('telegram_group_name_limit') then raise exception 'Check the group name length.';end if;
@@ -176,7 +179,7 @@ begin
  insert into public.game_telegram_signals as sig(player_id)
  select auth.uid() union select target where target is not null union select player_id from game_private.telegram_members where thread_id=r.thread_id and status in ('active','invited')
  on conflict(player_id) do update set revision=sig.revision+1;
- result:=jsonb_build_object('message',case p_action when 'create' then 'Group created. Invite your players.' when 'gang' then 'Gang conversation opened.' when 'invite' then 'Invitation sent.' when 'accept' then 'You joined the group.' when 'leave' then 'You left the group.' else 'Group updated.' end,'thread_id',r.thread_id);
+ result:=jsonb_build_object('message',case p_action when 'create' then 'Group created. Invite your players.' when 'gang' then 'Gang conversation opened.' when 'invite' then 'Invitation sent.' when 'accept' then 'You joined the group.' when 'leave' then 'You left the group.' when 'close' then 'Group closed. Your conversation history is retained.' else 'Group updated.' end,'thread_id',r.thread_id);
  insert into game_private.telegram_room_requests values(auth.uid(),request,jsonb_build_object('action',p_action,'payload',p_payload),result,now());
  return result;
  exception when others then
@@ -214,6 +217,7 @@ begin
   if (t.id is null or t.second_player is not null) and (recipient is null or recipient=auth.uid() or not exists(select 1 from public.game_players where id=recipient and deleted_at is null)
    or exists(select 1 from public.game_sanctions where player_id=recipient and kind='ban' and revoked_at is null and (expires_at is null or expires_at>now()))
    or exists(select 1 from game_private.telegram_blocks where (player_id=recipient and blocked_id=auth.uid()) or (player_id=auth.uid() and blocked_id=recipient))) then raise exception 'This recipient is unavailable for telegrams.'; end if;
+  if exists(select 1 from game_private.telegram_rooms where thread_id=t.id and closed_at is not null) then raise exception 'This group is closed. Its history is retained.';end if;
   if t.id is not null and t.second_player is null and not exists(select 1 from game_private.telegram_audience(t.id,auth.uid())) then raise exception 'No available recipients. Invite a player and wait for them to join.';end if;
   subject:=trim(coalesce(p_payload->>'subject',''));body:=trim(coalesce(p_payload->>'body',''));
   if length(body) not between 1 and game_private.setting('telegram_body_limit') or (t.id is null and length(subject) not between 1 and game_private.setting('telegram_subject_limit')) then raise exception 'Check the subject and message length.'; end if;
@@ -295,7 +299,7 @@ begin
  end if;
  if r.kind='group' then select count(*) into member_count from game_private.telegram_members where thread_id=p_thread and status='active';
  else select count(*) into member_count from public.game_season_gang_members where gang_id=r.gang_id and season_id=r.season_id;end if;
- return jsonb_build_object('kind',r.kind,'other_id',null,'other_name',coalesce((select name from public.game_season_gangs where id=r.gang_id),r.name),'other_avatar',null,'subject',case when r.kind='gang' then 'Gang correspondence' else 'Private group' end,'owner_id',r.owner_id,'member_count',member_count,'can_manage',r.kind='group' and r.owner_id=auth.uid(),'can_send',exists(select 1 from game_private.telegram_audience(p_thread,auth.uid())));
+ return jsonb_build_object('kind',r.kind,'other_id',null,'other_name',coalesce((select name from public.game_season_gangs where id=r.gang_id),r.name),'other_avatar',null,'subject',case when r.kind='gang' then 'Gang correspondence' else 'Private group' end,'owner_id',r.owner_id,'member_count',member_count,'closed',r.closed_at is not null,'can_manage',r.kind='group' and r.owner_id=auth.uid() and r.closed_at is null,'can_send',r.closed_at is null and exists(select 1 from game_private.telegram_audience(p_thread,auth.uid())));
 end $$;
 create function game_private.telegram_room_members(p_thread uuid) returns jsonb language sql stable set search_path='' as $$
  select coalesce(jsonb_agg(jsonb_build_object('id',m.player_id,'name',i.username,'avatar_url',game_private.player_avatar(m.player_id),'status',m.status,'owner',m.is_owner) order by m.is_owner desc,i.username),'[]'::jsonb)
@@ -317,6 +321,15 @@ begin
 end $$;
 
 
+-- Restrict mailbox scans to indexed participation instead of scanning every city thread.
+create function game_private.telegram_player_threads(p_player uuid) returns setof uuid language sql stable set search_path='' as $$
+ select id from game_private.telegram_threads where first_player=p_player and second_player is not null
+ union select id from game_private.telegram_threads where second_player=p_player
+ union select thread_id from game_private.telegram_members where player_id=p_player and status='active'
+ union select r.thread_id from game_private.telegram_rooms r join public.game_season_gang_members m on m.gang_id=r.gang_id and m.season_id=r.season_id where m.player_id=p_player and m.season_id=game_private.current_season()
+$$;
+revoke all on function game_private.telegram_player_threads(uuid) from public,anon,authenticated;
+
 create or replace function game_private.telegram_state(p_thread uuid default null,p_folder text default 'inbox',p_offset integer default 0,p_before uuid default null) returns jsonb language plpgsql security definer set search_path='' as $$
 #variable_conflict use_column
 declare s uuid; t game_private.telegram_threads; result jsonb;
@@ -335,7 +348,7 @@ begin
  'season',(select jsonb_build_object('id',id,'name',name,'status',status) from public.game_seasons where id=s),
  'office',game_private.telegram_office_data(),'server_time',now(),
  'limits',jsonb_build_object('subject',game_private.setting('telegram_subject_limit'),'body',game_private.setting('telegram_body_limit'),'group_name',game_private.setting('telegram_group_name_limit'),'group_members',game_private.setting('telegram_group_members')),
- 'unread',(select count(*) from game_private.telegrams m left join game_private.telegram_folders f on f.thread_id=m.thread_id and f.player_id=auth.uid() where m.sender_id<>auth.uid() and game_private.telegram_access(m.thread_id,auth.uid()) and game_private.telegram_visible(m.id,auth.uid()) and m.created_at>coalesce(f.read_at,'-infinity'::timestamptz)),
+ 'unread',(select count(*) from game_private.telegrams m left join game_private.telegram_folders f on f.thread_id=m.thread_id and f.player_id=auth.uid() where m.id in(select id from game_private.telegrams where recipient_id=auth.uid() union select message_id from game_private.telegram_deliveries where player_id=auth.uid()) and m.thread_id in(select game_private.telegram_player_threads(auth.uid())) and m.created_at>coalesce(f.read_at,'-infinity'::timestamptz)),
  'thread',case when t.id is null then null else to_jsonb(t)||game_private.telegram_thread_data(t.id) end,
  'threads',coalesce((select jsonb_agg(to_jsonb(x)||game_private.telegram_thread_data(x.id) order by x.last_at desc,x.id) from (
   select t0.id,t0.subject,case when t0.first_player=auth.uid() then t0.second_player else t0.first_player end as other_id,
@@ -345,7 +358,7 @@ begin
   from game_private.telegram_threads t0
   left join lateral(select body,created_at from game_private.telegrams where thread_id=t0.id and game_private.telegram_visible(id,auth.uid()) order by created_at desc,id desc limit 1)m on true
   left join game_private.telegram_folders f on f.thread_id=t0.id and f.player_id=auth.uid()
-  where game_private.telegram_access(t0.id,auth.uid()) and
+  where t0.id in(select game_private.telegram_player_threads(auth.uid())) and
    case p_folder when 'groups' then not coalesce(f.archived,false) and exists(select 1 from game_private.telegram_rooms r where r.thread_id=t0.id and r.kind='group') when 'gang' then not coalesce(f.archived,false) and exists(select 1 from game_private.telegram_rooms r where r.thread_id=t0.id and r.kind='gang') when 'archive' then coalesce(f.archived,false) when 'starred' then coalesce(f.starred,false)
     when 'sent' then not coalesce(f.archived,false) and exists(select 1 from game_private.telegrams where thread_id=t0.id and sender_id=auth.uid())
     else not coalesce(f.archived,false) end
@@ -361,7 +374,7 @@ begin
  return result||jsonb_build_object(
  'player_avatar',game_private.player_avatar(auth.uid()),
  'members',case when t.id is not null then game_private.telegram_room_members(t.id) else '[]'::jsonb end,
- 'invitations',coalesce((select jsonb_agg(jsonb_build_object('thread_id',r.thread_id,'name',r.name,'invited_by',game_private.district_owner_name('player',m.invited_by)) order by m.updated_at desc) from game_private.telegram_members m join game_private.telegram_rooms r on r.thread_id=m.thread_id where m.player_id=auth.uid() and m.status='invited'),'[]'::jsonb),
+ 'invitations',coalesce((select jsonb_agg(jsonb_build_object('thread_id',r.thread_id,'name',r.name,'invited_by',game_private.district_owner_name('player',m.invited_by)) order by m.updated_at desc) from game_private.telegram_members m join game_private.telegram_rooms r on r.thread_id=m.thread_id where m.player_id=auth.uid() and m.status='invited' and r.closed_at is null),'[]'::jsonb),
  'gang', (select jsonb_build_object('id',g.id,'name',g.name) from public.game_season_gangs g join public.game_season_gang_members m on m.gang_id=g.id and m.season_id=g.season_id where m.player_id=auth.uid() and m.season_id=s)
  );
 end $$;

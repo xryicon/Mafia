@@ -1,6 +1,6 @@
 import {test,expect,type Page} from "@playwright/test";
 import {cookie,token} from "../fixtures/identity.mjs";
-async function capture(page:Page,name:string){const shot=await page.screenshot({path:"test-results/"+name+".jpg",type:"jpeg",quality:65,fullPage:true});if(process.env.VISUAL_REVIEW==="1"){const encoded=shot.toString("base64");for(let n=0;n<encoded.length;n+=12000)console.log("VISUAL_REVIEW_"+name+"_"+Math.floor(n/12000)+":"+encoded.slice(n,n+12000));}}
+async function capture(page:Page,name:string){await page.evaluate(()=>window.scrollTo(0,0));const shot=await page.screenshot({path:"test-results/"+name+".jpg",type:"jpeg",quality:65,fullPage:true});if(process.env.VISUAL_REVIEW==="1"){const encoded=shot.toString("base64");for(let n=0;n<encoded.length;n+=12000)console.log("VISUAL_REVIEW_"+name+"_"+Math.floor(n/12000)+":"+encoded.slice(n,n+12000));}}
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated Telegram fixture");await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("private mailbox sends a priced telegram and supports drafts and folders",async({page})=>{
  await page.setViewportSize({width:1448,height:1086});await page.goto("/telegrams");
@@ -66,7 +66,7 @@ test("groups invite players, send one priced message and keep member controls pr
  await expect(page.locator(".tg-message-feed")).toContainText("Our warehouses are ready");
  await expect(page.locator(".header-cash")).toContainText("$9,975");
  await expect(page.locator(".tg-send-terms")).toContainText("$25 per group telegram");
- await capture(page,"telegrams-groups-desktop");
+ await expect(page.getByRole("button",{name:"Send Telegram",exact:true})).toBeEnabled();await capture(page,"telegrams-groups-desktop");
  await page.getByRole("button",{name:/2 members · View members/}).click();
  await page.getByLabel("Manage HarborJack").click();await page.getByRole("button",{name:"Make group owner",exact:true}).click();
  await expect(page.getByLabel("Invite player",{exact:true})).toHaveCount(0);

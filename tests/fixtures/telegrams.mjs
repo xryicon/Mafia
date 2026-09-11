@@ -46,6 +46,7 @@ export function telegramWorld(playerId,season,officePlot){
   const members=rooms.get(t?.id)||[];
   if(action==="invite"){members.push({id:other,name:p.username,avatar_url:"/art/command-portrait.jpg",status:"invited",owner:false});}
   if(action==="remove"){rooms.set(t.id,members.filter(m=>m.id!==p.player_id));t.member_count=rooms.get(t.id).length;t.can_send=t.member_count>1;}
+  if(action==="close"){t.closed=true;t.can_manage=false;t.can_send=false;}
   if(action==="rename")t.other_name=p.name;
   if(action==="transfer"){t.can_manage=false;members.forEach(m=>m.owner=m.id===p.player_id);}
   if(action==="leave")state.threads=state.threads.filter(x=>x.id!==t.id);
