@@ -115,3 +115,5 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
  .estate-city .estate-stats strong{font-size:20px}
  .estate-city .property-stats strong{font-size:20px}
 }
+
+.estate-city .table-scroll{position:relative;max-width:100%}
