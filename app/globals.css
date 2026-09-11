@@ -211,3 +211,6 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
  .fresh-city .estate-dropdown{top:91px;right:10px;max-height:calc(100dvh - 105px)}
  .fresh-city:before{background-position:center center}
 }
+
+.fresh-city .estate-player-numbers>span{font-size:10px;line-height:1.25}
+@media(max-width:600px){.fresh-city .estate-player-numbers>span{font-size:9px;line-height:1.25}.fresh-city .estate-player-numbers{max-width:139px}}
