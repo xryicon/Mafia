@@ -18,7 +18,7 @@ for(const href of sheets){
 }
 console.log(JSON.stringify({deployedLayout:styles.includes(".header-power")&&styles.includes(".brand-online")?"clear-city-header":styles.includes(".fresh-canvas")&&styles.includes(".header-wallet")?"fresh-icon-header":styles.includes(".estate-city")?"reference-property-screen":"previous-layout",stylesheets:sheets.length}));
 
-for(const path of ["/districts","/districts/the-waterfront","/districts/manage"]){
+for(const path of ["/districts","/districts/the-waterfront","/districts/manage","/telegrams"]){
  const response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
  const location=response.headers.get("location")||"";
  const protectedRoute=[302,303,307,308].includes(response.status)&&new URL(location,origin).pathname==="/login";
@@ -32,4 +32,13 @@ if(districtsDeployed){
  const bytes=(await art.arrayBuffer()).byteLength;
  console.log(JSON.stringify({cityArtwork:art.status,contentType:art.headers.get("content-type"),bytes}));
  if(!art.ok||bytes<10000||!art.headers.get("content-type")?.includes("image/webp"))process.exitCode=1;
+}
+
+const telegramsDeployed=styles.includes(".tg-correspondence")&&styles.includes(".tg-office");
+console.log(JSON.stringify({telegramsDeployed}));
+if(telegramsDeployed){
+ const art=await fetch(origin+"/art/telegram-office.jpg",{signal:AbortSignal.timeout(20000)});
+ const bytes=(await art.arrayBuffer()).byteLength;
+ console.log(JSON.stringify({telegramArtwork:art.status,contentType:art.headers.get("content-type"),bytes}));
+ if(!art.ok||bytes<10000||!art.headers.get("content-type")?.includes("image/jpeg"))process.exitCode=1;
 }

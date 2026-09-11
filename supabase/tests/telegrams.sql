@@ -62,6 +62,12 @@ begin
  r:=public.telegram_manage('transfer',jsonb_build_object('recipient',(select username from game_private.identities where player_id=b),'reason','Gift the strategic property'));if r?'error' then raise exception 'Office transfer failed %',r;end if;
  r:=public.telegram_manage('office','{"name":"Former owner","fee":35,"status":"open","reason":"Old owner attempt"}');if not(r?'error') then raise exception 'Former owner retained control';end if;
  perform set_config('request.jwt.claim.sub',b::text,true);
+ select cash into b_cash from public.game_players where id=b;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid()));
+ if r?'error' then raise exception 'Send after transfer failed %',r;end if;
+ if (select cash from public.game_players where id=b)<>b_cash+35 then raise exception 'New owner did not receive future revenue';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
  r:=public.telegram_manage('office','{"name":"Blackwater Telegram Office","fee":0,"status":"open","reason":"Free service"}');if r?'error' then raise exception 'Free fee failed %',r;end if;
  perform set_config('request.jwt.claim.sub',a::text,true);
  select cash into a_cash from public.game_players where id=a;
@@ -77,6 +83,15 @@ begin
  select count(*) into count_before from game_private.telegrams;
  r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',500));if not(r?'error') then raise exception 'Insufficient cash send succeeded';end if;
  if (select count(*) from game_private.telegrams)<>count_before then raise exception 'Failed send left a message';end if;
+
+ -- The existing auction settles the unique office title as one property.
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.district_action('auction',jsonb_build_object('plot_id',o.plot_id,'season_id',s,'price',100));if r?'error' then raise exception 'Office auction failed %',r;end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ r:=public.district_action('bid',jsonb_build_object('plot_id',o.plot_id,'season_id',s,'price',100));if r?'error' then raise exception 'Office bid failed %',r;end if;
+ update public.game_plot_auctions set ends_at=now()-interval '1 second' where plot_id=o.plot_id and status='open';
+ r:=public.district_action('auction_finish',jsonb_build_object('plot_id',o.plot_id,'season_id',s));if r?'error' then raise exception 'Office auction settlement failed %',r;end if;
+ if (select owner_id from public.game_district_businesses where id=o.business_id)<>owner then raise exception 'Auction did not transfer office ownership';end if;
  -- Owner administrative controls, unique constraints, relocation and season reset.
  insert into public.game_user_roles(player_id,role_id) values(owner,'owner') on conflict(player_id) do update set role_id='owner';
  perform set_config('request.jwt.claim.sub',owner::text,true);
