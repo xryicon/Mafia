@@ -1,7 +1,7 @@
 import {test,expect} from "@playwright/test";
 import {cookie,token} from "../fixtures/identity.mjs";
 
-test("market trading remains usable alongside blank game destinations",async({page,context,request})=>{
+test("market trading remains usable alongside the city dashboard",async({page,context,request})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
  await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
@@ -19,7 +19,7 @@ test("market trading remains usable alongside blank game destinations",async({pa
  await expect(page.locator(".own-offers")).toContainText("You haven't listed any goods");
  await expect(page.locator(".header-cash")).toContainText("$9,800");
  await page.setViewportSize({width:375,height:812});
- for(const [name,path] of [["Dashboard","/dashboard"],["Properties","/properties"]]){
+ for(const [name,path] of [["Properties","/properties"]]){
   await nav.getByRole("link",{name,exact:true}).click();await page.waitForURL(url=>url.pathname===path);
   await expect(page.getByRole("main").locator(".fresh-canvas")).toBeVisible();
   await expect(page.getByRole("main").locator("button,a,input,img,article,table,.estate-hero")).toHaveCount(0);
