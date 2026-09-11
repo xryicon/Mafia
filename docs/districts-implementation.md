@@ -34,3 +34,5 @@ Seeded entities are fictional city/company operators, not fake player accounts. 
 All application execution happens in GitHub Actions, per the project owner's preference. Tests include existing unit/browser/database regressions, district transactions, escrow conservation, gang participation and two concurrent purchase connections against disposable PostgreSQL. Visual captures cover desktop city/district/plot views and mobile drawers/Owner forms.
 
 Apply all district migrations in order only after isolated tests pass. Record actual Supabase migration versions in repository filenames. Never run the committed-fixture race script against production; it explicitly requires GitHub CI's local disposable PostgreSQL environment. Production smoke tests must roll back.
+
+Production migrations were approved and applied on 2026-09-11. Versions: 20260911175202 (district_schema), 20260911175208 (district_queries), 20260911175212 (district_transactions), 20260911175216 (district_owner), 20260911175226 (district_market_seasons), 20260911175230 (waterfront_seed), 20260911175236 (district_buy_orders).
