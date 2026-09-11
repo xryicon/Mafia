@@ -15,7 +15,7 @@ export function MiningOwner(){
  {notice&&<div className={"mine-notice "+(failed?"error":"")} role={failed?"alert":"status"}>{notice}{mining.retry&&<button disabled={mining.working} className="market-outline" onClick={()=>void mining.retryAction()}>Retry same request</button>}</div>}
  <div className="mine-admin-grid"><nav className="mine-admin-list command-panel" aria-label="Mine management sites">{data.sites.map(m=><button key={m.id} className={site?.id===m.id?"active":""} onClick={()=>setSelected(m.id)}><GameIcon name="pickaxe" size={20}/><span>{m.code} · {m.name}<small>{mineStatus(m)}</small></span></button>)}</nav>
  {site&&<MineControls key={site.id} site={site} data={data} busy={busy} act={act}/>}</div>
- <p className="mine-help">Pickaxe price, condition, respect and auction limits are editable in Economy & production.</p>
+ <p className="mine-help">Pickaxe condition, respect and auction limits are editable in Economy & production.</p>
  </div>;
 }
 

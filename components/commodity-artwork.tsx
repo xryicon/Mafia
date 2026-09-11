@@ -4,6 +4,11 @@ const commodityArt:Record<string,string>={
  whiskey:"/art/commodities/whiskey",
  silk:"/art/commodities/silk",
  steel:"/art/commodities/steel",
+ "iron-ore":"/art/resources/iron-ore",
+ "copper-ore":"/art/resources/copper-ore",
+ coal:"/art/resources/coal",
+ stone:"/art/resources/stone",
+ limestone:"/art/resources/limestone",
 };
 
 // These images accompany the database commodity name, so they are decorative.
