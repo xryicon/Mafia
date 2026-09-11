@@ -36,7 +36,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
   document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape);};
  },[]);
  const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/properties","Properties","property"],["/districts","Districts","district"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"]];
- const blank=["/dashboard","/properties","/telegrams"].includes(path);
+ const blank=["/dashboard","/properties"].includes(path);
  const active=(href:string)=>path===href||path.startsWith(href+"/");
  return <div className={"estate-city fresh-city"+(blank?" fresh-page":"")}>
   <header className="estate-header"><Brand href="/dashboard" className="estate-brand" status={<><span className={"presence-dot"+(stale?" offline":"")}/><span>{data&&!stale?data.online_count.toLocaleString("en-US"):"—"} online</span></>}/><nav className="estate-nav" aria-label="Game navigation">{links.map(([href,name,icon])=><Link href={href} key={href} aria-current={active(href)?"page":undefined}><GameIcon name={icon} size={18}/><span>{name}</span></Link>)}</nav>

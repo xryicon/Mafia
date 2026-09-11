@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {telegramWorld} from "./telegrams.mjs";
 import {districtWorld} from "./districts.mjs";
 import { playerId, token, user } from "./identity.mjs";
 const season={id:"55555555-5555-4555-8555-555555555555",name:"Founding Season",status:"open",starting_cash:10000,starting_crates:5,starts_at:null,ends_at:null,locked_at:null,opened_at:new Date().toISOString(),archived_at:null,reset_at:null,hall_of_fame_places:3};
@@ -18,8 +19,9 @@ const state = {season,
  server_time:new Date().toISOString(),
 };
 let districts=districtWorld(playerId,season,state.goods);
+let telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));districts=districtWorld(playerId,season,state.goods);};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -38,6 +40,15 @@ const server = http.createServer(async(req,res) => {
  if(req.headers.authorization!=="Bearer "+token){send(401,{code:"bad_jwt",message:"Invalid session"});return;}
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
 
+
+ if(url.pathname.startsWith("/rest/v1/rpc/telegram_")){
+  let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");
+  if(url.pathname.endsWith("telegram_state"))send(200,{...telegrams.read(p),cash:state.player.cash});
+  else if(url.pathname.endsWith("telegram_action"))send(200,telegrams.action(p.p_action,p.p_payload,state));
+  else if(url.pathname.endsWith("telegram_manage"))send(200,telegrams.manage(p.p_action,p.p_payload));
+  else send(400,{message:"Evidence unavailable."});
+  return;
+ }
  if(url.pathname==="/rest/v1/rpc/district_state"){send(200,{...districts,cash:state.player.cash,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/district_action"){
   let raw="";for await(const chunk of req)raw+=chunk;const {p_action:action,p_payload:p}=JSON.parse(raw),plot=districts.plots.find(x=>x.id===p.plot_id);

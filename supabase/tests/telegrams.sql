@@ -1,0 +1,133 @@
+begin;
+do $$
+declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); owner uuid:=gen_random_uuid(); mod uuid:=gen_random_uuid();
+ s uuid:=game_private.current_season(); o public.game_telegram_office; p public.game_district_plots; r jsonb; q jsonb; t uuid; m uuid; nonce uuid:=gen_random_uuid(); caseid uuid; denied boolean; count_before bigint; a_cash bigint; owner_cash bigint; b_cash bigint; dest uuid; next_season uuid; old_office uuid;
+begin
+ insert into auth.users(id,raw_user_meta_data) values(a,jsonb_build_object('username','TgA'||left(replace(a::text,'-',''),10))),(b,jsonb_build_object('username','TgB'||left(replace(b::text,'-',''),10))),(owner,jsonb_build_object('username','TgO'||left(replace(owner::text,'-',''),10))),(mod,jsonb_build_object('username','TgM'||left(replace(mod::text,'-',''),10)));
+ perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',b::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',owner::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',mod::text,true);perform public.game_state();
+ perform set_config('game.reason','Rollback-only Telegram test funding',true);
+ update public.game_players set cash=100000 where id in(a,b,owner,mod);
+ select * into o from public.game_telegram_office;
+ select * into p from public.game_district_plots where id=o.plot_id;
+ -- Purchase the actual city-owned office using the existing quoted transaction.
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ q:=jsonb_build_object('season_id',s,'plot_id',p.id,'version',p.version,'total',p.asking_price+ceil(p.asking_price*coalesce(p.tax_rate,3)/100));
+ r:=public.district_action('buy',q);if r?'error' then raise exception 'Office purchase failed: %',r;end if;
+ if (select owner_id from public.game_district_businesses where id=o.business_id)<>owner then raise exception 'Business did not follow property title';end if;
+ r:=public.telegram_manage('office',jsonb_build_object('name','Blackwater Telegram Office','description','Unique office','status','open','fee',35,'reason','Set delivery fee'));
+ if r?'error' then raise exception 'Owner fee control failed: %',r;end if;
+ r:=public.telegram_manage('office','{"name":"Blackwater Telegram Office","status":"open","fee":501,"reason":"Invalid fee test"}');
+ if not(r?'error') then raise exception 'Fee ceiling bypass';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_manage('office','{"name":"Stolen office","status":"open","fee":0,"reason":"Unauthorized edit test"}');
+ if not(r?'error') then raise exception 'Non-owner edited office';end if;
+ q:=jsonb_build_object('recipient',(select username from game_private.identities where player_id=b),'subject','PRIVATE SUBJECT','body','PRIVATE MESSAGE TEXT','fee',35,'season_id',s,'request_id',nonce);
+ select cash into a_cash from public.game_players where id=a;select cash into owner_cash from public.game_players where id=owner;
+ set local role authenticated;
+ denied:=false;begin perform * from game_private.telegrams;exception when insufficient_privilege then denied:=true;end;
+ if not denied then raise exception 'Direct private message access';end if;
+ r:=public.telegram_action('send',q||'{"fee":1}'::jsonb);if not(r?'error') then raise exception 'Forged fee accepted';end if;
+ r:=public.telegram_action('send',q);if r?'error' then raise exception 'Send failed: %',r;end if;t:=(r->>'thread_id')::uuid;
+ r:=public.telegram_action('send',q);if r?'error' then raise exception 'Idempotent retry failed';end if;
+ if (select count(*) from public.game_telegram_signals)<>1 or not exists(select 1 from public.game_telegram_signals where player_id=auth.uid()) then raise exception 'Realtime mailbox signals leak another account';end if;
+ reset role;
+ if (select cash from public.game_players where id=a)<>a_cash-35 or (select cash from public.game_players where id=owner)<>owner_cash+35 then raise exception 'Sender/owner settlement wrong';end if;
+ if (select count(*) from game_private.telegrams where sender_id=a and request_id=nonce)<>1 then raise exception 'Duplicate telegram';end if;
+ if not exists(select 1 from public.game_ledger where player_id=a and delta=-35 and reason='Telegram delivery fee')
+ or not exists(select 1 from public.game_ledger where player_id=owner and delta=35 and reason='Telegram Office revenue') then raise exception 'Missing Telegram ledgers';end if;
+ if exists(select 1 from public.game_ledger where reason='Telegram Office revenue' and actor_id is not null) then raise exception 'Office wallet reveals private senders';end if;
+ select id into m from game_private.telegrams where thread_id=t;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ r:=public.telegram_state();if r::text like '%PRIVATE MESSAGE TEXT%' or r::text like '%PRIVATE SUBJECT%' then raise exception 'Office owner private data leak';end if;
+ denied:=false;begin perform public.telegram_state(t);exception when others then denied:=true;end;if not denied then raise exception 'Office owner can open other threads';end if;
+ if exists(select 1 from public.game_audit where after_data::text like '%PRIVATE MESSAGE TEXT%' or before_data::text like '%PRIVATE SUBJECT%') then raise exception 'Private content leaked to audit';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.telegram_state(t);if r->'messages'->0->>'body'<>'PRIVATE MESSAGE TEXT' then raise exception 'Recipient cannot read instant delivery';end if;
+ r:=public.telegram_action('block',jsonb_build_object('player_id',a));if r?'error' then raise exception 'Block failed';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid()));if not(r?'error') then raise exception 'Blocked sender delivered';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ perform public.telegram_action('unblock',jsonb_build_object('player_id',a));
+ r:=public.telegram_action('report',jsonb_build_object('message_id',m,'reason','Investigate this specific telegram'));if r?'error' then raise exception 'Report failed %',r;end if;
+ select case_id into caseid from game_private.telegram_reports where message_id=m;
+ insert into public.game_user_roles(player_id,role_id) values(mod,'moderator') on conflict(player_id) do update set role_id='moderator';
+ perform set_config('request.jwt.claim.sub',mod::text,true);
+ denied:=false;begin perform public.telegram_evidence(caseid);exception when others then denied:=true;end;if not denied then raise exception 'Evidence outside investigating workflow';end if;
+ update public.game_cases set status='investigating' where id=caseid;
+ r:=public.telegram_evidence(caseid);if r->>'body'<>'PRIVATE MESSAGE TEXT' then raise exception 'Reported evidence unavailable';end if;
+ denied:=false;begin perform public.telegram_state(t);exception when others then denied:=true;end;if not denied then raise exception 'Moderator can browse private thread';end if;
+ if not exists(select 1 from public.game_audit where action='telegram.evidence_read' and target=caseid::text) then raise exception 'Evidence read not audited';end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ r:=public.telegram_manage('transfer',jsonb_build_object('recipient',(select username from game_private.identities where player_id=b),'reason','Gift the strategic property'));if r?'error' then raise exception 'Office transfer failed %',r;end if;
+ r:=public.telegram_manage('office','{"name":"Former owner","fee":35,"status":"open","reason":"Old owner attempt"}');if not(r?'error') then raise exception 'Former owner retained control';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ select cash into b_cash from public.game_players where id=b;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid()));
+ if r?'error' then raise exception 'Send after transfer failed %',r;end if;
+ if (select cash from public.game_players where id=b)<>b_cash+35 then raise exception 'New owner did not receive future revenue';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.telegram_manage('office','{"name":"Blackwater Telegram Office","fee":0,"status":"open","reason":"Free service"}');if r?'error' then raise exception 'Free fee failed %',r;end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ select cash into a_cash from public.game_players where id=a;
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',0));if r?'error' then raise exception 'Free send failed %',r;end if;
+ if (select cash from public.game_players where id=a)<>a_cash then raise exception 'Free send charged money';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ perform public.telegram_manage('office','{"name":"Blackwater Telegram Office","fee":500,"status":"closed","reason":"Close office"}');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',500));if not(r?'error') then raise exception 'Closed office delivered';end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ perform public.telegram_manage('office','{"name":"Blackwater Telegram Office","fee":500,"status":"open","reason":"Reopen office"}');
+ perform set_config('request.jwt.claim.sub',a::text,true);perform set_config('game.reason','Rollback-only insufficient cash test',true);update public.game_players set cash=1 where id=a;
+ select count(*) into count_before from game_private.telegrams;
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',500));if not(r?'error') then raise exception 'Insufficient cash send succeeded';end if;
+ if (select count(*) from game_private.telegrams)<>count_before then raise exception 'Failed send left a message';end if;
+
+ -- The existing auction settles the unique office title as one property.
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.district_action('auction',jsonb_build_object('plot_id',o.plot_id,'season_id',s,'price',100));if r?'error' then raise exception 'Office auction failed %',r;end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ r:=public.district_action('bid',jsonb_build_object('plot_id',o.plot_id,'season_id',s,'price',100));if r?'error' then raise exception 'Office bid failed %',r;end if;
+ update public.game_plot_auctions set ends_at=now()-interval '1 second' where plot_id=o.plot_id and status='open';
+ r:=public.district_action('auction_finish',jsonb_build_object('plot_id',o.plot_id,'season_id',s));if r?'error' then raise exception 'Office auction settlement failed %',r;end if;
+ if (select owner_id from public.game_district_businesses where id=o.business_id)<>owner then raise exception 'Auction did not transfer office ownership';end if;
+ -- Owner administrative controls, unique constraints, relocation and season reset.
+ insert into public.game_user_roles(player_id,role_id) values(owner,'owner') on conflict(player_id) do update set role_id='owner';
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ r:=public.telegram_manage('transfer','{"recipient":"state","reason":"Restore city ownership"}');if r?'error' then raise exception 'State ownership failed %',r;end if;
+ select id into dest from public.game_district_plots where season_id=s and code='W08';
+ r:=public.telegram_manage('relocate',jsonb_build_object('plot_id',dest,'reason','Relocate the unique strategic office'));if r?'error' then raise exception 'Relocation failed %',r;end if;
+ if (select plot_id from public.game_telegram_office)<>dest then raise exception 'Registry not relocated';end if;
+ r:=public.district_manage('building',jsonb_build_object('plot_id',p.id,'building_type','telegram','reason','Clone office test'));if not(r?'error') then raise exception 'Owner district API cloned office';end if;
+ denied:=false;begin
+ insert into public.game_district_buildings(season_id,plot_id,building_type,owner_type,owner_id,construction_status,cost,ready_at) values(s,p.id,'telegram','city',p.owner_id,'ready',0,now());
+ exception when unique_violation then denied:=true;end;if not denied then raise exception 'Database allowed second office';end if;
+ -- City-owned revenue has its own balanced permanent ledger.
+ r:=public.telegram_manage('office','{"name":"Blackwater Telegram Office","fee":1,"status":"open","reason":"State fee test"}');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',1));if r?'error' then raise exception 'City revenue send failed %',r;end if;
+ if not exists(select 1 from game_private.telegram_account_ledger where delta=1 and balance_after=balance_before+1) then raise exception 'City revenue ledger missing';end if;
+
+ -- A real season lifecycle preserves correspondence and receipts, resets ownership and fee.
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ select business_id into old_office from public.game_telegram_office;
+ r:=public.season_action('create','{"name":"Telegram Next Season","reason":"Telegram season test"}');next_season:=(r->>'season_id')::uuid;
+ if next_season is null then raise exception 'Next season create failed %',r;end if;
+ r:=public.season_action('lock',jsonb_build_object('season_id',s,'reason','Lock Telegram test season'));if r?'error' then raise exception 'Lock failed %',r;end if;
+ r:=public.season_action('snapshot',jsonb_build_object('season_id',s,'reason','Archive Telegram test results'));if r?'error' then raise exception 'Snapshot failed %',r;end if;
+ r:=public.season_action('archive',jsonb_build_object('season_id',s,'reason','Archive Telegram season'));if r?'error' then raise exception 'Archive failed %',r;end if;
+ r:=public.season_action('launch_next',jsonb_build_object('season_id',next_season,'expected_current_season',s,'confirmation','RESET '||(select name from public.game_seasons where id=s),'reason','Test Telegram season reset'));if r?'error' then raise exception 'Launch failed %',r;end if;
+ if (select season_id from public.game_telegram_office)<>next_season then raise exception 'Office reset was not immediate';end if;
+ if not exists(select 1 from public.game_district_businesses where id=old_office and archived_at is not null) then raise exception 'Old business history not archived';end if;
+ if not exists(select 1 from public.game_telegram_office registry join public.game_district_businesses office_business on office_business.id=registry.business_id where office_business.owner_type='city' and office_business.telegram_fee=registry.default_fee) then raise exception 'Ownership/default fee did not reset';end if;
+ if not exists(select 1 from game_private.telegram_receipts where season_id=s) then raise exception 'Season financial history lost';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_state(t);if r->'messages'->0->>'body'<>'PRIVATE MESSAGE TEXT' then raise exception 'Season reset lost private correspondence';end if;
+ if (select count(*) from public.game_district_buildings where building_type='telegram' and archived_at is null)<>1 then raise exception 'Season reset cloned office';end if;
+ set constraints all immediate;
+end $$;
+rollback;
+
