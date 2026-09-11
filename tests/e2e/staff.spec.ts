@@ -20,7 +20,7 @@ test("Owner office and private Support tickets work on mobile",async({page,conte
  const ticket=page.locator("article").filter({has:page.getByRole("heading",{name:"Test support request",exact:true})});
  await ticket.getByLabel("Response to player").fill("The team has reviewed your request.");await ticket.getByLabel("Status",{exact:true}).selectOption("resolved");
  const response=ticket.locator("form").filter({has:page.getByRole("heading",{name:"Case response",exact:true})});
- await response.getByLabel("Reason",{exact:true}).fill("Resolved browser test");await response.getByRole("button").click();
+ await response.getByLabel("Reason",{exact:true}).fill("Resolved browser test");await response.getByRole("button").click();await expect(page.getByRole("status")).toContainText("Saved.");
  await page.goto("/support");await expect(page.getByText("The team has reviewed your request.",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

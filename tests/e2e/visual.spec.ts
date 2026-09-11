@@ -58,6 +58,7 @@ test("illustrated game uses real market offers and reachable mobile navigation",
  await page.setViewportSize({width:1440,height:1000});
  await page.goto("/dashboard");
  await loaded(page,".district-hero img");
+ await expect(page.locator(".city-status-row")).toContainText("2 online");
  await expect(page.getByRole("region",{name:"Player market overview"})).toBeVisible();
  await capture(page,"game-desktop");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
