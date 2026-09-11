@@ -23,3 +23,12 @@ test("mobile bottom sheet, map controls and Owner district editing",async({page}
  await page.goto("/districts/manage?district=the-waterfront");await page.getByLabel("Tagline",{exact:true}).fill("The harbour belongs to the bold.");await page.getByLabel("Reason for this change").fill("Update the district welcome text");await page.getByRole("button",{name:"Save changes",exact:true}).click();await expect(page.getByRole("status")).toContainText("recorded in the audit");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"district-owner-mobile");
 });
+
+test("funded buy orders reserve and refund cash in the existing market",async({page})=>{
+ await page.goto("/market?district=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+ const book=page.locator(".district-order-book");
+ await book.getByLabel("Units wanted").fill("2");await book.getByLabel("Your unit price").fill("100");await book.getByRole("button",{name:"Fund buy order"}).click();
+ await expect(book.getByRole("status")).toContainText("funded and posted");await expect(page.locator(".header-cash")).toContainText("$9,800");
+ await book.getByRole("button",{name:"Cancel & refund"}).click();await expect(page.locator(".header-cash")).toContainText("$10,000");
+ await expect(book.getByRole("status")).toContainText("Funds returned");
+});

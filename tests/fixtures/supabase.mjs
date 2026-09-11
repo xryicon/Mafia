@@ -49,6 +49,12 @@ const server = http.createServer(async(req,res) => {
   districts.events.unshift({id:Date.now(),district_id:districts.district.id,category:action==="buy"?"property":"system",event_type:action,description:action==="buy"?plot.code+" sold to "+state.player.handle:"District updated",actor_id:playerId,actor_name:state.player.handle,plot_id:plot?.id??null,business_id:null,gang_id:null,created_at:new Date().toISOString()});
   send(200,{message:"District updated."});return;
  }
+ if(url.pathname==="/rest/v1/rpc/district_market_order"){
+  let raw="";for await(const chunk of req)raw+=chunk;const {p_action:action,p_payload:p}=JSON.parse(raw);
+  if(action==="create"){const total=Number(p.quantity)*Number(p.unit_price);state.player.cash-=total;districts.buy_orders.push({id:"buy-order",district_id:p.district_id,buyer_id:playerId,buyer_name:state.player.handle,good_id:p.good_id,quantity:Number(p.quantity),unit_price:Number(p.unit_price),escrow:total});}
+  if(action==="cancel"){const order=districts.buy_orders.find(o=>o.id===p.order_id);state.player.cash+=order.escrow;districts.buy_orders=districts.buy_orders.filter(o=>o.id!==order.id);}
+  send(200,{message:action==="create"?"Buy order funded and posted.":"Buy order cancelled. Funds returned."});return;
+ }
  if(url.pathname==="/rest/v1/rpc/district_manage"){
   let raw="";for await(const chunk of req)raw+=chunk;const {p_action:action,p_payload:p}=JSON.parse(raw);
   if(action==="district"){Object.assign(districts.district,p);Object.assign(districts.districts[0],p);Object.assign(districts.management.districts[0],p);}
