@@ -19,7 +19,7 @@ test("market trading remains usable alongside blank game destinations",async({pa
  await expect(page.locator(".own-offers")).toContainText("You haven't listed any goods");
  await expect(page.locator(".header-cash")).toContainText("$9,800");
  await page.setViewportSize({width:375,height:812});
- for(const [name,path] of [["Dashboard","/dashboard"],["Properties","/properties"],["Districts","/districts"],["Telegrams","/telegrams"]]){
+ for(const [name,path] of [["Dashboard","/dashboard"],["Properties","/properties"],["Telegrams","/telegrams"]]){
   await nav.getByRole("link",{name,exact:true}).click();await page.waitForURL(url=>url.pathname===path);
   await expect(page.getByRole("main").locator(".fresh-canvas")).toBeVisible();
   await expect(page.getByRole("main").locator("button,a,input,img,article,table,.estate-hero")).toHaveCount(0);

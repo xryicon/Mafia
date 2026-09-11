@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {districtWorld} from "./districts.mjs";
 import { playerId, token, user } from "./identity.mjs";
 const season={id:"55555555-5555-4555-8555-555555555555",name:"Founding Season",status:"open",starting_cash:10000,starting_crates:5,starts_at:null,ends_at:null,locked_at:null,opened_at:new Date().toISOString(),archived_at:null,reset_at:null,hall_of_fame_places:3};
 const state = {season,
@@ -16,8 +17,9 @@ const state = {season,
  my_listings:[],events:[{id:"welcome",description:"Arrived in Blackwater",cash_delta:10000,created_at:user.created_at}],
  server_time:new Date().toISOString(),
 };
+let districts=districtWorld(playerId,season,state.goods);
 const initialState=structuredClone(state);
-const resetWorld=()=>Object.assign(state,structuredClone(initialState));
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));districts=districtWorld(playerId,season,state.goods);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -35,6 +37,24 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/username_available"){let raw="";for await(const chunk of req)raw+=chunk;const {candidate}=JSON.parse(raw);send(200,{available:candidate.toLowerCase()!=="harborboss"});return;}
  if(req.headers.authorization!=="Bearer "+token){send(401,{code:"bad_jwt",message:"Invalid session"});return;}
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
+
+ if(url.pathname==="/rest/v1/rpc/district_state"){send(200,{...districts,cash:state.player.cash,server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/rest/v1/rpc/district_action"){
+  let raw="";for await(const chunk of req)raw+=chunk;const {p_action:action,p_payload:p}=JSON.parse(raw),plot=districts.plots.find(x=>x.id===p.plot_id);
+  if(action==="buy"){const total=plot.price+Math.ceil(plot.price*plot.tax/100);if(plot.status!=="available"||state.player.cash<total){send(200,{error:"Plot unavailable or insufficient cash."});return;}state.player.cash-=total;Object.assign(plot,{status:"owned",owner_type:"player",owner_id:playerId,owner_name:state.player.handle,version:plot.version+1});}
+  if(action==="watch")plot.watched=!plot.watched;
+  if(action==="sell"){plot.asking_price=Number(p.price);plot.offers_allowed=p.offers_allowed;}
+  if(action==="build"){const type=districts.building_types.find(t=>t.id===p.building_type);state.player.cash-=type.cost;districts.buildings.push({id:"new-building",plot_id:plot.id,building_type:type.id,owner_id:playerId,level:1,condition:100,construction_status:"building",cost:type.cost,ready_at:new Date(Date.now()+300000).toISOString()});}
+  if(action==="job"){state.player.cash+=250;state.player.xp+=10;districts.job_ready_at=new Date(Date.now()+60000).toISOString();}
+  districts.events.unshift({id:Date.now(),district_id:districts.district.id,category:action==="buy"?"property":"system",event_type:action,description:action==="buy"?plot.code+" sold to "+state.player.handle:"District updated",actor_id:playerId,actor_name:state.player.handle,plot_id:plot?.id??null,business_id:null,gang_id:null,created_at:new Date().toISOString()});
+  send(200,{message:"District updated."});return;
+ }
+ if(url.pathname==="/rest/v1/rpc/district_manage"){
+  let raw="";for await(const chunk of req)raw+=chunk;const {p_action:action,p_payload:p}=JSON.parse(raw);
+  if(action==="district"){Object.assign(districts.district,p);Object.assign(districts.districts[0],p);Object.assign(districts.management.districts[0],p);}
+  send(200,{message:"Saved. The change is recorded in the audit history."});return;
+ }
+
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}

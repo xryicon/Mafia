@@ -1,11 +1,13 @@
 
 create function game_private.district_wallet(p uuid,delta bigint,reason text) returns void language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 begin
  perform set_config('game.reason',reason,true);
  update public.game_players set cash=cash+delta where id=p and season_id=game_private.current_season() and cash+delta>=0;
  if not found then raise exception 'Not enough cash, or this account is unavailable.'; end if;
 end $$;
 create function game_private.district_transfer(p public.game_district_plots,buyer uuid,price bigint,tax bigint,method text) returns void language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare sale uuid; o public.game_plot_offers;
 begin
  if p.owner_type='player' then perform game_private.district_wallet(p.owner_id,price,'Property sale: '||p.code);
@@ -29,6 +31,7 @@ begin
  perform game_private.district_event(p.district_id,'property','property_sale',p.code||' sold for $'||price,p.id,null,null,jsonb_build_object('sale_id',sale,'price',price,'tax',tax,'buyer_id',buyer));
 end $$;
 create function game_private.district_act(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare s uuid; p public.game_district_plots; d public.game_districts; a public.game_plot_auctions; o public.game_plot_offers;
  bt public.game_building_types; b public.game_district_buildings; biz public.game_district_businesses;
  price bigint; tax bigint; total bigint; amount bigint; gid uuid; topgang uuid; totalinfluence numeric; points bigint;
@@ -210,6 +213,7 @@ begin
  return coalesce(result,jsonb_build_object('message','District updated.'));
 end $$;
 create function game_private.district_action(p_action text,p_payload jsonb default '{}') returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 begin
  perform game_private.require_active();
  if not game_private.rate('actions',game_private.setting('actions_per_minute')) then return jsonb_build_object('error','Too many actions. Try again in a minute.'); end if;

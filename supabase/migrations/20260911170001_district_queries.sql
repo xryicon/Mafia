@@ -9,6 +9,7 @@ create function game_private.district_event(d uuid, category text, event_type te
  values(game_private.current_season(),d,category,event_type,description,auth.uid(),plot,business,gang,metadata)
 $$;
 create function game_private.ensure_districts(s uuid) returns void language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare p public.game_district_plots; t public.game_plot_templates; b uuid; d public.game_districts;
 begin
  -- Serialize first access only when catalog content has not been instantiated.
@@ -47,6 +48,7 @@ begin
 end $$;
 
 create function game_private.district_state(p_slug text default null,p_before bigint default null) returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare s uuid; d public.game_districts; result jsonb; manage boolean;
 begin
  perform game_private.require_active();

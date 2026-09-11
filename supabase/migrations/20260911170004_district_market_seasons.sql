@@ -1,5 +1,6 @@
 create or replace function game_private.act(p_action text, p_payload jsonb default '{}'::jsonb)
 returns jsonb language plpgsql security definer set search_path = '' as $$
+#variable_conflict use_column
 declare
  uid uuid := auth.uid();
  p public.game_players;
@@ -124,6 +125,7 @@ select b.player_id,b.handle,case p_metric
 from base b
 $$;
 create function game_private.district_trade_record() returns trigger language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 begin
  if new.district_id is not null and new.status='sold' and old.status='active' then
   insert into public.game_district_trades(season_id,district_id,listing_id,good_id,quantity,unit_price,buyer_id,seller_id)
@@ -133,6 +135,7 @@ begin
 end $$;
 create trigger district_market_trade after update of status on public.game_listings for each row execute function game_private.district_trade_record();
 create function game_private.district_season_reopen() returns trigger language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare pause interval;
 begin
  if old.status='locked' and new.status='open' and old.locked_at is not null then

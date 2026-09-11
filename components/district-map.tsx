@@ -1,0 +1,23 @@
+"use client";
+import {useRef,useState,type ReactNode,type PointerEvent} from "react";
+import {centroid,points,plotTone,type DistrictState,type Plot} from "@/lib/districts";
+export function PanMap({children,label,background}:{children:ReactNode;label:string;background?:string}){
+ const [camera,setCamera]=useState({x:0,y:0,z:1}),drag=useRef<{x:number;y:number;px:number;py:number;moved:boolean}|null>(null),svg=useRef<SVGSVGElement>(null);
+ function down(e:PointerEvent<SVGSVGElement>){if(e.button!==0)return;drag.current={x:e.clientX,y:e.clientY,px:camera.x,py:camera.y,moved:false};}
+ function move(e:PointerEvent<SVGSVGElement>){const d=drag.current;if(!d)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.moved=true;svg.current?.setPointerCapture(e.pointerId);const scale=1200/(svg.current?.getBoundingClientRect().width||1200);setCamera(c=>({...c,x:d.px+(e.clientX-d.x)*scale,y:d.py+(e.clientY-d.y)*scale}));}}
+ function zoom(step:number){setCamera(c=>{const z=Math.max(.75,Math.min(3,c.z+step));return {z,x:600-(600-c.x)*z/c.z,y:400-(400-c.y)*z/c.z};});}
+ return <div className="district-map-frame"><svg ref={svg} className="district-svg" viewBox="0 0 1200 800" role="group" aria-label={label} onPointerDown={down} onPointerMove={move} onPointerUp={()=>{setTimeout(()=>{drag.current=null;},0);}} onPointerCancel={()=>{drag.current=null;}} onClickCapture={e=>{if(drag.current?.moved)e.stopPropagation();}}>
+ <defs><pattern id="district-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#bd9a65" strokeOpacity=".09"/></pattern><filter id="district-glow"><feGaussianBlur stdDeviation="3"/></filter></defs>
+ <g transform={"translate("+camera.x+" "+camera.y+") scale("+camera.z+")"}>{background?<image href={background} width="1200" height="800" preserveAspectRatio="xMidYMid slice"/>:<><rect width="1200" height="800" fill="#0b1d24"/><rect width="1200" height="800" fill="url(#district-grid)"/><path d="M50 80H940L1090 670H190Z" fill="#111e20" stroke="#92734e"/>{[102,230,360,490,615].map((y,i)=><g key={y}><path d={"M"+(65+i*25)+" "+y+"H"+(950+i*22)} stroke="#8a785d" strokeWidth="12" strokeOpacity=".3"/><path d={"M"+(65+i*25)+" "+y+"H"+(950+i*22)} stroke="#c9a870" strokeDasharray="3 18" strokeWidth="1"/></g>)}<text x="780" y="740" fill="#6a8b96" fontSize="17" letterSpacing="8">BLACKWATER HARBOR</text><path d="M220 650v65h35v-65m130 0v85h35v-85m130 0v68h35v-68" fill="#1d2b2e" stroke="#8b7352"/></>}{children}</g>
+ <g aria-hidden="true" className="map-compass" transform="translate(70 722)"><circle r="29" fill="#071114dd" stroke="#ac864e"/><path d="M0-26L6 0 0 26-6 0Z" fill="#bd965e"/><path d="M-26 0L0-6 26 0 0 6Z" fill="none" stroke="#bd965e"/><text y="-39" textAnchor="middle">N</text></g>
+ </svg><div className="map-zoom" aria-label="Map controls"><button onClick={()=>zoom(.25)} aria-label="Zoom in">+</button><button onClick={()=>zoom(-.25)} aria-label="Zoom out">−</button><button onClick={()=>setCamera({x:0,y:0,z:1})}>Fit map</button></div><span className="map-instruction">Drag to explore · Select a plot</span></div>;
+}
+export function PlotMap({state,selected,onSelect,filter}:{state:DistrictState;selected:string|null;onSelect:(p:Plot)=>void;filter:string}){
+ return <PanMap label="Waterfront plot map">{state.plots.map(p=>{const [x,y]=centroid(p.polygon),business=state.businesses.find(b=>b.plot_id===p.id),building=state.buildings.find(b=>b.plot_id===p.id),own=p.owner_id===state.player_id;
+ const match=filter==="all"||filter==="mine"&&own||filter==="available"&&p.status==="available"||filter==="players"&&p.owner_type==="player"||filter==="strategic"&&!!p.strategic_type||filter==="businesses"&&!!business||filter==="watched"&&p.watched;
+ return <g key={p.id} role="button" tabIndex={0} aria-label={"Plot "+p.code+" · "+p.status+(own?" · Yours":"")} aria-pressed={selected===p.id} className={"district-plot tone-"+plotTone(p,state.auctions.find(a=>a.plot_id===p.id))+(selected===p.id?" selected":"")+(own?" owned":"")+(match?"":" dimmed")} onClick={()=>onSelect(p)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();onSelect(p);}}}>
+ <title>{p.code+" · "+p.zoning+" · "+p.owner_name+(business?" · "+business.name:"")}</title><polygon points={points(p.polygon)}/>
+ {building&&<g className="plot-structure" transform={"translate("+(x-24)+" "+(y-26)+")"}><path d="M0 12L24 0 50 12 26 26Z"/><path d="M0 12V31L26 45V26Z"/><path d="M26 26L50 12V31L26 45Z"/><path className="structure-windows" d="M5 23l5 3m4 2l5 3m13 1l5-3m4-3l5-3"/></g>}
+ <text x={x} y={y+(building?34:4)} textAnchor="middle">{p.code}</text>{own&&<circle cx={x+40} cy={y-28} r="4" fill="#e6c17c"/>}
+ </g>;})}</PanMap>;
+}

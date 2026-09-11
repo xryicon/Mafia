@@ -1,5 +1,6 @@
 
 create function game_private.district_manage(p_action text,p_payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare s uuid; d public.game_districts; p public.game_district_plots; t public.game_plot_templates;
  bt public.game_building_types; z public.game_zoning; st public.game_district_site_templates;
  b uuid; new_id uuid; reason text:=trim(p_payload->>'reason'); payload jsonb:=p_payload-'reason'; j jsonb;
