@@ -15,6 +15,7 @@ export type DistrictState={
  gangs:{id:string;name:string;recruiting:boolean;founder:boolean}[];
  influence:{gang_id:string;name:string;influence:number}[];wars:War[];auctions:Auction[];offers:Offer[];
  sales:{id:string;plot_id:string;buyer_id:string;price:number;tax:number;method:string;created_at:string}[];
+ buy_orders:{id:string;district_id:string;buyer_id:string;buyer_name:string;good_id:string;quantity:number;unit_price:number;escrow:number}[];price_comparisons:{good_id:string;local:number|null;city:number|null}[];
  market:import("./game").Listing[];trades:{id:number;good_id:string;quantity:number;unit_price:number;created_at:string}[];market_volume:number;
  building_types:BuildingType[];zoning:{id:string;name:string;allowed_buildings:string[]}[];goods:import("./game").Good[];jobs:import("./game").Job[];job_ready_at:string;
  settings:Record<string,number>;management:{districts:District[];templates:(Plot&{entity_id:string|null;building_type:string|null;business_name:string|null})[];site_templates:(Site&{district_id:string;plot_template_id:string|null})[];entities:{id:string;name:string}[];gangs:{id:string;name:string}[]}|null;
