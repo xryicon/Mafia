@@ -11,23 +11,20 @@ test("signup reserves a public username and passes it to Auth",async({page})=>{
  await page.getByLabel("Username",{exact:true}).fill("NewHarborName");await page.getByRole("button",{name:"Create account"}).click();
  await expect(page.getByRole("status")).toContainText("Check your email");expect(submitted?.data.username).toBe("NewHarborName");
 });
-test("named city chat persists across pages and refreshes in another window",async({page,context})=>{
+test("reference navigation removes chat and retains account destinations",async({page,context})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
- await page.setViewportSize({width:1600,height:1000});await page.goto("/dashboard");
- const chat=page.getByRole("complementary",{name:"City chat"});
- await expect(chat).toBeVisible();await expect(chat.getByRole("link",{name:"HarborJack",exact:true})).toBeVisible();
- await expect(page.locator(".city-status-row")).toContainText("2 online");
- expect((await chat.boundingBox())!.x).toBeGreaterThanOrEqual(1290);
- const other=await context.newPage();await other.setViewportSize({width:1440,height:900});await other.goto("/support");
- await page.getByRole("navigation",{name:"City navigation"}).getByRole("link",{name:"Leaderboards",exact:true}).click();
- await expect(chat).toBeVisible();await page.getByLabel("Message the city").fill("A new deal at the docks");await chat.getByRole("button",{name:"Send",exact:false}).click();
- const message=chat.locator("article").filter({hasText:"A new deal at the docks"});await expect(message.getByRole("link",{name:"HarborBoss",exact:true})).toBeVisible();
- await expect(other.getByRole("log").getByText("A new deal at the docks",{exact:true})).toBeVisible({timeout:10000});
- await message.getByRole("button",{name:/Remove your message/}).click();await expect(other.getByRole("log").getByText("A new deal at the docks",{exact:true})).toHaveCount(0,{timeout:10000});await other.close();
- await page.setViewportSize({width:375,height:812});await expect(chat).not.toBeVisible();
- await page.getByRole("button",{name:/City chat/}).click();await expect(chat).toBeVisible();await page.getByRole("button",{name:"Close city chat",exact:true}).click();await expect(chat).not.toBeVisible();
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.setViewportSize({width:1448,height:1086});await page.goto("/dashboard");
+ const nav=page.getByRole("navigation",{name:"Game navigation"});
+ await expect(nav.getByRole("link")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Profile"]);
+ await expect(page.getByRole("complementary",{name:"City chat"})).toHaveCount(0);await expect(page.getByRole("button",{name:/City chat/})).toHaveCount(0);
+ await expect(page.locator(".estate-player-numbers")).toContainText("2 online");
+ await page.getByLabel("Player menu",{exact:true}).click();
+ const menu=page.locator(".estate-account-menu");
+ for(const name of ["Players & respect","Leaderboards","Seasons","Support","Owner panel"])await expect(menu.getByRole("link",{name,exact:true})).toBeVisible();
+ await menu.getByRole("link",{name:"Owner panel",exact:true}).click();await expect(page.getByRole("heading",{name:"Owner panel",exact:true})).toBeVisible();
+ await page.setViewportSize({width:375,height:812});await page.goto("/support");await expect(page.getByLabel("Message the city")).toHaveCount(0);
+ await expect(nav.getByRole("link")).toHaveCount(6);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 test("respect directory keeps global ranks while searching and filtering online",async({page,context})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
@@ -42,7 +39,7 @@ test("existing accounts claim a username before joining the city",async({page,co
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
  let claimed=false;
- await page.route("**/rest/v1/rpc/social_state",async route=>{const response=await route.fetch();const data=await response.json();await route.fulfill({response,json:{...data,username:claimed?"ClaimedName":"Rookie-11111111",username_claimed:claimed}});});
+ await page.route("**/rest/v1/rpc/city_status",async route=>{const response=await route.fetch();const data=await response.json();await route.fulfill({response,json:{...data,username:claimed?"ClaimedName":"Rookie-11111111",username_claimed:claimed}});});
  await page.route("**/rest/v1/rpc/claim_username",async route=>{expect(route.request().postDataJSON().candidate).toBe("ClaimedName");claimed=true;await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({message:"Username saved.",username:"ClaimedName"})});});
  await page.goto("/dashboard");const dialog=page.getByRole("dialog",{name:"Choose your username."});
  await expect(dialog).toBeVisible();await page.keyboard.press("Escape");await expect(dialog).toBeVisible();
