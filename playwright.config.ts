@@ -2,7 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 const fixture = process.env.GAME_TEST_FIXTURE === "1";
 export default defineConfig({
   testDir: "./tests/e2e",
-  fullyParallel: true,
+  fullyParallel: !fixture,
+  // The CI fixture is one shared game world; economic tests must not race it.
+  workers: fixture ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: "list",
