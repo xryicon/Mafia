@@ -120,7 +120,7 @@ begin
  r:=public.season_action('launch_next',jsonb_build_object('season_id',next_season,'expected_current_season',s,'confirmation','RESET '||(select name from public.game_seasons where id=s),'reason','Test Telegram season reset'));if r?'error' then raise exception 'Launch failed %',r;end if;
  if (select season_id from public.game_telegram_office)<>next_season then raise exception 'Office reset was not immediate';end if;
  if not exists(select 1 from public.game_district_businesses where id=old_office and archived_at is not null) then raise exception 'Old business history not archived';end if;
- if not exists(select 1 from public.game_telegram_office o join public.game_district_businesses b on b.id=o.business_id where b.owner_type='city' and b.telegram_fee=o.default_fee) then raise exception 'Ownership/default fee did not reset';end if;
+ if not exists(select 1 from public.game_telegram_office registry join public.game_district_businesses office_business on office_business.id=registry.business_id where office_business.owner_type='city' and office_business.telegram_fee=registry.default_fee) then raise exception 'Ownership/default fee did not reset';end if;
  if not exists(select 1 from game_private.telegram_receipts where season_id=s) then raise exception 'Season financial history lost';end if;
  perform set_config('request.jwt.claim.sub',a::text,true);
  r:=public.telegram_state(t);if r->'messages'->0->>'body'<>'PRIVATE MESSAGE TEXT' then raise exception 'Season reset lost private correspondence';end if;
