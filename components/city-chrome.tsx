@@ -1,5 +1,5 @@
 "use client";
-import {useCallback,useEffect,useRef,useState} from "react";
+import {useCallback,useEffect,useLayoutEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
@@ -29,7 +29,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
   document.addEventListener("visibilitychange",visible);window.addEventListener("focus",visible);window.addEventListener("blackwater:identity",visible);window.addEventListener("blackwater:game",visible);
   return ()=>{alive.current=false;window.clearInterval(timer);document.removeEventListener("visibilitychange",visible);window.removeEventListener("focus",visible);window.removeEventListener("blackwater:identity",visible);window.removeEventListener("blackwater:game",visible);};
  },[refresh,data?.poll_seconds]);
- useEffect(()=>{if(account.current)account.current.open=false;if(activity.current)activity.current.open=false;},[path]);
+ useLayoutEffect(()=>{if(account.current)account.current.open=false;if(activity.current)activity.current.open=false;},[path]);
  useEffect(()=>{
   const close=(e:PointerEvent)=>{if(account.current&&!account.current.contains(e.target as Node))account.current.open=false;if(activity.current&&!activity.current.contains(e.target as Node))activity.current.open=false;};
   const escape=(e:KeyboardEvent)=>{if(e.key==="Escape"){if(account.current?.open){account.current.open=false;account.current.querySelector("summary")?.focus();}if(activity.current?.open){activity.current.open=false;activity.current.querySelector("summary")?.focus();}}};

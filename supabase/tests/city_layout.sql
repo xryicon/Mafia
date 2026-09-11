@@ -2,7 +2,7 @@ begin;
 do $$
 declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();sa uuid:=gen_random_uuid();sb uuid:=gen_random_uuid();g uuid:=gen_random_uuid();s uuid;result jsonb;
 begin
- insert into auth.users(id,raw_user_meta_data) values(a,jsonb_build_object('username','City_'+left(replace(a::text,'-',''),12))),(b,jsonb_build_object('username','Crew_'+left(replace(b::text,'-',''),12)));
+ insert into auth.users(id,raw_user_meta_data) values(a,jsonb_build_object('username','City_'||left(replace(a::text,'-',''),12))),(b,jsonb_build_object('username','Crew_'||left(replace(b::text,'-',''),12)));
  insert into auth.sessions(id,user_id,created_at) values(sa,a,now()),(sb,b,now());
  perform set_config('request.jwt.claim.sub',a::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'session_id',sa)::text,true);
  set local role authenticated;

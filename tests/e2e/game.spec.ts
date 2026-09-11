@@ -1,7 +1,8 @@
 import {test,expect} from "@playwright/test";
-import {cookie} from "../fixtures/identity.mjs";
-test("top navigation supports earning, trading and property production",async({page,context})=>{
+import {cookie,token,playerId} from "../fixtures/identity.mjs";
+test("top navigation supports earning, trading and property production",async({page,context,request})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
+ await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
  await page.goto("/dashboard");await expect(page.getByRole("heading",{level:1})).toHaveText("Your empire.");
  await expect(page.locator(".estate-stats")).toContainText("$10,000");
@@ -23,8 +24,8 @@ test("top navigation supports earning, trading and property production",async({p
  await expect(page.locator(".property-deed")).toContainText("Owned by HarborBoss");
  await expect(page.locator(".header-cash")).toContainText("$7,050");
  await page.setViewportSize({width:375,height:812});
- for(const name of ["Dashboard","Market","Properties","Districts","Gangs","Profile"]){
-  await nav.getByRole("link",{name,exact:true}).click();await expect(page.getByRole("heading",{level:1})).toBeVisible();
+ for(const [name,path] of [["Dashboard","/dashboard"],["Market","/market"],["Properties","/properties"],["Districts","/districts"],["Gangs","/gangs"],["Profile","/players/"+playerId]]){
+  await nav.getByRole("link",{name,exact:true}).click();await page.waitForURL(url=>url.pathname===path);await expect(page.getByRole("heading",{level:1})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  }
  await page.getByLabel("Player menu",{exact:true}).click();await expect(page.getByRole("button",{name:"Log out",exact:true})).toBeVisible();

@@ -36,7 +36,7 @@ begin
  with standings as (
  select g.id,g.name,count(m.player_id) as members,coalesce(sum(p.xp),0) as respect,
  coalesce(sum(m.contribution),0) as contribution,
- bool_or(m.player_id=auth.uid()) as joined
+ coalesce(bool_or(m.player_id=auth.uid()),false) as joined
  from public.game_season_gangs g
  left join public.game_season_gang_members m on m.gang_id=g.id and m.season_id=g.season_id and game_private.visible_player(m.player_id)
  left join public.game_season_players p on p.player_id=m.player_id and p.season_id=g.season_id

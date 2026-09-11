@@ -4,7 +4,11 @@ async function capture(page:Page,name:string,fullPage=false){
  const shot=await page.screenshot({path:"test-results/"+name+".jpg",type:"jpeg",quality:60,fullPage});
  if(process.env.VISUAL_REVIEW==="1"){const encoded=shot.toString("base64");for(let n=0;n<encoded.length;n+=12000)console.log("VISUAL_REVIEW_"+name+"_"+Math.floor(n/12000)+":"+encoded.slice(n,n+12000));}
 }
-async function noOverflow(page:Page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);}
+async function noOverflow(page:Page){
+ const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,class:el.className,x:el.getBoundingClientRect().x,right:el.getBoundingClientRect().right})).filter(r=>r.x<-.5||r.right>innerWidth+.5).slice(0,30)}));
+ if(layout.scroll>layout.width){console.log("LAYOUT_OVERFLOW "+page.url()+" "+JSON.stringify(layout));await capture(page,"overflow-mobile");}
+ expect(layout.scroll,"Horizontal overflow at "+page.url()).toBeLessThanOrEqual(layout.width);
+}
 async function loaded(page:Page,selector:string){await expect.poll(()=>page.locator(selector).evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
 test("public artwork and signup remain responsive",async({page})=>{
  await page.setViewportSize({width:1448,height:1086});await page.goto("/");await loaded(page,".bw-hero img");await expect(page.getByRole("heading",{level:1})).toContainText("Every fortune");

@@ -5,7 +5,7 @@ import {GameIcon} from "@/components/game-icon";
 import {money,readyUnits,duration,type GameState} from "@/lib/game";
 import {seasonPlayable} from "@/lib/seasons";
 export const propertyArt=(id:string)=>id==="whiskey"?"distillery":id==="silk"?"textile":"foundry";
-export const propertyDistrict=(id:string)=>id==="whiskey"?"Old Town":id==="silk"?"Industrial Quarter":"The Docks";
+export const propertyDistrict=(id:string)=>id==="whiskey"?"The Docks":id==="silk"?"Old Town":"Industrial Quarter";
 export function PropertyEstate({state,now,propertyId,busy,onAction,onSelect,onSell,notice}:{state:GameState;now:number;propertyId:string;busy:boolean;onAction:(action:string,payload:Record<string,string|number>)=>Promise<boolean>;onSelect:(id:string)=>void;onSell:(id:string)=>void;notice:React.ReactNode}){
  const good=state.goods.find(g=>g.id===propertyId)||state.goods[0],owned=state.businesses.find(b=>b.good_id===good.id),playing=seasonPlayable(state.season,now);
  const clock=playing?now:Date.parse(state.season.locked_at||state.season.ends_at||state.server_time);

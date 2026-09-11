@@ -16,6 +16,8 @@ const state = {season,
  my_listings:[],events:[{id:"welcome",description:"Arrived in Blackwater",cash_delta:10000,created_at:user.created_at}],
  server_time:new Date().toISOString(),
 };
+const initialState=structuredClone(state);
+const resetWorld=()=>Object.assign(state,structuredClone(initialState));
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -37,8 +39,9 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
  if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
+ if(url.pathname==="/__reset_world"&&process.env.GAME_TEST_FIXTURE==="1"){resetWorld();send(200,{ok:true});return;}
  if(url.pathname==="/__visual_world"&&process.env.GAME_TEST_FIXTURE==="1"){
- state.player.cash=2480000;state.player.xp=1247;
+ resetWorld();state.player.cash=2480000;state.player.xp=1247;
  state.inventory=[{good_id:"whiskey",quantity:340},{good_id:"silk",quantity:120},{good_id:"steel",quantity:80}];
  state.businesses=state.goods.map(g=>({player_id:playerId,good_id:g.id,collected_at:new Date(Date.now()-31*60000).toISOString()}));
  state.market=[{id:"22222222-2222-4222-8222-222222222222",seller_id:"33333333-3333-4333-8333-333333333333",seller_handle:"HarborJack",good_id:"steel",quantity:120,unit_price:180,status:"active",created_at:new Date().toISOString()}];
