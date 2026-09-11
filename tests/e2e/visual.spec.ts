@@ -32,7 +32,7 @@ test("compact icon header and blank canvases match the fresh-start request",asyn
  await expect(page.locator(".header-rank")).toHaveText("Caporegime");
  await expect(page.locator(".estate-brand .brand-online")).toHaveText("2 online");
  await noOverflow(page);await capture(page,"clear-city-desktop");
- for(const path of ["/dashboard","/dashboard?view=ledger","/properties?good=steel","/districts"]){
+ for(const path of ["/dashboard","/dashboard?view=ledger","/properties?good=steel"]){
   await page.goto(path);await expect(page.locator(".fresh-canvas")).toBeVisible();
   await expect(page.getByRole("main").locator("img,button,a,input,article,table,.estate-hero,.stats-grid")).toHaveCount(0);
   await expect(page.locator(".estate-footer")).toHaveCount(0);

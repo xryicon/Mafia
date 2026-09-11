@@ -17,3 +17,19 @@ for(const href of sheets){
  if(!response.ok)throw new Error("Deployed stylesheet failed to load");styles+=await response.text();
 }
 console.log(JSON.stringify({deployedLayout:styles.includes(".header-power")&&styles.includes(".brand-online")?"clear-city-header":styles.includes(".fresh-canvas")&&styles.includes(".header-wallet")?"fresh-icon-header":styles.includes(".estate-city")?"reference-property-screen":"previous-layout",stylesheets:sheets.length}));
+
+for(const path of ["/districts","/districts/the-waterfront","/districts/manage"]){
+ const response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ const location=response.headers.get("location")||"";
+ const protectedRoute=[302,303,307,308].includes(response.status)&&new URL(location,origin).pathname==="/login";
+ console.log(JSON.stringify({path,status:response.status,protectedRoute}));
+ if(!protectedRoute)process.exitCode=1;
+}
+const districtsDeployed=styles.includes(".district-tabs")&&styles.includes(".city-district-zone");
+console.log(JSON.stringify({districtsDeployed}));
+if(districtsDeployed){
+ const art=await fetch(origin+"/art/city-map.webp",{signal:AbortSignal.timeout(20000)});
+ const bytes=(await art.arrayBuffer()).byteLength;
+ console.log(JSON.stringify({cityArtwork:art.status,contentType:art.headers.get("content-type"),bytes}));
+ if(!art.ok||bytes<10000||!art.headers.get("content-type")?.includes("image/webp"))process.exitCode=1;
+}
