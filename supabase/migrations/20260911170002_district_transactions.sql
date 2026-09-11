@@ -166,12 +166,13 @@ begin
   select * into biz from public.game_district_businesses where plot_id=p.id and archived_at is null for update;
   if biz.id is null then raise exception 'No business exists on this plot.'; end if;
   if action='business' then
+   if biz.telegram_fee is not null and ((payload->>'telegram_fee')::bigint is null or (payload->>'telegram_fee')::bigint<0) then raise exception 'Enter a non-negative Telegram Office fee.'; end if;
    if length(trim(payload->>'name')) not between 2 and 80 or length(coalesce(payload->>'description',''))>1000 or (payload->>'status') not in ('open','closed') then raise exception 'Check the business name, description and status.'; end if;
    update public.game_district_businesses set name=trim(payload->>'name'),description=coalesce(payload->>'description',''),
    status=payload->>'status',collected_at=case when status<>payload->>'status' then now() else collected_at end,
    telegram_fee=case when telegram_fee is not null then (payload->>'telegram_fee')::bigint else null end
    where id=biz.id;
-   perform game_private.district_event(d.id,'business',case when biz.status<>payload->>'status' then 'business_'||case when payload->>'status'='open' then 'opening' else 'closure' end else 'business_update' end,
+   perform game_private.district_event(d.id,'business',case when biz.telegram_fee is not null and biz.telegram_fee is distinct from (payload->>'telegram_fee')::bigint then 'telegram_fee_change' when biz.status<>payload->>'status' then 'business_'||case when payload->>'status'='open' then 'opening' else 'closure' end else 'business_update' end,
    trim(payload->>'name')||' updated',p.id,biz.id);
   else
    select bt0.* into bt from public.game_building_types bt0 join public.game_district_buildings b0 on b0.building_type=bt0.id where b0.id=biz.building_id and b0.archived_at is null and b0.construction_status='ready';
@@ -185,7 +186,7 @@ begin
    quantity:=batches*bt.batch_size;
    insert into public.game_inventory as inv(season_id,player_id,good_id,quantity) values(s,auth.uid(),bt.good_id,quantity)
    on conflict(season_id,player_id,good_id) do update set quantity=inv.quantity+excluded.quantity;
-   update public.game_district_businesses set collected_at=now() where id=biz.id;
+   update public.game_district_businesses set collected_at=case when extract(epoch from now()-biz.collected_at)>=game_private.setting('district_offline_batches')*bt.cycle_seconds then now() else biz.collected_at+make_interval(secs=>batches*bt.cycle_seconds) end where id=biz.id;
    perform game_private.record_metric(auth.uid(),'production',quantity);
    perform game_private.district_event(d.id,'resources','resource_extraction',biz.name||' produced '||quantity||' '||bt.good_id,p.id,biz.id,null,jsonb_build_object('quantity',quantity,'good_id',bt.good_id));
   end if;

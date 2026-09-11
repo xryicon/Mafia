@@ -72,6 +72,18 @@ begin
  r:=public.district_manage('control',jsonb_build_object('district_id',d,'controller_gang_id','','neutral_influence',100,'fortification',20,'status','neutral','reason','Explicitly granted district moderation'));
  if r?'error' then raise exception 'Explicit economic permission failed %',r;end if;
  if not exists(select 1 from public.game_audit where actor_id=a and reason='Explicitly granted district moderation') then raise exception 'Missing Owner audit';end if;
+ select * into p from public.game_district_plots where district_id=d and season_id=s and code='W07';
+ r:=public.district_manage('plot',jsonb_build_object('id',p.template_id,'base_price',7000,'status','available','reason','Edit player property without erasing its title'));
+ if r?'error' then raise exception 'Owner editing player-owned plot failed %',r;end if;
+ if (select owner_id from public.game_district_plots where id=p.id)<>c or (select status from public.game_district_plots where id=p.id)<>'owned' then raise exception 'Owner edit erased title';end if;
+ r:=public.district_manage('plot',jsonb_build_object('id',p.template_id,'status','locked','reason','Lock an owned plot for test'));
+ if r?'error' then raise exception 'Owner plot lock failed %',r;end if;
+ perform set_config('request.jwt.claim.sub',c::text,true);
+ r:=public.district_action('business',jsonb_build_object('season_id',s,'plot_id',p.id,'name','Locked enterprise','status','open'));
+ if not(r?'error') or r->>'error'<>'This plot is locked.' then raise exception 'Locked property business action allowed %',r;end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.district_manage('plot',jsonb_build_object('id',p.template_id,'status','owned','reason','Restore owned plot after test'));
+ if r?'error' then raise exception 'Restore owned plot failed %',r;end if;
  insert into public.game_season_gangs(season_id,name) values(s,'Rollback Gang A') returning id into gang_a;
  insert into public.game_season_gangs(season_id,name) values(s,'Rollback Gang B') returning id into gang_b;
  insert into public.game_district_gang_control(season_id,district_id,gang_id,influence) values(s,d,gang_a,20),(s,d,gang_b,30);
