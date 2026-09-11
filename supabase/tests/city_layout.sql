@@ -1,0 +1,37 @@
+begin;
+do $$
+declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();sa uuid:=gen_random_uuid();sb uuid:=gen_random_uuid();g uuid:=gen_random_uuid();s uuid;result jsonb;
+begin
+ insert into auth.users(id,raw_user_meta_data) values(a,jsonb_build_object('username','City_'+left(replace(a::text,'-',''),12))),(b,jsonb_build_object('username','Crew_'+left(replace(b::text,'-',''),12)));
+ insert into auth.sessions(id,user_id,created_at) values(sa,a,now()),(sb,b,now());
+ perform set_config('request.jwt.claim.sub',a::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'session_id',sa)::text,true);
+ set local role authenticated;
+ result:=public.city_status();
+ if result ? 'chat' or result ? 'cases' then raise exception 'Header response includes removed chat or private support'; end if;
+ if result->>'player_id'<>a::text or (result->>'online_count')::integer<1 then raise exception 'Header identity or presence missing'; end if;
+ if not(result->>'username_claimed')::boolean then raise exception 'Existing username claim state was lost'; end if;
+ reset role;
+ s:=game_private.current_season();
+ update public.game_players set xp=10 where id=a;
+ update public.game_season_players set level=4 where player_id=a and season_id=s;
+ perform set_config('request.jwt.claim.sub',b::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',b,'session_id',sb)::text,true);
+ perform public.city_status();update public.game_players set xp=30 where id=b;
+ insert into public.game_season_gangs(id,season_id,name,data) values(g,s,'Fixture Family',jsonb_build_object('private_note','never leak this'));
+ insert into public.game_season_gang_members(season_id,player_id,gang_id,contribution) values(s,a,g,20),(s,b,g,50);
+ perform set_config('request.jwt.claim.sub',a::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'session_id',sa)::text,true);
+ set local role authenticated;
+ result:=public.city_status();
+ if (result->'player'->>'level')::integer<>4 or (result->'player'->>'xp')::integer<>10 then raise exception 'Header does not use current season records'; end if;
+ result:=public.gang_directory();
+ if result::text like '%never leak this%' then raise exception 'Private gang metadata exposed'; end if;
+ if not exists(select 1 from jsonb_array_elements(result->'gangs') r where r->>'id'=g::text and (r->>'respect')::integer=40 and (r->>'members')::integer=2 and (r->>'contribution')::integer=70 and (r->>'joined')::boolean) then raise exception 'Gang standings do not use current member activity: %',result; end if;
+ reset role;
+ insert into public.game_sanctions(player_id,kind,reason) values(b,'ban','Excluded member test');
+ result:=public.gang_directory();
+ if not exists(select 1 from jsonb_array_elements(result->'gangs') r where r->>'id'=g::text and (r->>'respect')::integer=10 and (r->>'members')::integer=1) then raise exception 'Banned member included in gang standings'; end if;
+ if has_function_privilege('anon','public.city_status()','execute') or has_function_privilege('anon','public.gang_directory()','execute') then raise exception 'Anonymous game data exposed'; end if;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'session_id',gen_random_uuid())::text,true);
+ begin perform public.city_status();raise exception 'Unrecognized session accepted';exception when raise_exception then if SQLERRM='Unrecognized session accepted' then raise;end if;end;
+end $$;
+rollback;
+select 'PASS: chat-free city status, trusted cash/level/respect, session presence, private gang metadata and permission boundaries' as result;
