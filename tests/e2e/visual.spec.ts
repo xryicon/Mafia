@@ -17,7 +17,7 @@ test("public artwork and signup remain responsive",async({page})=>{
  await page.setViewportSize({width:375,height:812});await page.goto("/signup");await loaded(page,".auth-intro img");await expect(page.getByLabel("Username",{exact:true})).toBeVisible();await noOverflow(page);
  await capture(page,"signup-mobile",true);
 });
-test("compact icon header and blank canvases match the fresh-start request",async({page,context,request})=>{
+test("game navigation and remaining blank properties stay responsive",async({page,context,request})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated visual fixture");
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
@@ -32,13 +32,13 @@ test("compact icon header and blank canvases match the fresh-start request",asyn
  await expect(page.locator(".header-rank")).toHaveText("Caporegime");
  await expect(page.locator(".estate-brand .brand-online")).toHaveText("2 online");
  await noOverflow(page);await capture(page,"clear-city-desktop");
- for(const path of ["/dashboard","/dashboard?view=ledger","/properties?good=steel"]){
+ for(const path of ["/properties?good=steel"]){
   await page.goto(path);await expect(page.locator(".fresh-canvas")).toBeVisible();
   await expect(page.getByRole("main").locator("img,button,a,input,article,table,.estate-hero,.stats-grid")).toHaveCount(0);
   await expect(page.locator(".estate-footer")).toHaveCount(0);
   await noOverflow(page);
  }
- await capture(page,"empty-dashboard-desktop");
+ await capture(page,"empty-properties-desktop");
  await page.setViewportSize({width:375,height:812});
  for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/support","/players"]){
   await page.goto(path);await noOverflow(page);

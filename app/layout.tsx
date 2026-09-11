@@ -3,6 +3,7 @@ import {SiteChrome} from "@/components/site-chrome";
 import "./globals.css";
 import "./districts.css";
 import "./telegrams.css";
+import "./dashboard.css";
 export const metadata:Metadata={
  metadataBase:new URL("https://mafia.xryicon.workers.dev"),
  title:{default:"Blackwater Mafia — A player-driven crime economy",template:"%s · Blackwater Mafia"},

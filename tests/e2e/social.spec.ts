@@ -16,7 +16,7 @@ test("reference navigation removes chat and retains account destinations",async(
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
  await page.setViewportSize({width:1448,height:1086});await page.goto("/dashboard");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.getByRole("link")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
  await expect(page.getByRole("complementary",{name:"City chat"})).toHaveCount(0);await expect(page.getByRole("button",{name:/City chat/})).toHaveCount(0);
  await expect(page.locator(".estate-brand .brand-online")).toContainText("2 online");
  await page.getByLabel("Player menu",{exact:true}).click();
@@ -44,5 +44,5 @@ test("existing accounts claim a username before joining the city",async({page,co
  await page.goto("/dashboard");const dialog=page.getByRole("dialog",{name:"Choose your username."});
  await expect(dialog).toBeVisible();await page.keyboard.press("Escape");await expect(dialog).toBeVisible();
  await dialog.getByLabel("Your username",{exact:true}).fill("ClaimedName");await dialog.getByRole("button",{name:"Claim my name",exact:true}).click();
- await expect(dialog).not.toBeVisible();await expect(page.getByRole("heading",{name:"Dashboard",exact:true})).toBeVisible();
+ await expect(dialog).not.toBeVisible();await expect(page.getByRole("heading",{name:"BLACKWATER",exact:true})).toBeVisible();
 });

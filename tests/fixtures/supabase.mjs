@@ -81,6 +81,8 @@ const server = http.createServer(async(req,res) => {
  resetWorld();state.player.cash=2480000;state.player.xp=1247;
  state.inventory=[{good_id:"whiskey",quantity:340},{good_id:"silk",quantity:120},{good_id:"steel",quantity:80}];
  state.businesses=state.goods.map(g=>({player_id:playerId,good_id:g.id,collected_at:new Date(Date.now()-31*60000).toISOString()}));
+ districts.gang_id="gang-cobalto";districts.territory={controller_gang_id:"gang-cobalto",controller_name:"Cobalto Family",neutral_influence:6,fortification:35,status:"controlled"};
+ districts.influence=[{gang_id:"gang-cobalto",name:"Cobalto Family",influence:28},{gang_id:"gang-red",name:"Red Hollow",influence:22},{gang_id:"gang-marc",name:"Marcelli Syndicate",influence:18},{gang_id:"gang-north",name:"North Docks",influence:16},{gang_id:"gang-variants",name:"The Variants",influence:10}];
  state.market=[{id:"22222222-2222-4222-8222-222222222222",seller_id:"33333333-3333-4333-8333-333333333333",seller_handle:"HarborJack",good_id:"steel",quantity:120,unit_price:180,status:"active",created_at:new Date().toISOString()}];
  send(200,{ok:true});return;
  }
