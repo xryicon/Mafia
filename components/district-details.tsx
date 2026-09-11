@@ -7,8 +7,8 @@ export type DistrictAction=(action:string,payload?:Record<string,unknown>)=>Prom
 export function DistrictActionForm({label,children,onSubmit,busy}:{label:string;children:React.ReactNode;onSubmit:(values:Record<string,string>)=>Promise<unknown>;busy:boolean}){
  return <form className="district-action-form" onSubmit={e=>{e.preventDefault();void onSubmit(Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string,string>);}}><fieldset disabled={busy}>{children}<button className="district-gold" type="submit">{label}</button></fieldset></form>;
 }
-export function PlotDetails({p,state,act,busy,onClose}:{p:Plot;state:DistrictState;act:DistrictAction;busy:boolean;onClose:()=>void}){
- const [section,setSection]=useState("plot"),[confirm,setConfirm]=useState(false);
+export function PlotDetails({p,state,act,busy,onClose,initialSection="plot"}:{p:Plot;state:DistrictState;initialSection?:string;act:DistrictAction;busy:boolean;onClose:()=>void}){
+ const [section,setSection]=useState(initialSection),[confirm,setConfirm]=useState(false);
  const own=p.owner_type==="player"&&p.owner_id===state.player_id,b=state.buildings.find(b=>b.plot_id===p.id),biz=state.businesses.find(b=>b.plot_id===p.id),bt=state.building_types.find(t=>t.id===b?.building_type),auction=state.auctions.find(a=>a.plot_id===p.id),offers=state.offers.filter(o=>o.plot_id===p.id),allowed=eligibleBuildings(p,state),total=p.price+Math.ceil(p.price*p.tax/100),ended=auction&&Date.parse(auction.ends_at)<=Date.parse(state.server_time);
  const action:DistrictAction=(a,v)=>act(a,{plot_id:p.id,...v});
  const disabled=busy||state.season.status!=="open";

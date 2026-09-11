@@ -125,7 +125,7 @@ export function GameShell({ initial, initialTab="overview", initialGood, initial
     if (!Number.isInteger(qty) || !Number.isInteger(price) || qty < 1 || qty > settings.max_listing_quantity || price < 1 || price > settings.max_unit_price) {
       setFailed(true); setNotice("Enter whole-number quantities and prices within the limits."); return;
     }
-    await act("list", { good_id: goodId, quantity: qty, unit_price: price, district_id:districtId||null });
+    await act("list", { good_id: goodId, quantity: qty, unit_price: price, ...(districtId?{district_id:districtId}:{}) });
   }
 
   function marketRows(offers: Listing[]) {
