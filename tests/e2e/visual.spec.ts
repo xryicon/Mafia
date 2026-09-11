@@ -27,8 +27,11 @@ test("compact icon header and blank canvases match the fresh-start request",asyn
  await expect(nav.getByRole("link")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
  await expect(nav.getByRole("link",{name:"Profile",exact:true})).toHaveCount(0);
  for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeVisible();
- await expect(page.locator(".estate-header")).toHaveCSS("height","64px");
- await noOverflow(page);await capture(page,"fresh-header-desktop");
+ await expect(page.locator(".estate-header")).toHaveCSS("height","78px");
+ await expect(page.locator(".header-power")).toHaveText("Power 1,247");
+ await expect(page.locator(".header-rank")).toHaveText("Caporegime");
+ await expect(page.locator(".estate-brand .brand-online")).toHaveText("2 online");
+ await noOverflow(page);await capture(page,"clear-city-desktop");
  for(const path of ["/dashboard","/dashboard?view=ledger","/properties?good=steel","/districts"]){
   await page.goto(path);await expect(page.locator(".fresh-canvas")).toBeVisible();
   await expect(page.getByRole("main").locator("img,button,a,input,article,table,.estate-hero,.stats-grid")).toHaveCount(0);
@@ -41,6 +44,6 @@ test("compact icon header and blank canvases match the fresh-start request",asyn
   await page.goto(path);await noOverflow(page);
   const links=nav.getByRole("link");await expect(links).toHaveCount(6);
   for(const link of await links.all()){const box=await link.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(376);}
-  if(path==="/dashboard")await capture(page,"fresh-header-mobile");
+  if(path==="/dashboard")await capture(page,"clear-city-mobile");
  }
 });

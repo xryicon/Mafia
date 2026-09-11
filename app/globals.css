@@ -160,3 +160,54 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
 }
 
 .fresh-city .account-identity{font:17px Georgia,serif;color:#ddcfab;margin:0 0 12px}.fresh-city .account-identity small{display:block;font:10px Arial,sans-serif;color:#93a194;margin-top:7px}
+
+/* Clearer city masthead over a quiet, atmospheric Blackwater panorama. */
+.fresh-city{--estate-header-height:78px;position:relative;isolation:isolate;background:#061014}
+.fresh-city.fresh-page{background:#061014}
+.fresh-city:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#0410144d 0%,#04101440 35%,#020b10bd 100%),linear-gradient(90deg,#03101470,transparent 40%,#03101455),url('/art/harbor.webp') center center/cover no-repeat}
+.fresh-city .estate-header{height:78px;grid-template-rows:78px;grid-template-columns:190px minmax(0,1fr) auto;padding:0 24px;gap:0 14px;background:linear-gradient(180deg,#101e22,#081318);border-bottom:1px solid #9c805657;box-shadow:0 8px 26px #0005}
+.fresh-city .estate-brand{gap:10px}.fresh-city .estate-brand svg{width:34px;height:43px;color:#d3ac6e}.fresh-city .estate-brand>span{font-size:19px;letter-spacing:1px;color:#f1edda}
+.fresh-city .estate-brand small{font-size:6px;letter-spacing:6px;margin:4px 0 0;color:#c3a46b}
+.fresh-city .brand-online{display:flex;justify-content:center;align-items:center;gap:6px;font:9px/1.2 Arial,sans-serif;letter-spacing:.7px;color:#b3caba;margin-top:6px;text-transform:uppercase}
+.fresh-city .brand-online .presence-dot{width:5px;height:5px;margin:0;box-shadow:0 0 8px #9ccc9866;background:#97c48d}
+.fresh-city .brand-online.is-stale{color:#a5a79a}.fresh-city .brand-online .presence-dot.offline{background:#8e958d;box-shadow:none}
+.fresh-city .estate-nav a{height:64px;min-height:64px;min-width:70px;padding:9px 9px 7px;gap:7px;font:11px Arial,sans-serif;color:#d8dacf}
+.fresh-city .estate-nav a svg{width:20px;height:20px;stroke-width:1.5;color:#cfb178}
+.fresh-city .estate-nav a:hover{color:#ffe0a2;background:#ae916116}
+.fresh-city .estate-nav a[aria-current=page]{color:#ffe0a2;background:linear-gradient(180deg,#c7a7740a,#c7a77422)}
+.fresh-city .estate-nav a[aria-current=page] svg{color:#efd29a}
+.fresh-city .estate-nav a[aria-current=page]:after{height:2px;background:#d2af6d;left:7px;right:7px}
+.fresh-city .estate-player-tools{gap:13px}
+.fresh-city .header-wallet{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;min-width:120px;min-height:48px;padding:7px 13px;background:#1b302e;border:1px solid #aa905c;border-radius:3px;box-shadow:inset 0 1px 0 #e4ce9230,0 3px 12px #0005}
+.fresh-city .wallet-label{font:8px Arial,sans-serif;letter-spacing:1.3px;color:#c0c1a0}
+.fresh-city .header-cash{font:600 17px/1.2 Georgia,serif;color:#f4cc87;letter-spacing:.2px;white-space:nowrap}
+.fresh-city .estate-account-menu>summary{gap:9px;min-width:156px}.fresh-city .don-portrait{width:41px;height:41px}
+.fresh-city .estate-player-name{font:600 13px Georgia,serif;max-width:150px;color:#eee6d3;letter-spacing:.1px;margin:0 0 7px}
+.fresh-city .estate-player-name i{font-size:12px}
+.fresh-city .estate-player-numbers{display:flex;align-items:center;gap:8px;max-width:none;flex-wrap:wrap;row-gap:4px}
+.fresh-city .estate-player-numbers>span{font:8px Arial,sans-serif;letter-spacing:.2px;text-transform:none;color:#c0c5b3;display:flex;align-items:center;gap:3px}
+.fresh-city .estate-player-numbers .header-power{color:#dbc48f}.fresh-city .header-power strong{font-weight:600;color:#f1d397}
+.fresh-city .estate-player-numbers .header-rank{color:#b9c9be;border-left:1px solid #8f7d5044;padding-left:8px}
+@media(min-width:1400px){.fresh-city .estate-header{grid-template-columns:225px minmax(0,1fr) auto;gap:0 22px;padding:0 32px}.fresh-city .estate-brand>span{font-size:21px}.fresh-city .estate-nav a{min-width:82px;font-size:12px}.fresh-city .estate-player-tools{gap:17px}.fresh-city .estate-player-name{font-size:14px}.fresh-city .estate-player-numbers>span{font-size:9px}.fresh-city .header-wallet{min-width:136px}.fresh-city .header-cash{font-size:18px}}
+@media(max-width:1020px){
+ .fresh-city{--estate-header-height:126px}
+ .fresh-city .estate-header{height:126px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:70px 56px;padding:0 22px;gap:0 14px}
+ .fresh-city .estate-player-tools{grid-column:2;grid-row:1}
+ .fresh-city .estate-nav{grid-column:1/-1;grid-row:2;border-top:1px solid #4c514039;justify-content:space-between}
+ .fresh-city .estate-nav a{height:53px;min-height:53px;min-width:0;flex:1;font-size:11px;gap:5px;padding:6px}
+ .fresh-city .estate-nav a svg{width:19px;height:19px}
+}
+@media(max-width:600px){
+ .fresh-city{--estate-header-height:155px}
+ .fresh-city .estate-header{height:155px;padding:0 13px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:94px 61px;gap:0 8px}
+ .fresh-city .estate-brand{gap:8px}.fresh-city .estate-brand svg{width:29px;height:38px}.fresh-city .estate-brand>span{font-size:15px;letter-spacing:.5px}.fresh-city .estate-brand small{font-size:6px;letter-spacing:4px;margin-top:4px}.fresh-city .brand-online{font-size:8px;letter-spacing:.3px;margin-top:5px}
+ .fresh-city .estate-player-tools{display:grid;grid-template-columns:1fr;gap:7px;justify-items:end}
+ .fresh-city .header-wallet{min-width:105px;min-height:27px;padding:4px 7px;flex-direction:row;align-items:center;gap:8px;justify-content:space-between}
+ .fresh-city .wallet-label{font-size:6px;letter-spacing:.8px}.fresh-city .header-cash{font-size:12px}
+ .fresh-city .estate-account-menu>summary{min-width:0;gap:6px}.fresh-city .estate-account-menu>summary>div{display:block}
+ .fresh-city .don-portrait{width:28px;height:28px}.fresh-city .estate-player-name{font-size:10px;max-width:125px;margin-bottom:4px}.fresh-city .estate-player-name i{font-size:9px;margin-left:5px}
+ .fresh-city .estate-player-numbers{gap:4px;row-gap:3px;max-width:133px}.fresh-city .estate-player-numbers>span{font-size:7px;letter-spacing:0}.fresh-city .estate-player-numbers .header-rank{padding-left:4px}
+ .fresh-city .estate-nav a{height:58px;min-height:58px;font-size:9px;gap:6px;padding:5px 1px}.fresh-city .estate-nav a svg{width:20px;height:20px}
+ .fresh-city .estate-dropdown{top:91px;right:10px;max-height:calc(100dvh - 105px)}
+ .fresh-city:before{background-position:center center}
+}
