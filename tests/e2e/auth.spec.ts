@@ -9,7 +9,7 @@ test("public landing page and sign-up are accessible", async ({ page }) => {
   await expect(page.getByLabel("Confirm password")).toBeVisible();
 });
 test("private pages redirect anonymous visitors to login", async ({ page }) => {
-  for (const path of ["/dashboard", "/dashboard/private", "/update-password", "/players", "/owner", "/support", "/account", "/seasons", "/market", "/properties", "/districts", "/gangs", "/profile"]) {
+  for (const path of ["/dashboard", "/dashboard/private", "/update-password", "/players", "/owner", "/support", "/account", "/seasons", "/market", "/properties", "/districts", "/gangs", "/profile", "/telegrams", "/ledger"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login\?next=/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, boss.");

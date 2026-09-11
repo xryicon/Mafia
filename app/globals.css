@@ -117,3 +117,46 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
 }
 
 .estate-city .table-scroll{position:relative;max-width:100%}
+
+/* Fresh game frame: the user's compact icon header and empty build canvases. */
+.fresh-city{--estate-header-height:64px}
+.fresh-city .estate-header{height:64px;padding:0 24px;grid-template-columns:178px minmax(0,1fr) auto;grid-template-rows:64px;gap:0 10px;background:linear-gradient(90deg,#051014fa 0%,#051014f2 53%,#05101483 76%,#051014b8),url('/art/harbor.webp') center 42%/cover;border-bottom:1px solid #6a5b385c;backdrop-filter:none}
+.fresh-city .estate-brand{gap:10px}.fresh-city .estate-brand svg{width:33px;height:42px}.fresh-city .estate-brand>span{font:600 18px Georgia,serif;letter-spacing:1px;white-space:nowrap}.fresh-city .estate-brand small{font:7px Arial,sans-serif;letter-spacing:5.5px;margin-top:6px}
+.fresh-city .estate-nav{grid-column:2;grid-row:1;justify-content:flex-start;gap:0;border:0;overflow:visible}
+.fresh-city .estate-nav a{height:54px;min-height:54px;min-width:68px;padding:6px 10px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-transform:none;font:10px Arial,sans-serif;letter-spacing:0;color:#b8bdb8}
+.fresh-city .estate-nav a svg{width:17px;height:17px;color:#ba9c64;stroke-width:1.15}
+.fresh-city .estate-nav a[aria-current=page]{background:linear-gradient(#5e665117,#c6a26c17);color:#e2b971}
+.fresh-city .estate-nav a[aria-current=page]:after{bottom:0;left:4px;right:4px;height:1px;background:#cfa45f;box-shadow:0 1px 7px #d6b06466}
+.fresh-city .estate-player-tools{grid-column:3;grid-row:1;gap:12px}
+.fresh-city .header-wallet{display:flex;align-items:center;justify-content:center;min-height:31px;min-width:104px;padding:6px 10px;background:#041016d6;border:1px solid #75603866;color:#e7b568;font:14px Georgia,serif;white-space:nowrap;letter-spacing:.3px}
+.fresh-city .estate-account-menu>summary{gap:9px;min-width:118px}
+.fresh-city .don-portrait{width:38px;height:38px}
+.fresh-city .estate-player-name{font:600 11px Georgia,serif;letter-spacing:.15px;max-width:135px;margin:0 0 6px;overflow:hidden}
+.fresh-city .estate-player-name i{display:inline;font-size:11px;color:#d0a065;margin-left:10px}
+.fresh-city .estate-player-numbers{gap:10px;flex-wrap:nowrap;max-width:none}
+.fresh-city .estate-player-numbers>span{font:6.5px Arial,sans-serif;letter-spacing:1px;color:#abafa1;gap:0;text-transform:uppercase}
+.fresh-city .estate-player-numbers>span:last-child{display:flex}
+.fresh-city .estate-dropdown{top:calc(100% + 13px)}
+.fresh-city.fresh-page{background:#040e12}
+.fresh-page .fresh-canvas{position:relative;min-height:calc(100dvh - var(--estate-header-height))}
+.fresh-canvas>.sr-only{top:0;left:0;clip-path:inset(50%)}
+@media(min-width:1400px){.fresh-city .estate-header{grid-template-columns:205px minmax(0,1fr) auto;padding:0 30px;column-gap:18px}.fresh-city .estate-nav a{min-width:78px}.fresh-city .estate-brand>span{font-size:20px}.fresh-city .estate-player-tools{gap:16px}.fresh-city .estate-account-menu>summary{min-width:148px}}
+@media(max-width:940px){
+ .fresh-city{--estate-header-height:110px}
+ .fresh-city .estate-header{height:110px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:57px 53px;padding:0 20px;gap:0 12px}
+ .fresh-city .estate-player-tools{grid-column:2;grid-row:1}
+ .fresh-city .estate-nav{grid-column:1/-1;grid-row:2;justify-content:space-between;border-top:1px solid #33413b6b}
+ .fresh-city .estate-nav a{height:49px;min-height:49px;flex:1;min-width:0;font-size:10px}
+ .fresh-city .estate-dropdown{top:calc(100% + 10px)}
+}
+@media(max-width:600px){
+ .fresh-city .estate-header{padding:0 12px;column-gap:8px}
+ .fresh-city .estate-brand{gap:7px}.fresh-city .estate-brand svg{width:26px;height:34px}.fresh-city .estate-brand>span{font-size:14px;letter-spacing:.6px}.fresh-city .estate-brand small{font-size:6px;letter-spacing:4px;margin-top:4px}
+ .fresh-city .estate-player-tools{gap:7px}.fresh-city .header-wallet{font-size:11px;min-width:0;padding:6px;min-height:27px;letter-spacing:0}
+ .fresh-city .don-portrait{width:31px;height:31px}.fresh-city .estate-account-menu>summary{min-width:0;gap:0}
+ .fresh-city .estate-account-menu>summary>div{display:none}
+ .fresh-city .estate-nav a{font-size:8px;padding:5px 2px;gap:5px}.fresh-city .estate-nav a svg{width:17px;height:17px}
+ .fresh-city .estate-dropdown{position:fixed;top:57px;right:10px;width:min(284px,calc(100vw - 20px));max-height:calc(100dvh - 74px)}
+}
+
+.fresh-city .account-identity{font:17px Georgia,serif;color:#ddcfab;margin:0 0 12px}.fresh-city .account-identity small{display:block;font:10px Arial,sans-serif;color:#93a194;margin-top:7px}

@@ -17,25 +17,30 @@ test("public artwork and signup remain responsive",async({page})=>{
  await page.setViewportSize({width:375,height:812});await page.goto("/signup");await loaded(page,".auth-intro img");await expect(page.getByLabel("Username",{exact:true})).toBeVisible();await noOverflow(page);
  await capture(page,"signup-mobile",true);
 });
-test("property panels match the reference and every destination fits a phone",async({page,context,request})=>{
+test("compact icon header and blank canvases match the fresh-start request",async({page,context,request})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated visual fixture");
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
- await page.setViewportSize({width:1448,height:1086});await page.goto("/properties?good=steel");
- await loaded(page,".property-hero>.bw-art img");await expect(page.locator(".header-cash")).toContainText("$2,480,000");
- await expect(page.getByRole("heading",{level:1})).toHaveText("Dockside foundry");
- await expect(page.getByRole("button",{name:/Collect [0-9]+ units/})).toBeEnabled();await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow","25");
- await noOverflow(page);await capture(page,"property-reference-desktop",true);
- const before=await page.locator(".property-stats").innerText();await page.getByRole("button",{name:/Collect [0-9]+ units/}).click();
- await expect(page.locator(".property-stats")).not.toHaveText(before);
- await page.goto("/dashboard");await loaded(page,".estate-hero>.bw-art img");await capture(page,"dashboard-reference-desktop",true);
- for(const path of ["/market","/districts","/gangs"]){await page.goto(path);await noOverflow(page);await capture(page,path.slice(1)+"-reference-desktop");}
+ await page.setViewportSize({width:1044,height:700});await page.goto("/telegrams");
+ await expect(page.locator(".header-cash")).toContainText("$2,480,000");
+ const nav=page.getByRole("navigation",{name:"Game navigation"});
+ await expect(nav.getByRole("link")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
+ await expect(nav.getByRole("link",{name:"Profile",exact:true})).toHaveCount(0);
+ for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeVisible();
+ await expect(page.locator(".estate-header")).toHaveCSS("height","64px");
+ await noOverflow(page);await capture(page,"fresh-header-desktop");
+ for(const path of ["/dashboard","/dashboard?view=ledger","/properties?good=steel","/districts"]){
+  await page.goto(path);await expect(page.locator(".fresh-canvas")).toBeVisible();
+  await expect(page.getByRole("main").locator("img,button,a,input,article,table,.estate-hero,.stats-grid")).toHaveCount(0);
+  await expect(page.locator(".estate-footer")).toHaveCount(0);
+  await noOverflow(page);
+ }
+ await capture(page,"empty-dashboard-desktop");
  await page.setViewportSize({width:375,height:812});
- for(const path of ["/dashboard","/market","/properties?good=steel","/districts","/gangs","/profile","/owner","/support","/players"]){
-  await page.goto(path);await expect(page.getByRole("heading",{level:1})).toBeVisible();await noOverflow(page);
-  const links=page.getByRole("navigation",{name:"Game navigation"}).getByRole("link");await expect(links).toHaveCount(6);
+ for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/support","/players"]){
+  await page.goto(path);await noOverflow(page);
+  const links=nav.getByRole("link");await expect(links).toHaveCount(6);
   for(const link of await links.all()){const box=await link.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(376);}
-  if(path.startsWith("/properties"))await capture(page,"property-reference-mobile",true);
-  if(path==="/dashboard")await capture(page,"dashboard-reference-mobile");
+  if(path==="/dashboard")await capture(page,"fresh-header-mobile");
  }
 });
