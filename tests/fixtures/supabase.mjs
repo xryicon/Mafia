@@ -47,7 +47,7 @@ const server = http.createServer(async(req,res) => {
  state.market=[{id:"22222222-2222-4222-8222-222222222222",seller_id:"33333333-3333-4333-8333-333333333333",seller_handle:"HarborJack",good_id:"steel",quantity:120,unit_price:180,status:"active",created_at:new Date().toISOString()}];
  send(200,{ok:true});return;
  }
- if(url.pathname==="/rest/v1/rpc/city_status"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,player:{cash:state.player.cash,xp:state.player.xp,level:1},online_count:2,window_seconds:90,poll_seconds:30,season,permissions:state.permissions,events:state.events.slice(0,8),server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/rest/v1/rpc/city_status"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,player:{cash:state.player.cash,xp:state.player.xp,power:state.player.xp,rank:state.player.xp>=state.settings.rank_underboss?"Underboss":state.player.xp>=state.settings.rank_caporegime?"Caporegime":state.player.xp>=state.settings.rank_soldier?"Soldier":"Associate",level:1},online_count:2,window_seconds:90,poll_seconds:30,season,permissions:state.permissions,events:state.events.slice(0,8),server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/gang_directory"){send(200,{gangs:[],total:0,season,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/social_state"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,online_count:2,window_seconds:90,poll_seconds:3,season,permissions:state.permissions,muted:false,chat:[...community.chat].reverse(),server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/presence_leave"){send(200,null);return;}
