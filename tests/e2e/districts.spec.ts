@@ -25,7 +25,7 @@ test("mobile bottom sheet, map controls and Owner district editing",async({page}
 });
 
 test("funded buy orders reserve and refund cash in the existing market",async({page})=>{
- await page.goto("/market?district=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+ await page.goto("/market?view=orders&district=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
  const book=page.locator(".district-order-book");
  await book.getByLabel("Units wanted").fill("2");await book.getByLabel("Your unit price").fill("100");await book.getByRole("button",{name:"Fund buy order"}).click();
  await expect(book.getByRole("status")).toContainText("funded and posted");await expect(page.locator(".header-cash")).toContainText("$9,800");
