@@ -37,6 +37,7 @@ begin
  if (select count(*) from game_private.telegrams where sender_id=a and request_id=nonce)<>1 then raise exception 'Duplicate telegram';end if;
  if not exists(select 1 from public.game_ledger where player_id=a and delta=-35 and reason='Telegram delivery fee')
  or not exists(select 1 from public.game_ledger where player_id=owner and delta=35 and reason='Telegram Office revenue') then raise exception 'Missing Telegram ledgers';end if;
+ if exists(select 1 from public.game_ledger where reason='Telegram Office revenue' and actor_id is not null) then raise exception 'Office wallet reveals private senders';end if;
  select id into m from game_private.telegrams where thread_id=t;
  perform set_config('request.jwt.claim.sub',owner::text,true);
  r:=public.telegram_state();if r::text like '%PRIVATE MESSAGE TEXT%' or r::text like '%PRIVATE SUBJECT%' then raise exception 'Office owner private data leak';end if;

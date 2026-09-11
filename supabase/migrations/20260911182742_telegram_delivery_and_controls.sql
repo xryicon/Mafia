@@ -282,3 +282,14 @@ end $$;
 create trigger telegram_season_switch after update of season_id on game_private.season_runtime for each row execute function game_private.telegram_season_switch();
 revoke all on function game_private.telegram_season_switch() from public,anon,authenticated;
 
+
+-- Wallet statements identify office income without identifying private senders.
+-- The private receipt and message retain the complete accounting relationship.
+create function game_private.telegram_receipt_privacy() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ if new.reason='Telegram Office revenue' then new.actor_id:=null;end if;
+ return new;
+end $$;
+create trigger telegram_receipt_privacy before insert on public.game_ledger for each row execute function game_private.telegram_receipt_privacy();
+revoke all on function game_private.telegram_receipt_privacy() from public,anon,authenticated;
+
