@@ -53,6 +53,7 @@ declare s uuid; d public.game_districts; result jsonb; manage boolean;
 begin
  perform game_private.require_active();
  if not game_private.rate('district_read',120) then raise exception 'Wait a moment before refreshing.'; end if;
+ if not exists(select 1 from public.game_players where id=auth.uid()) then perform game_private.state(); end if;
  s:=game_private.season_guard(false);
  perform game_private.ensure_districts(s);
  manage:=game_private.has_permission('districts.manage');

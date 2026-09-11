@@ -12,7 +12,7 @@ export function PlotDetails({p,state,act,busy,onClose}:{p:Plot;state:DistrictSta
  const own=p.owner_type==="player"&&p.owner_id===state.player_id,b=state.buildings.find(b=>b.plot_id===p.id),biz=state.businesses.find(b=>b.plot_id===p.id),bt=state.building_types.find(t=>t.id===b?.building_type),auction=state.auctions.find(a=>a.plot_id===p.id),offers=state.offers.filter(o=>o.plot_id===p.id),allowed=eligibleBuildings(p,state),total=p.price+Math.ceil(p.price*p.tax/100),ended=auction&&Date.parse(auction.ends_at)<=Date.parse(state.server_time);
  const action:DistrictAction=(a,v)=>act(a,{plot_id:p.id,...v});
  const disabled=busy||state.season.status!=="open";
- return <div className="plot-details"><header><div><p className="eyebrow">THE WATERFRONT / LAND REGISTRY</p><h2>Plot {p.code}</h2></div><button onClick={onClose} aria-label="Close plot details">×</button></header>
+ return <div className="plot-details"><header><div><p className="eyebrow">{state.district.name.toUpperCase()} / LAND REGISTRY</p><h2>Plot {p.code}</h2></div><button onClick={onClose} aria-label="Close plot details">×</button></header>
  <nav className="detail-breadcrumb" aria-label="Property hierarchy"><button onClick={()=>setSection("plot")}>Plot</button>{b&&<><span>›</span><button onClick={()=>setSection("building")}>Building</button></>}{biz&&<><span>›</span><button onClick={()=>setSection("business")}>Business</button></>}</nav>
  <div className="detail-scroll">
  {section==="plot"&&<><div className="plot-title-line"><span className={"district-badge "+p.status}>{own?"Your property":p.status}</span><button disabled={busy} className="watch-button" onClick={()=>action("watch")}>{p.watched?"★ Watching":"☆ Watch plot"}</button></div>
