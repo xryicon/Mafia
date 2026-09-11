@@ -78,5 +78,6 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/social.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/city_layout.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/districts.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/telegrams.sql
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh

@@ -25,4 +25,4 @@ export type DistrictTab=typeof districtTabs[number];
 export const points=(polygon:Point[])=>polygon.map(p=>p.join(",")).join(" ");
 export function centroid(polygon:Point[]):Point{return [polygon.reduce((sum,p)=>sum+p[0],0)/polygon.length,polygon.reduce((sum,p)=>sum+p[1],0)/polygon.length];}
 export function plotTone(p:Plot,auction?:Auction){return auction||p.status==="reserved"?"gold":p.status==="locked"?"gray":p.strategic_type?"red":p.owner_type==="player"?"blue":p.owner_id?"purple":"green";}
-export function eligibleBuildings(p:Plot,state:DistrictState){return state.building_types.filter(b=>state.zoning.find(z=>z.id===p.zoning)?.allowed_buildings.includes(b.id)&&b.capacity_required<=p.build_capacity&&b.minimum_utility<=p.utility_level&&b.minimum_infrastructure<=p.infrastructure_level);}
+export function eligibleBuildings(p:Plot,state:DistrictState){return state.building_types.filter(b=>b.id!=="telegram"&&state.zoning.find(z=>z.id===p.zoning)?.allowed_buildings.includes(b.id)&&b.capacity_required<=p.build_capacity&&b.minimum_utility<=p.utility_level&&b.minimum_infrastructure<=p.infrastructure_level);}
