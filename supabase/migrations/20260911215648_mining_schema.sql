@@ -147,6 +147,7 @@ create function game_private.district_manage(p_action text,p_payload jsonb) retu
 begin
  perform game_private.require_active();
  if not game_private.has_permission('districts.manage') then raise exception 'District management permission required.';end if;
+ perform game_private.season_guard(false);perform pg_advisory_xact_lock(4704020);
  if p_action='archive_district' and exists(select 1 from public.game_mines m join public.game_district_plots p on p.id=m.plot_id where p.district_id=nullif(p_payload->>'id','')::uuid and (exists(select 1 from public.game_mining_runs r where r.mine_id=m.id and r.status='working') or exists(select 1 from public.game_plot_auctions a where a.plot_id=p.id and a.status='open'))) then return jsonb_build_object('error','Finish mining shifts and auctions before archiving this district.');end if;
  if (p_action='plot' and exists(select 1 from public.game_mine_definitions where plot_template_id=nullif(p_payload->>'id','')::uuid))
  or (p_action='building' and exists(select 1 from public.game_mines where plot_id=nullif(p_payload->>'plot_id','')::uuid))

@@ -1,5 +1,6 @@
 
 create function game_private.mining_finish(a public.game_plot_auctions,cancel_sale boolean default false) returns void language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare p public.game_district_plots;
 begin
  select * into strict p from public.game_district_plots where id=a.plot_id for update;
@@ -19,6 +20,7 @@ begin
  end if;
 end $$;
 create function game_private.mining_close_due(finalize boolean default false) returns void language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare s uuid; a public.game_plot_auctions; r public.game_mining_runs;
 begin
  s:=game_private.season_guard(false);
@@ -211,6 +213,7 @@ begin
  end;
 end $$;
 create function game_private.mining_state(p_slug text default 'mines-and-quarries') returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare world jsonb; s uuid; d uuid; stamp timestamptz;
 begin
  perform game_private.require_active();

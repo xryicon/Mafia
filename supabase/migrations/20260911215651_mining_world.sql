@@ -42,7 +42,7 @@ begin
   on conflict(plot_template_id) do nothing;
  end loop;
  insert into public.game_district_site_templates(district_id,name,kind,resource_type,data)
- values(d,'Rail Loading Terminal','strategic','rail','{"transport":"Rail + road","description":"City-owned freight infrastructure connecting the mines to Blackwater."}')
+ select d,'Rail Loading Terminal','strategic','rail','{"transport":"Rail + road","description":"City-owned freight infrastructure connecting the mines to Blackwater."}'::jsonb where not exists(select 1 from public.game_district_site_templates where district_id=d and name='Rail Loading Terminal')
  on conflict do nothing;
 end $$;
 select game_private.ensure_districts(game_private.current_season());
