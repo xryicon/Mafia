@@ -42,6 +42,7 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
  await expect(page.locator(".command-gangs")).toContainText("Cobalto Family");
  await expect.poll(()=>page.locator(".command-portrait").evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  await expect(page.getByLabel("Inventory stock")).toContainText("540");
+ const dashboardBounds=await page.locator(".command-dashboard").boundingBox();console.log("COMMAND_DESKTOP_BOUNDS "+JSON.stringify(dashboardBounds));
  await capture(page,"command-desktop");
  for(const width of [1448,1024,768,375]){
   await page.setViewportSize({width,height:width===375?812:1000});

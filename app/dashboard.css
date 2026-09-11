@@ -261,3 +261,23 @@
 }
 @media(min-width:1251px) and (max-width:1500px){.command-dashboard{grid-template-columns:212px minmax(0,1fr) 270px}.command-header-bell{display:none}}
 @media(max-width:1250px){.command-header-bell{display:none}}
+
+@media(min-width:1251px){
+ .command-dashboard{padding-bottom:10px}
+ .command-player-stats>div{min-height:32px}
+ .command-level{padding:4px 0 6px}
+ .command-location{padding:10px 0}
+ .command-summary-grid .command-panel-head{margin-bottom:7px}
+ .command-summary-grid .command-subtitle{margin-bottom:8px}
+ .command-summary-grid .command-control-key{margin-bottom:9px}
+ .command-land img{height:76px}
+ .command-economy-grid .command-production>div{min-height:36px;padding:5px;margin-bottom:4px}
+ .command-economy-grid .command-queue-button{min-height:25px;padding:4px;margin-top:5px}
+}
+@media(min-width:1600px){
+ .command-city .estate-brand{grid-column:1;grid-row:1}
+ .command-city .command-header-tagline{grid-column:2;grid-row:1}
+ .command-city .estate-nav{grid-column:3;grid-row:1}
+ .command-city .estate-player-tools{grid-column:4;grid-row:1}
+}
+@media(min-width:501px) and (max-width:1050px){.command-player-stats>div:nth-child(3){display:flex}}

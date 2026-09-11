@@ -3,7 +3,7 @@ import {useRef,useState,useEffect,type ReactNode,type PointerEvent} from "react"
 import {centroid,points,plotTone,type DistrictState,type Plot} from "@/lib/districts";
 export function PanMap({children,label,background,height=800,instruction="Drag to explore · Select a plot",focus}:{children:ReactNode;label:string;background?:string;height?:number;instruction?:string;focus?:[number,number]}){
  const [camera,setCamera]=useState({x:0,y:0,z:1}),drag=useRef<{x:number;y:number;px:number;py:number;moved:boolean}|null>(null),svg=useRef<SVGSVGElement>(null);
- function fit(){const compact=focus&&matchMedia("(max-width:1050px)").matches;setCamera(compact?{x:600-focus![0],y:height/2-focus![1],z:1}:{x:0,y:0,z:1});}
+ function fit(){const compact=focus&&matchMedia("(max-width:1050px)").matches;setCamera(compact?{x:600-focus![0],y:0,z:1}:{x:0,y:0,z:1});}
  useEffect(()=>{if(!focus)return;const mq=matchMedia("(max-width:1050px)");fit();mq.addEventListener("change",fit);return()=>mq.removeEventListener("change",fit);},[height,focus?.[0],focus?.[1]]);
  function down(e:PointerEvent<SVGSVGElement>){if(e.button!==0)return;drag.current={x:e.clientX,y:e.clientY,px:camera.x,py:camera.y,moved:false};}
  function move(e:PointerEvent<SVGSVGElement>){const d=drag.current;if(!d)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.moved=true;svg.current?.setPointerCapture(e.pointerId);const matrix=svg.current?.getScreenCTM();const scale=matrix?1/matrix.a:1200/(svg.current?.getBoundingClientRect().width||1200);setCamera(c=>({...c,x:d.px+(e.clientX-d.x)*scale,y:d.py+(e.clientY-d.y)*scale}));}}
