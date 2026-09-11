@@ -111,7 +111,7 @@ export function GameShell({ initial, initialTab="overview", initialGood, initial
     } finally { busyRef.current = false; setBusy(false); }
   }
 
-  function openTab(next: Tab, good?:string) { setTab(next); if(good){setFilter(good);setGoodId(good);}router.push(viewPath(next,good)); }
+  function openTab(next: Tab, good?:string) { setTab(next); if(good){setFilter(good);setGoodId(good);}const path=viewPath(next,good);router.push(path+(districtId?(path.includes("?")?"&":"?")+"district="+encodeURIComponent(districtId):"")); }
   const goodsName = (id: string) => state.goods.find(g => g.id === id)?.name || id;
   const available = (id: string) => state.inventory.find(i => i.good_id === id)?.quantity || 0;
   const cooldown = remaining(state.player.job_ready_at, now);
