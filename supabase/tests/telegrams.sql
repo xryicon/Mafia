@@ -32,6 +32,7 @@ begin
  r:=public.telegram_action('send',q||'{"fee":1}'::jsonb);if not(r?'error') then raise exception 'Forged fee accepted';end if;
  r:=public.telegram_action('send',q);if r?'error' then raise exception 'Send failed: %',r;end if;t:=(r->>'thread_id')::uuid;
  r:=public.telegram_action('send',q);if r?'error' then raise exception 'Idempotent retry failed';end if;
+ if (select count(*) from public.game_telegram_signals)<>1 or not exists(select 1 from public.game_telegram_signals where player_id=auth.uid()) then raise exception 'Realtime mailbox signals leak another account';end if;
  reset role;
  if (select cash from public.game_players where id=a)<>a_cash-35 or (select cash from public.game_players where id=owner)<>owner_cash+35 then raise exception 'Sender/owner settlement wrong';end if;
  if (select count(*) from game_private.telegrams where sender_id=a and request_id=nonce)<>1 then raise exception 'Duplicate telegram';end if;

@@ -293,3 +293,26 @@ end $$;
 create trigger telegram_receipt_privacy before insert on public.game_ledger for each row execute function game_private.telegram_receipt_privacy();
 revoke all on function game_private.telegram_receipt_privacy() from public,anon,authenticated;
 
+
+-- Realtime carries only an account's mailbox revision, never message text or peers.
+create table public.game_telegram_signals (
+ player_id uuid primary key references public.game_players(id), revision bigint not null default 1
+);
+alter table public.game_telegram_signals enable row level security;
+revoke all on public.game_telegram_signals from public,anon,authenticated;
+grant select on public.game_telegram_signals to authenticated;
+create policy own_mailbox_revision on public.game_telegram_signals for select to authenticated using(player_id=(select auth.uid()));
+create function game_private.telegram_signal() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ insert into public.game_telegram_signals as signal(player_id) values(new.sender_id),(new.recipient_id)
+ on conflict(player_id) do update set revision=signal.revision+1;
+ return new;
+end $$;
+create trigger telegram_signal after insert on game_private.telegrams for each row execute function game_private.telegram_signal();
+revoke all on function game_private.telegram_signal() from public,anon,authenticated;
+do $$ begin
+ if exists(select 1 from pg_publication where pubname='supabase_realtime') then
+  alter publication supabase_realtime add table public.game_telegram_signals;
+ end if;
+end $$;
+

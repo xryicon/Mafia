@@ -19,6 +19,13 @@ export function TelegramWorkspace({initial}:{initial:TelegramState}){
   if(r.error||!r.data){setNotice("Connection interrupted. Refresh your mailbox to reconnect.");setFailed(true);return;}
   setData(r.data);
  },[thread,folder,offset,before]);
+ const refreshSignal=useRef(refresh);
+ useEffect(()=>{refreshSignal.current=refresh;},[refresh]);
+ useEffect(()=>{
+  const client=createClient(),channel=client.channel("telegram-mailbox-"+data.player_id).on("postgres_changes",{event:"*",schema:"public",table:"game_telegram_signals",filter:"player_id=eq."+data.player_id},()=>{if(!document.hidden)void refreshSignal.current();}).subscribe();
+  const visible=()=>{if(!document.hidden)void refreshSignal.current();};document.addEventListener("visibilitychange",visible);
+  return()=>{void client.removeChannel(channel);document.removeEventListener("visibilitychange",visible);};
+ },[data.player_id]);
  useEffect(()=>{void refresh();const timer=setInterval(()=>{if(!document.hidden&&!busy)void refresh();},15000);return()=>{clearInterval(timer);sequence.current++;};},[refresh,busy]);
  useEffect(()=>{if(showOffice)modal.current?.showModal();else modal.current?.close();},[showOffice]);
  useEffect(()=>{if(!before)end.current?.scrollIntoView({block:"nearest"});},[data.messages.length,thread,before]);
