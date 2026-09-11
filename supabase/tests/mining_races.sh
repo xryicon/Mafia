@@ -5,7 +5,7 @@ psql -v ON_ERROR_STOP=1 <<'SQL'
 insert into auth.users(id) values('eeeeeeee-2000-4000-8000-000000000001');
 select set_config('request.jwt.claim.sub','eeeeeeee-2000-4000-8000-000000000001',false);
 select public.game_state();
-select public.mining_action('pickaxe',jsonb_build_object('season_id',game_private.current_season(),'request_id',gen_random_uuid(),'price',game_private.setting('mining_pickaxe_cost')));
+insert into public.game_mining_tools(season_id,player_id,durability) values(game_private.current_season(),auth.uid(),game_private.setting('mining_pickaxe_durability'));
 SQL
 for attempt in 1 2; do
  psql -At -v ON_ERROR_STOP=1 >"/tmp/mining-start-$attempt.txt" <<'SQL' &
@@ -53,7 +53,7 @@ psql -v ON_ERROR_STOP=1 <<'SQL'
 insert into auth.users(id) values('eeeeeeee-2000-4000-8000-000000000003');
 select set_config('request.jwt.claim.sub','eeeeeeee-2000-4000-8000-000000000003',false);
 select public.game_state();
-select public.mining_action('pickaxe',jsonb_build_object('season_id',game_private.current_season(),'request_id',gen_random_uuid(),'price',game_private.setting('mining_pickaxe_cost')));
+insert into public.game_mining_tools(season_id,player_id,durability) values(game_private.current_season(),auth.uid(),game_private.setting('mining_pickaxe_durability'));
 update public.game_mines m set remaining=6 where m.season_id=game_private.current_season() and exists(select 1 from public.game_district_plots p where p.id=m.plot_id and p.code='MQ-10');
 SQL
 for player in 1 3; do

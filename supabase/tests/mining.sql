@@ -25,9 +25,12 @@ begin
  r:=public.mining_action('pickaxe',q||'{"price":1}');if not(r?'error') then raise exception 'Forged pickaxe price accepted';end if;
  reset role;
  cost:=game_private.setting('mining_pickaxe_cost');
- r:=public.mining_action('pickaxe',q||jsonb_build_object('price',cost));if r?'error' then raise exception 'Pickaxe acquisition failed %',r;end if;
- if (select cash from public.game_players where id=a)<>1000000-cost then raise exception 'Pickaxe charge wrong';end if;
- if not exists(select 1 from public.game_ledger where player_id=a and delta=-cost and reason='Purchase mining pickaxe') then raise exception 'Missing pickaxe ledger';end if;
+ r:=public.mining_action('pickaxe',q||jsonb_build_object('price',cost));if not(r?'error') then raise exception 'Pickaxe purchase remains enabled';end if;
+ if (select cash from public.game_players where id=a)<>1000000 then raise exception 'Disabled pickaxe purchase charged cash';end if;
+ if exists(select 1 from public.game_mining_tools where player_id=a and season_id=s) then raise exception 'Disabled purchase created equipment';end if;
+ if exists(select 1 from public.game_ledger where player_id=a and reason='Purchase mining pickaxe') then raise exception 'Disabled purchase wrote a financial entry';end if;
+ -- Isolated fixture: simulate an already-owned pickaxe. There is no public grant or discovery endpoint yet.
+ insert into public.game_mining_tools(season_id,player_id,durability) values(s,a,game_private.setting('mining_pickaxe_durability'));
  reserve:=m.remaining;q:=q||jsonb_build_object('request_id',gen_random_uuid(),'quantity',999999,'good_id','steel','ready_at','2000-01-01');
  r:=public.mining_action('start',q);if r?'error' then raise exception 'Public mining failed %',r;end if;
  shift:=(r->>'run_id')::uuid;first:=r;

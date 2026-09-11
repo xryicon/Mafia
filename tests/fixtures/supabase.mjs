@@ -56,6 +56,7 @@ const server = http.createServer(async(req,res) => {
  }
  if(url.pathname==="/rest/v1/rpc/district_state"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,{...mining.district(p.p_slug),server_time:new Date().toISOString()});return;}
  if(url.pathname.startsWith('/rest/v1/rpc/mining_')){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');if(url.pathname.endsWith('mining_state'))send(200,mining.read());else send(200,mining.action(url.pathname.endsWith('mining_manage')?'manage':p.p_action,p.p_payload));return;}
+ if(url.pathname==='/__mining_equipped'&&process.env.GAME_TEST_FIXTURE==='1'){mining.equip();send(200,{ok:true});return;}
  if(url.pathname==='/__finish_mining'&&process.env.GAME_TEST_FIXTURE==='1'){mining.finish();send(200,{ok:true});return;}
  if(url.pathname==='/__mining_player'&&process.env.GAME_TEST_FIXTURE==='1'){mining.player();send(200,{ok:true});return;}
  if(url.pathname==="/rest/v1/rpc/district_action"){

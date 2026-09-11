@@ -75,3 +75,9 @@ if(miningDeployed){for(const name of ['map','map-small','mine','mine-small','qua
  console.log(JSON.stringify({miningArtwork:name,status:art.status,bytes}));
  if(!art.ok||bytes<1000||!art.headers.get('content-type')?.includes('image/webp'))process.exitCode=1;
 }}
+
+const resourceArtworkDeployed=styles.includes('.mining-refined');console.log(JSON.stringify({resourceArtworkDeployed}));
+if(resourceArtworkDeployed){for(const good of ['iron-ore','copper-ore','coal','stone','limestone'])for(const size of ['', '-256','-96']){
+ const response=await fetch(origin+'/art/resources/'+good+size+'.webp',{signal:AbortSignal.timeout(20000)});const bytes=(await response.arrayBuffer()).byteLength;
+ console.log(JSON.stringify({resourceArt:good+size,status:response.status,bytes}));if(!response.ok||bytes<1000||!response.headers.get('content-type')?.includes('image/webp'))process.exitCode=1;
+}}
