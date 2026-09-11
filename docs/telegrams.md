@@ -5,3 +5,6 @@ One strategic office serves the entire city. The existing Waterfront property is
 Personal messages, drafts, blocks and folder preferences survive season changes. A new season resets the office to city ownership and its configured default fee, retaining previous financial and ownership records. Moderation can inspect only a specifically reported message after the report enters investigation and the reviewer has both report and evidence permissions. Evidence reads are audited without copying private text into general audit records.
 
 Artwork: `public/art/telegram-office.jpg` (web asset) and `public/art/telegram-office.png` (source), generated with the built-in image generation tool. Prompt: cinematic 1920s waterfront Telegram Office, dark stone and copper-framed amber windows, rainy cobbles, harbour cranes, deep blue-black and muted gold, three-quarter architectural view, no UI or statistics.
+
+Production migrations were applied on 2026-09-11 as `20260911190107_telegram_city_office` and `20260911190501_telegram_delivery_and_controls`. The complete Telegram transaction/privacy suite also passed against production inside a rolled-back transaction. The founding season remains open; one city-owned office remains at Waterfront W06 with a $25 fee and a $15,000 property listing (district tax additional).
+
