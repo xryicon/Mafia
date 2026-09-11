@@ -272,3 +272,13 @@ create function public.telegram_evidence(p_case uuid) returns jsonb language sql
 revoke all on function game_private.telegram_office_data(),game_private.telegram_state(uuid,text,integer,uuid),game_private.telegram_action(text,jsonb),game_private.telegram_manage(text,jsonb),game_private.telegram_evidence(uuid),public.telegram_state(uuid,text,integer,uuid),public.telegram_action(text,jsonb),public.telegram_manage(text,jsonb),public.telegram_evidence(uuid) from public,anon,authenticated;
 grant execute on function game_private.telegram_state(uuid,text,integer,uuid),game_private.telegram_action(text,jsonb),game_private.telegram_manage(text,jsonb),game_private.telegram_evidence(uuid),public.telegram_state(uuid,text,integer,uuid),public.telegram_action(text,jsonb),public.telegram_manage(text,jsonb),public.telegram_evidence(uuid) to authenticated;
 
+
+-- Reset the office in the same transaction as the season switch.
+create function game_private.telegram_season_switch() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ if new.season_id is distinct from old.season_id then perform game_private.ensure_districts(new.season_id);end if;
+ return new;
+end $$;
+create trigger telegram_season_switch after update of season_id on game_private.season_runtime for each row execute function game_private.telegram_season_switch();
+revoke all on function game_private.telegram_season_switch() from public,anon,authenticated;
+

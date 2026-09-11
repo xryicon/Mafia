@@ -1,7 +1,7 @@
 begin;
 do $$
 declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); owner uuid:=gen_random_uuid(); mod uuid:=gen_random_uuid();
- s uuid:=game_private.current_season(); o public.game_telegram_office; p public.game_district_plots; r jsonb; q jsonb; t uuid; m uuid; nonce uuid:=gen_random_uuid(); caseid uuid; denied boolean; count_before bigint; a_cash bigint; owner_cash bigint; b_cash bigint; dest uuid;
+ s uuid:=game_private.current_season(); o public.game_telegram_office; p public.game_district_plots; r jsonb; q jsonb; t uuid; m uuid; nonce uuid:=gen_random_uuid(); caseid uuid; denied boolean; count_before bigint; a_cash bigint; owner_cash bigint; b_cash bigint; dest uuid; next_season uuid; old_office uuid;
 begin
  insert into auth.users(id,raw_user_meta_data) values(a,jsonb_build_object('username','TgA'||left(replace(a::text,'-',''),10))),(b,jsonb_build_object('username','TgB'||left(replace(b::text,'-',''),10))),(owner,jsonb_build_object('username','TgO'||left(replace(owner::text,'-',''),10))),(mod,jsonb_build_object('username','TgM'||left(replace(mod::text,'-',''),10)));
  perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
@@ -93,6 +93,23 @@ begin
  perform set_config('request.jwt.claim.sub',a::text,true);
  r:=public.telegram_action('send',q||jsonb_build_object('request_id',gen_random_uuid(),'fee',1));if r?'error' then raise exception 'City revenue send failed %',r;end if;
  if not exists(select 1 from game_private.telegram_account_ledger where delta=1 and balance_after=balance_before+1) then raise exception 'City revenue ledger missing';end if;
+
+ -- A real season lifecycle preserves correspondence and receipts, resets ownership and fee.
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ select business_id into old_office from public.game_telegram_office;
+ r:=public.season_action('create','{"name":"Telegram Next Season","reason":"Telegram season test"}');next_season:=(r->>'season_id')::uuid;
+ if next_season is null then raise exception 'Next season create failed %',r;end if;
+ r:=public.season_action('lock',jsonb_build_object('season_id',s,'reason','Lock Telegram test season'));if r?'error' then raise exception 'Lock failed %',r;end if;
+ r:=public.season_action('snapshot',jsonb_build_object('season_id',s,'reason','Archive Telegram test results'));if r?'error' then raise exception 'Snapshot failed %',r;end if;
+ r:=public.season_action('archive',jsonb_build_object('season_id',s,'reason','Archive Telegram season'));if r?'error' then raise exception 'Archive failed %',r;end if;
+ r:=public.season_action('launch_next',jsonb_build_object('season_id',next_season,'expected_current_season',s,'confirmation','RESET '||(select name from public.game_seasons where id=s),'reason','Test Telegram season reset'));if r?'error' then raise exception 'Launch failed %',r;end if;
+ if (select season_id from public.game_telegram_office)<>next_season then raise exception 'Office reset was not immediate';end if;
+ if not exists(select 1 from public.game_district_businesses where id=old_office and archived_at is not null) then raise exception 'Old business history not archived';end if;
+ if not exists(select 1 from public.game_telegram_office o join public.game_district_businesses b on b.id=o.business_id where b.owner_type='city' and b.telegram_fee=o.default_fee) then raise exception 'Ownership/default fee did not reset';end if;
+ if not exists(select 1 from game_private.telegram_receipts where season_id=s) then raise exception 'Season financial history lost';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.telegram_state(t);if r->'messages'->0->>'body'<>'PRIVATE MESSAGE TEXT' then raise exception 'Season reset lost private correspondence';end if;
+ if (select count(*) from public.game_district_buildings where building_type='telegram' and archived_at is null)<>1 then raise exception 'Season reset cloned office';end if;
  set constraints all immediate;
 end $$;
 rollback;
