@@ -5,6 +5,7 @@ import {usePathname} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
 import {money,type GameState} from "@/lib/game";
 import type {CityState} from "@/lib/city";
+import {PlayerAvatar} from "@/components/player-avatar";
 import {Brand} from "@/components/brand";
 import {GameIcon} from "@/components/game-icon";
 import {UsernameForm} from "@/components/username-form";
@@ -53,7 +54,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
   <div className="estate-player-tools"><div className="header-wallet" aria-label="Cash balance"><span className="wallet-label">CASH</span><strong className="header-cash">{data?money(data.player.cash):"—"}</strong></div>
   <Link href="/market?view=inventory" className="command-header-stock" aria-label="Inventory stock"><GameIcon name="inventory" size={22}/>{summary?.stock?.toLocaleString("en-US")??"—"}</Link>
   <Link className="command-header-bell" href="/telegrams" aria-label="Telegram notifications"><GameIcon name="bell" size={21}/>{!!summary?.unread&&<b aria-hidden="true">{summary.unread}</b>}</Link>
-  <details className="estate-account-menu" ref={account}><summary aria-label="Player menu"><img className="don-portrait" src="/art/command-portrait.jpg" alt="" width={36} height={36}/><div><span className="estate-player-name">{data?.username||"Your account"} <i>⌄</i></span><span className="estate-player-numbers"><span className="header-power">Power <strong>{data?.player.power?.toLocaleString("en-US")??"—"}</strong></span><span className="header-rank" title="Rank">{data?.player.rank||"—"}</span></span></div></summary>
+  <details className="estate-account-menu" ref={account}><summary aria-label="Player menu"><PlayerAvatar className="don-portrait" src={data?.avatar_url} size={36}/><div><span className="estate-player-name">{data?.username||"Your account"} <i>⌄</i></span><span className="estate-player-numbers"><span className="header-power">Power <strong>{data?.player.power?.toLocaleString("en-US")??"—"}</strong></span><span className="header-rank" title="Rank">{data?.player.rank||"—"}</span></span></div></summary>
    <div className="estate-dropdown"><p className="eyebrow">YOUR BLACKWATER</p><p className="account-identity">{data?.username||"Your account"}<small>Power {data?.player.power?.toLocaleString("en-US")??"—"} · {data?.player.rank||"—"}</small></p><Link href="/players">Players & respect</Link><Link href="/seasons?view=rankings">Leaderboards</Link><Link href="/seasons">Seasons</Link><Link href="/support">Support</Link>{!!data?.permissions.length&&<Link className="owner-menu-link" href={data.permissions.includes("roles.manage")?"/owner":"/staff"}>{data.permissions.includes("roles.manage")?"Owner panel":"Staff panel"}</Link>}<Link href="/ledger">Financial history</Link><Link href="/account">Account & security</Link><LogoutButton/></div>
   </details></div></header>
   {stale&&<div className="estate-connection" role="status">Connection paused. <button onClick={()=>void refresh()}>Refresh city status</button></div>}

@@ -8,6 +8,7 @@ import {seasonPlayable} from "@/lib/seasons";
 import {points,centroid,type DistrictState,type District} from "@/lib/districts";
 import {atlasAreas,mailboxSummary,respectProgress,since,until,type DashboardData} from "@/lib/dashboard";
 import {telegramFee} from "@/lib/telegrams";
+import {PlayerAvatar} from "@/components/player-avatar";
 import {GameIcon} from "./game-icon";
 import {PanMap} from "./district-map";
 
@@ -96,7 +97,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   {notice&&<div className={"command-notice"+(failed?" error":"")} role={failed?"alert":"status"}>{notice}<button aria-label="Dismiss dashboard message" onClick={()=>setNotice("")}>×</button></div>}
   {!playing&&<div className="command-notice">This season is {game.season.status}. Your empire remains available to view.</div>}
   <aside className="command-player command-panel" aria-label="Your empire">
-   <Link href="/profile" className="command-portrait-link" aria-label="View your player profile"><img className="command-portrait" src="/art/command-portrait.jpg" alt="A shadowed Blackwater boss in a fedora" width={512} height={512}/></Link>
+   <Link href="/profile" className="command-portrait-link" aria-label="View your player profile"><PlayerAvatar className="command-portrait" src={data.city?.avatar_url} name={data.game.player.handle} size={512}/></Link>
    <div className="command-player-name"><h2>{data.city?.username??game.player.handle}</h2><Link href="/account" aria-label="Edit account"><GameIcon name="edit" size={15}/></Link></div>
    <p className="command-player-rank"><GameIcon name="shield" size={15}/>{playerRank}</p><p className="command-player-quote">“Power moves people.”</p>
    <div className="command-level"><div><span>Lv. {player?.level??"—"}</span><small>{game.player.xp.toLocaleString("en-US")} {progress.next?"/ "+progress.next.value.toLocaleString("en-US"):""} respect</small></div><Meter value={progress.percent} label="Progress to next respect rank"/><small>{progress.next?"Next rank: "+progress.next.name:"Highest configured rank"}</small></div>

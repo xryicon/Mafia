@@ -47,3 +47,70 @@ test("a closed office prevents sending while existing conversations remain reada
  await expect(page.getByRole("button",{name:"Send Telegram",exact:true})).toBeDisabled();
 });
 
+
+test("groups invite players, send one priced message and keep member controls private",async({page,request})=>{
+ await page.setViewportSize({width:1672,height:1000});await page.goto("/telegrams");
+ await page.getByRole("button",{name:"New Group",exact:true}).click();
+ await page.getByRole("dialog").getByLabel("Group name",{exact:true}).fill("Waterfront Trading Circle");
+ await page.getByRole("button",{name:"Create group",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"Waterfront Trading Circle",exact:true})).toBeVisible();
+ await expect(page.getByRole("button",{name:"Send Telegram",exact:true})).toBeDisabled();
+ await page.getByLabel("Invite player",{exact:true}).fill("HarborJack");await page.getByRole("button",{name:"Send invitation",exact:true}).click();
+ await expect(page.getByLabel("Conversation members")).toContainText("Invitation pending");
+ await request.post("http://127.0.0.1:54329/__accept_telegram_invites",{headers:{Authorization:"Bearer "+token}});
+ await page.getByRole("button",{name:"Refresh mailbox",exact:true}).click();
+ await expect(page.getByLabel("Conversation members")).toContainText("2 members");
+ await page.getByRole("button",{name:"Close members",exact:true}).click();
+ await page.getByLabel("Your reply").fill("Our warehouses are ready for the next shipment.");
+ await page.getByRole("button",{name:"Send Telegram",exact:true}).click();
+ await expect(page.locator(".tg-message-feed")).toContainText("Our warehouses are ready");
+ await expect(page.locator(".header-cash")).toContainText("$9,975");
+ await expect(page.locator(".tg-send-terms")).toContainText("$25 per group telegram");
+ await capture(page,"telegrams-groups-desktop");
+ await page.getByRole("button",{name:/2 members · View members/}).click();
+ await page.getByLabel("Manage HarborJack").click();await page.getByRole("button",{name:"Make group owner",exact:true}).click();
+ await expect(page.getByLabel("Invite player",{exact:true})).toHaveCount(0);
+ await page.getByRole("button",{name:"Leave group",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"Waterfront Trading Circle",exact:true})).toHaveCount(0);
+});
+test("mobile gang correspondence uses dashboard styling without overflowing",async({page})=>{
+ await page.setViewportSize({width:375,height:812});await page.goto("/telegrams");
+ await page.getByRole("navigation",{name:"Telegram folders"}).getByRole("button",{name:"Gang",exact:true}).click();
+ await page.getByRole("button",{name:"Open gang conversation",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"Cobalto Family",exact:true})).toBeVisible();
+ await expect(page.getByRole("button",{name:"Mailbox",exact:false})).toBeVisible();
+ await page.getByLabel("Your reply").fill("Meet at the harbor. Bring the crew.");
+ await page.getByRole("button",{name:"Send Telegram",exact:true}).click();
+ await expect(page.locator(".tg-message-feed")).toContainText("Meet at the harbor");
+ await page.getByRole("button",{name:/2 members · View members/}).click();
+ await expect(page.getByLabel("Conversation members")).toContainText("Access follows your current gang membership");
+ await expect(page.getByLabel("Invite player",{exact:true})).toHaveCount(0);
+ await capture(page,"telegrams-gang-mobile");
+ for(const width of [375,768,1024,1448]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
+});
+test("profile pictures stay consistent in the header, profile, dashboard and sent telegrams",async({page})=>{
+ const photo="https://images.example.test/harbor-boss.jpg";
+ await page.route(photo,async route=>{const r=await page.request.get("/art/command-portrait.jpg");await route.fulfill({body:await r.body(),contentType:"image/jpeg"});});
+ await page.goto("/account");await page.getByLabel("Profile image URL").fill(photo);await page.getByRole("button",{name:"Save picture",exact:true}).click();
+ await expect(page.getByRole("status")).toContainText("Profile picture saved");
+ await expect(page.locator(".don-portrait")).toHaveAttribute("src",photo);
+ await page.goto("/dashboard");await expect(page.locator(".command-portrait")).toHaveAttribute("src",photo);
+ await page.goto("/profile");await expect(page.locator(".control-heading .profile-picture-preview")).toHaveAttribute("src",photo);
+ await page.goto("/telegrams");await page.locator(".tg-conversations").getByRole("button").first().click();
+ await expect(page.locator(".tg-thread-header .tg-seal")).toHaveAttribute("src","/art/command-portrait.jpg");
+ await page.getByLabel("Your reply").fill("My portrait follows my messages.");await page.getByRole("button",{name:"Send Telegram",exact:true}).click();
+ await expect(page.locator(".tg-message.outgoing .tg-seal").last()).toHaveAttribute("src",photo);
+});
+test("group creation reports errors and safely retries a lost confirmation",async({page})=>{
+ await page.goto("/telegrams");await page.getByRole("button",{name:"New Group",exact:true}).click();
+ const dialog=page.getByRole("dialog");await dialog.getByLabel("Group name",{exact:true}).fill("BlockedGroup");
+ await dialog.getByRole("button",{name:"Create group",exact:true}).click();await expect(dialog.getByRole("status")).toContainText("group ownership limit");
+ await dialog.getByLabel("Group name",{exact:true}).fill("Retry Partners");
+ let failed=false;await page.route("**/rest/v1/rpc/telegram_room_action",async route=>{if(!failed){failed=true;await route.fetch();await route.abort("failed");}else await route.continue();});
+ await dialog.getByRole("button",{name:"Create group",exact:true}).click();
+ await expect(dialog.getByRole("button",{name:"Retry group change",exact:true})).toBeVisible();
+ await dialog.getByRole("button",{name:"Retry group change",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"Retry Partners",exact:true})).toBeVisible();
+ await expect(page.locator(".tg-conversations").getByRole("button").filter({hasText:"Retry Partners"})).toHaveCount(1);
+});
+
