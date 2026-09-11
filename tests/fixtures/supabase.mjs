@@ -5,8 +5,8 @@ const season={id:"55555555-5555-4555-8555-555555555555",name:"Founding Season",s
 const state = {season,
  jobs:[{"id":"docks","name":"Dock errand","district":"THE DOCKS","description":"Build connections.","reward":250,"xp":10,"cooldown":60},{"id":"warehouse","name":"Warehouse shift","district":"INDUSTRIAL QUARTER","description":"Keep goods moving.","reward":600,"xp":20,"cooldown":180},{"id":"courier","name":"Night courier","district":"OLD TOWN","description":"Work the night shift.","reward":1100,"xp":40,"cooldown":360}],
  settings:{market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
- permissions:['economy.manage','roles.manage'],ledger:[],
- player:{id:playerId,handle:"Rookie-11111111",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
+ permissions:['economy.manage','roles.manage','players.rename','tickets.manage','chat.delete','audit.view','evidence.view','seasons.manage','seasons.reset'],ledger:[],
+ player:{id:playerId,handle:"HarborBoss",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
  goods:[
   {id:"whiskey",name:"Whiskey crates",business_name:"Backroom distillery",business_cost:3000,batch_size:3,cycle_seconds:300},
   {id:"silk",name:"Silk bolts",business_name:"Textile workshop",business_cost:5000,batch_size:2,cycle_seconds:300},
@@ -16,7 +16,7 @@ const state = {season,
  my_listings:[],events:[{id:"welcome",description:"Arrived in Blackwater",cash_delta:10000,created_at:user.created_at}],
  server_time:new Date().toISOString(),
 };
-const community={chat:[],cases:[],sanctions:[]};
+const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
  moderator_permissions:["players.warn"],permission_catalog:[{id:"players.warn",owner_only:false}],audit:[]});
@@ -30,19 +30,30 @@ const server = http.createServer(async(req,res) => {
  const send=(status,data)=>{res.writeHead(status);res.end(JSON.stringify(data));};
  if(url.pathname==="/health"){send(200,{ok:true});return;}
  if(url.pathname==="/auth/v1/token"){send(400,{error:"invalid_grant",error_description:"Invalid test code"});return;}
+ if(url.pathname==="/rest/v1/rpc/username_available"){let raw="";for await(const chunk of req)raw+=chunk;const {candidate}=JSON.parse(raw);send(200,{available:candidate.toLowerCase()!=="harborboss"});return;}
  if(req.headers.authorization!=="Bearer "+token){send(401,{code:"bad_jwt",message:"Invalid session"});return;}
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
  if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
+ if(url.pathname==="/rest/v1/rpc/social_state"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,online_count:2,window_seconds:90,poll_seconds:3,season,permissions:state.permissions,muted:false,chat:[...community.chat].reverse(),server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/rest/v1/rpc/presence_leave"){send(200,null);return;}
+ if(url.pathname==="/rest/v1/rpc/support_state"){send(200,{cases:community.cases,sanctions:community.sanctions});return;}
+ if(url.pathname==="/rest/v1/rpc/player_directory"){
+ let raw="";for await(const chunk of req)raw+=chunk;const {p_search="",p_online=false,p_offset=0}=JSON.parse(raw);
+ const players=[{id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",respect:800,rank:1,online:true,role:"player"},{id:playerId,username:state.player.handle,respect:state.player.xp,rank:2,online:true,role:"owner"},{id:"88888888-8888-4888-8888-888888888888",username:"IronRose",respect:0,rank:3,online:false,role:"player"}].filter(p=>p.username.toLowerCase().includes(p_search.toLowerCase())&&(!p_online||p.online));
+ send(200,{players:players.slice(p_offset,p_offset+50),total:players.length,offset:p_offset,page_size:50,my_rank:2,online_count:2,season,server_time:new Date().toISOString()});return;
+ }
  if(url.pathname==="/rest/v1/rpc/community_state"){send(200,community);return;}
  if(url.pathname==="/rest/v1/rpc/staff_action"||url.pathname==="/rest/v1/rpc/community_action"){
  let raw="";for await(const chunk of req)raw+=chunk;
  const {action,payload:p}=JSON.parse(raw);
  if(action==="setting")state.settings[p.key]=Number(p.value);
- if(action==="chat")community.chat.unshift({id:String(Date.now()),player_id:playerId,handle:state.player.handle,body:p.body});
- if(action==="ticket"||action==="report")community.cases.unshift({id:String(Date.now()),player_id:playerId,kind:action,subject:p.subject,body:p.body,status:"open"});
+ if(action==="chat")community.chat.unshift({id:String(Date.now()),player_id:playerId,handle:state.player.handle,username:state.player.handle,role:"owner",created_at:new Date().toISOString(),body:p.body});
+ if(action==="ticket"||action==="report")community.cases.unshift({id:String(Date.now()),player_id:playerId,kind:action,subject:p.subject,body:p.body,status:"open",response:null,created_at:new Date().toISOString()});
+ if(action==="delete_own_chat")community.chat=community.chat.filter(c=>c.id!==p.id||c.player_id!==playerId);
+ if(action==="case"){const ticket=community.cases.find(c=>c.id===p.id);if(ticket){ticket.status=p.status;ticket.response=p.response;}}
  send(200,{message:"Saved."});return;
  }
  if(url.pathname==="/rest/v1/rpc/game_action"){
