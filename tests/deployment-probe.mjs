@@ -44,7 +44,7 @@ if(telegramsDeployed){
 }
 
 const commandDashboardDeployed=styles.includes(".command-dashboard")&&styles.includes(".command-atlas");
-console.log(JSON.stringify({marketExchangeDeployed:styles.includes(".market-workspace"),commandDashboardDeployed,sharedCommandHudDeployed:styles.includes(".command-city.command-dashboard-page"),cityWideOfficeMarkerRemoved:!styles.includes(".command-office-marker")}));
+console.log(JSON.stringify({telegramGroupsDeployed:styles.includes(".tg-command")&&styles.includes(".tg-members"),marketExchangeDeployed:styles.includes(".market-workspace"),commandDashboardDeployed,sharedCommandHudDeployed:styles.includes(".command-city.command-dashboard-page"),cityWideOfficeMarkerRemoved:!styles.includes(".command-office-marker")}));
 if(commandDashboardDeployed){
  for(const name of ["command-city","command-portrait"]){
   const art=await fetch(origin+"/art/"+name+".jpg",{signal:AbortSignal.timeout(20000)});

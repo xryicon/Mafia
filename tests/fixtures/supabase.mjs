@@ -46,6 +46,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname.startsWith("/rest/v1/rpc/telegram_")){
   let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");
   if(url.pathname.endsWith("telegram_state"))send(200,{...telegrams.read(p),cash:state.player.cash});
+  else if(url.pathname.endsWith("telegram_room_action"))send(200,telegrams.room(p.p_action,p.p_payload));
   else if(url.pathname.endsWith("telegram_action"))send(200,telegrams.action(p.p_action,p.p_payload,state));
   else if(url.pathname.endsWith("telegram_manage"))send(200,telegrams.manage(p.p_action,p.p_payload));
   else send(400,{message:"Evidence unavailable."});
@@ -77,9 +78,11 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/market_state"){send(200,market.read(districts));return;}
  if(url.pathname==="/rest/v1/rpc/market_auction_action"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);send(200,market.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/__close_auctions"&&process.env.GAME_TEST_FIXTURE==="1"){market.expire();send(200,{ok:true});return;}
+ if(url.pathname==="/__accept_telegram_invites"&&process.env.GAME_TEST_FIXTURE==="1"){telegrams.acceptInvites();send(200,{ok:true});return;}
+ if(url.pathname==="/rest/v1/rpc/profile_avatar"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);state.player.avatar_url=telegrams.avatar(p.p_url);send(200,{message:"Profile picture saved.",avatar_url:state.player.avatar_url});return;}
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
- if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
+ if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{is_self:true,avatar_url:state.player.avatar_url||"/art/command-portrait.jpg",handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
  if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
  if(url.pathname==="/__reset_world"&&process.env.GAME_TEST_FIXTURE==="1"){resetWorld();send(200,{ok:true});return;}
  if(url.pathname==="/__visual_world"&&process.env.GAME_TEST_FIXTURE==="1"){
@@ -91,7 +94,7 @@ const server = http.createServer(async(req,res) => {
  state.market=[{id:"22222222-2222-4222-8222-222222222222",seller_id:"33333333-3333-4333-8333-333333333333",seller_handle:"HarborJack",good_id:"steel",quantity:120,unit_price:180,status:"active",created_at:new Date().toISOString()}];
  send(200,{ok:true});return;
  }
- if(url.pathname==="/rest/v1/rpc/city_status"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,player:{cash:state.player.cash,xp:state.player.xp,power:state.player.xp,rank:state.player.xp>=state.settings.rank_underboss?"Underboss":state.player.xp>=state.settings.rank_caporegime?"Caporegime":state.player.xp>=state.settings.rank_soldier?"Soldier":"Associate",level:1},online_count:2,window_seconds:90,poll_seconds:30,season,permissions:state.permissions,events:state.events.slice(0,8),server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/rest/v1/rpc/city_status"){send(200,{player_id:playerId,avatar_url:state.player.avatar_url||"/art/command-portrait.jpg",username:state.player.handle,username_claimed:true,player:{cash:state.player.cash,xp:state.player.xp,power:state.player.xp,rank:state.player.xp>=state.settings.rank_underboss?"Underboss":state.player.xp>=state.settings.rank_caporegime?"Caporegime":state.player.xp>=state.settings.rank_soldier?"Soldier":"Associate",level:1},online_count:2,window_seconds:90,poll_seconds:30,season,permissions:state.permissions,events:state.events.slice(0,8),server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/gang_directory"){send(200,{gangs:[],total:0,season,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/social_state"){send(200,{player_id:playerId,username:state.player.handle,username_claimed:true,online_count:2,window_seconds:90,poll_seconds:3,season,permissions:state.permissions,muted:false,chat:[...community.chat].reverse(),server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/presence_leave"){send(200,null);return;}
