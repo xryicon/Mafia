@@ -20,6 +20,7 @@ begin
  set local role authenticated;
  denied:=false;begin update public.game_mines set remaining=0 where id=m.id;exception when insufficient_privilege then denied:=true;end;
  if not denied then raise exception 'Browser can modify reserves';end if;
+ r:=public.mining_state();if jsonb_array_length(r->'sites')<>10 or r->>'can_manage'<>'false' then raise exception 'Mining state scope wrong %',r;end if;
  r:=public.mining_action('start',q);if not(r?'error') then raise exception 'Mining without pickaxe was allowed';end if;
  r:=public.mining_action('pickaxe',q||'{"price":1}');if not(r?'error') then raise exception 'Forged pickaxe price accepted';end if;
  reset role;
