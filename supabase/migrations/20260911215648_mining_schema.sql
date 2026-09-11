@@ -137,10 +137,13 @@ create trigger mine_title_change after update of owner_id,owner_type on public.g
 -- Mine property transactions use the dedicated controls; ordinary district plots retain their current behavior.
 alter function game_private.district_act(text,jsonb) rename to district_act_before_mining;
 create function game_private.district_act(action text,payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare result jsonb;
 begin
  if exists(select 1 from public.game_mines where plot_id=nullif(payload->>'plot_id','')::uuid)
  and action not in ('watch','bid','auction_finish') then raise exception 'Use the mine controls for extraction rights and auctions.';end if;
- return game_private.district_act_before_mining(action,payload);
+ result:=game_private.district_act_before_mining(action,payload);
+ if action='auction_finish' then update public.game_mines set operated_at=now() where plot_id=nullif(payload->>'plot_id','')::uuid;end if;
+ return result;
 end $$;
 alter function game_private.district_manage(text,jsonb) rename to district_manage_before_mining;
 create function game_private.district_manage(p_action text,p_payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$

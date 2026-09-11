@@ -26,6 +26,7 @@ test("public mining buys a pickaxe, completes one shift, and makes gathered reso
  await page.getByRole("button",{name:"District activity",exact:true}).click();await expect(page.locator(".mine-history li")).toHaveCount(10);
 });
 test("Owner opens a mine and auctions it; a player reserves their bid",async({page,request})=>{
+ page.on("pageerror",e=>console.log("MINING_PAGE_ERROR "+e.message));
  await page.setViewportSize({width:1448,height:1100});await page.goto("/owner?section=mines&mine=mine-2");
  await page.getByLabel("Site status",{exact:true}).selectOption("open");await page.getByLabel("Reason for this change").fill("Open the copper mine for auction");await page.getByRole("button",{name:"Save mine settings"}).click();await expect(page.locator(".mine-notice")).toContainText("saved");
  await page.getByLabel("Minimum bid ($)").fill("1000");await page.getByLabel("Auction duration (minutes)").fill("5");await page.getByLabel("Reason for this auction").fill("Release city extraction rights");await page.getByRole("button",{name:"Start mine auction"}).click();await expect(page.getByRole("heading",{name:"Auction in progress"})).toBeVisible();await capture(page,"mining-owner-controls");

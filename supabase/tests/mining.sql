@@ -2,7 +2,7 @@
 begin;
 do $$
 declare owner uuid:=gen_random_uuid(); a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); s uuid:=game_private.current_season();
- m public.game_mines; other public.game_mines; p public.game_district_plots; q jsonb; r jsonb; first jsonb; shift uuid; cost bigint; reserve bigint; before_cash bigint; aid uuid; denied boolean; nextseason uuid; original_ready timestamptz;
+ m public.game_mines; other public.game_mines;  q jsonb; r jsonb; first jsonb; shift uuid; cost bigint; reserve bigint; before_cash bigint; aid uuid; denied boolean; nextseason uuid; original_ready timestamptz;
 begin
  insert into auth.users(id) values(owner),(a),(b);
  perform set_config('request.jwt.claim.sub',owner::text,true);perform public.game_state();

@@ -25,8 +25,8 @@ export function MineControls({site,data,busy,act}:{site:Mine;data:MiningState;bu
  <p className="mine-help">Site rules and opening defaults carry into future seasons. Current ownership and extraction history remain in the registry.</p>
  <form className="mine-form mine-edit-grid" onSubmit={save}>
  <label>Site name<input name="name" required minLength={3} maxLength={80} defaultValue={site.name}/></label>
- <label>Site status<select name="status" defaultValue={site.status}><option value="open">Open</option><option value="closed">Closed</option><option value="reserved">Reserved for future release</option></select></label>
- <label>Mining access<select name="access_mode" defaultValue={site.access_mode}><option value="public">Public · all players with a pickaxe</option><option value="private">Private · property owner only</option></select></label>
+ <label>Site status<select aria-label="Site status" name="status" defaultValue={site.status}><option value="open">Open</option><option value="closed">Closed</option><option value="reserved">Reserved for future release</option></select></label>
+ <label>Mining access<select aria-label="Mining access" name="access_mode" defaultValue={site.access_mode}><option value="public">Public · all players with a pickaxe</option><option value="private">Private · property owner only</option></select></label>
  <label>Remaining resource units<input name="remaining" required type="number" min="0" max="100000000" defaultValue={site.remaining}/></label>
  <label>Property base value ($)<input name="base_price" required type="number" min="1" max="1000000000" defaultValue={site.base_price}/></label>
  <label>Public shift yield<input name="hand_yield" required type="number" min="1" max="1000" defaultValue={site.hand_yield}/></label>
