@@ -1,5 +1,11 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    bell: "M6 8a6 6 0 0 1 12 0v7l3 3H3l3-3V8 M10 21h4 M12 1v1",
+    people: "M9 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M3 21v-8c0-4 12-4 12 0v8 M6 21v-7 M12 21v-7 M17 3a3 3 0 0 1 0 6 M18 12c3 0 4 1 4 3v6 M19 21v-7",
+    production: "M3 21V9l6 3V7l6 5V3h4v18H3 M6 16h2 M11 16h2 M16 16h2",
+    map: "m3 5 6-3 6 3 6-3v17l-6 3-6-3-6 3V5 M9 2v17 M15 5v17",
+    pin: "M12 22S4 13 4 8a8 8 0 0 1 16 0c0 5-8 14-8 14 M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+    gear: "m9 2 1 3h4l1-3 4 3-1 3 2 3 3 1-1 5-3 0-3 3v3h-5l-1-3-3-2-3 1-2-5 3-2V8L2 6l4-3 3 2 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
     overview: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
     operations: "M9 4V2h6v2 M3 7h18v14H3z M3 12h18 M10 10h4v4h-4z",
     market: "M3 3h2l2 13h12l2-10H6 M8 20h.01 M18 20h.01",
