@@ -3,7 +3,7 @@ import Link from "next/link";
 import {useCallback,useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
-import {money,rank,readyUnits,remaining,type GameState} from "@/lib/game";
+import {money,rank,readyUnits,remaining} from "@/lib/game";
 import {seasonPlayable} from "@/lib/seasons";
 import {points,centroid,type DistrictState,type District} from "@/lib/districts";
 import {atlasAreas,mailboxSummary,respectProgress,since,until,type DashboardData} from "@/lib/dashboard";
@@ -25,7 +25,7 @@ function Atlas({districts,selected,onSelect,office}:{districts:District[];select
  return <section className="command-atlas" aria-label="City overview">
   <div className="command-atlas-title"><h1>BLACKWATER</h1><p>A CITY OF OPPORTUNITY</p></div>
   <span className="command-atlas-motto">CONTROL TERRITORY. BUILD EMPIRES. LEAVE A LEGACY.</span>
-  <PanMap label="Blackwater command map" background="/art/command-city.jpg" height={560} instruction="Drag to explore · Select a district">
+  <PanMap label="Blackwater command map" background="/art/command-city.jpg" height={560} focus={atlasAreas.find(a=>a.slug===selected)?.label} instruction="Drag to explore · Select a district">
    {atlasAreas.map(area=>{const d=districts.find(d=>d.slug===area.slug),active=d?.slug===selected;return <g key={area.slug} className={"command-zone"+(active?" selected":"")+(d?"":" unopened")} style={{"--zone-color":area.color} as CSSProperties} role={d?"button":undefined} tabIndex={d?0:undefined} aria-label={d?"Select "+d.name:undefined} aria-pressed={d?active:undefined} onClick={()=>d&&onSelect(d.slug)} onDoubleClick={()=>d&&router.push("/districts/"+d.slug)} onKeyDown={e=>{if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();onSelect(d.slug);}}}>
     <title>{d?d.name+" · "+(d.runtime_status??d.status):area.name+" · Unopened district"}</title><polygon points={points(area.polygon)}/>
     <foreignObject x={area.label[0]-140} y={area.label[1]-53} width="280" height="95" className="command-zone-label"><div><GameIcon name={area.icon} size={30}/><strong>{d?.name??area.name}</strong><span>{d?(d.industries.slice(0,3).join(" · ")||area.subtitle):"Unopened district"}</span></div></foreignObject>
@@ -42,18 +42,18 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
  const modal=useRef<HTMLDialogElement>(null),travelSelect=useRef<HTMLSelectElement>(null),lock=useRef(false),loading=useRef(false),version=useRef(0),alive=useRef(true),selected=useRef(initial.district?.district?.slug??"the-waterfront"),offset=useRef(Date.parse(initial.game.server_time)-Date.now());
  const router=useRouter();
  const refresh=useCallback(async(slug=selected.current,silent=false)=>{
-  if(loading.current&&slug===selected.current)return;
-  const id=++version.current;selected.current=slug;loading.current=true;if(!silent)setRefreshing(true);
+  if(loading.current&&slug===selected.current)return false;
+  const id=++version.current;selected.current=slug;loading.current=true;setRefreshing(true);
   try{
    const client=createClient();
    const [game,city,district,season,mailbox]=await Promise.all([client.rpc("game_state"),client.rpc("city_status"),client.rpc("district_state",{p_slug:slug}),client.rpc("season_state",{p_metric:"respect"}),client.rpc("telegram_state")]);
    if(game.error||!game.data||district.error)throw new Error("The city could not be refreshed. Your last saved figures are shown.");
-   if(!alive.current||id!==version.current)return;
+   if(!alive.current||id!==version.current)return false;
    offset.current=Date.parse(game.data.server_time)-Date.now();setNow(Date.parse(game.data.server_time));
    setData({game:game.data,city:city.error?null:city.data,district:district.data,season:season.error?null:season.data,mailbox:mailbox.error||!mailbox.data?null:mailboxSummary(mailbox.data)});
    setTravel(district.data?.district?.slug??slug);setFailed(false);if(!silent)setNotice("");
-   window.dispatchEvent(new Event("blackwater:game"));
-  }catch(error){if(alive.current&&id===version.current){setFailed(true);setNotice(error instanceof Error?error.message:"Could not refresh the city.");}}
+   window.dispatchEvent(new Event("blackwater:game"));return true;
+  }catch(error){if(alive.current&&id===version.current){setFailed(true);setNotice(error instanceof Error?error.message:"Could not refresh the city.");}return false;}
   finally{if(id===version.current){loading.current=false;if(alive.current)setRefreshing(false);}}
  },[]);
  useEffect(()=>{
@@ -87,7 +87,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   try{
    const {data:result,error}=await createClient().rpc("game_action",{p_action:action,p_payload:{...payload,season_id:game.season.id}});
    if(error||result?.error)throw new Error(result?.error??"Could not confirm the action. Refresh before trying again.");
-   await refresh(selected.current,true);setNotice(result.message??"Action completed.");
+   const fresh=await refresh(selected.current,true);setNotice((result.message??"Action completed.")+(fresh?"":" Refresh city to see your updated totals."));
   }catch(error){setFailed(true);setNotice(error instanceof Error?error.message:"Could not complete this action.");}
   finally{lock.current=false;setBusy(false);}
  }
@@ -142,7 +142,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   </div>
   <aside className="command-right" aria-label="City intelligence">
    <Panel title={"District: "+(d?.name??"Unavailable")} action={<button className="command-more command-change" onClick={change}>Change</button>} className="command-dossier">{d?<><img src={d.image_url} alt={d.name+" skyline"} width={720} height={280}/><p>{d.description}</p><dl className="command-district-facts"><div><dt><GameIcon name="shield" size={15}/>Control</dt><dd>{ds?.territory.controller_name??d.controller??"Neutral"}</dd></div><div><dt><GameIcon name="respect" size={15}/>Your influence</dt><dd><Meter value={share(ownInfluence)} label="Your gang influence"/><small>{share(ownInfluence).toFixed(0)}%</small></dd></div><div><dt><GameIcon name="property" size={15}/>Plots</dt><dd>{d.available_plots??ds?.plots.filter(p=>p.status==="available").length??0} available</dd></div><div><dt><GameIcon name="production" size={15}/>Businesses</dt><dd>{d.active_businesses??ds?.businesses.filter(b=>b.status==="open").length??0} active</dd></div></dl><Go href={districtPath}>View District</Go></>:<Empty>District information is unavailable. Use Refresh city to reconnect.</Empty>}</Panel>
-   <Panel title="Telegram Office" action={<span className={"command-office-status"+(telegramOnline?" online":"")}>{data.mailbox?telegramOnline?"Online":"Closed":"Unavailable"}</span>} className="command-telegram"><img src="/art/telegram-office.jpg" alt="Blackwater Telegram Office" width={720} height={220}/><p>The city’s lifeline. Trade, form alliances, plan operations.</p><div className="command-office-fee"><span>City-wide delivery</span><strong>{data.mailbox?telegramFee(data.mailbox.office.fee):"—"}</strong></div><Go href="/telegrams">Open Telegrams {data.mailbox?.unread?<b className="command-unread">{data.mailbox.unread}</b>:null}</Go></Panel>
+   <Panel title="Telegram Office" action={<span className={"command-office-status"+(telegramOnline?" online":"")}>{data.mailbox?(telegramOnline?"Online":"Closed")+" · "+telegramFee(data.mailbox.office.fee):"Unavailable"}</span>} className="command-telegram"><img src="/art/telegram-office.jpg" alt="Blackwater Telegram Office" width={720} height={220}/><p>The city’s lifeline. Trade, form alliances, plan operations.</p><Go href="/telegrams">Open Telegrams {data.mailbox?.unread?<b className="command-unread">{data.mailbox.unread}</b>:null}</Go></Panel>
    <Panel title="Gang Influence" action={<More href={districtPath+"?tab=Territory"}/>} className="command-gangs"><ol>{ds?.influence.slice(0,6).map((g,i)=><li key={g.gang_id}><span>{i+1}</span><GameIcon name="people" size={16}/><Link href={districtPath+"?tab=Territory"}>{g.name}</Link><strong>{share(g.influence).toFixed(0)}%</strong><Meter value={share(g.influence)} label={g.name+" influence"} color={["#9577b2","#a56858","#5699aa","#619278","#bc9d63","#9b9990"][i]}/></li>)}</ol>{!ds?.influence.length&&<div className="command-neutral"><GameIcon name="shield" size={30}/><strong>Neutral territory</strong><p>No gang has established influence.<br/>Make your first move.</p><More href={districtPath+"?tab=Territory"}>Establish your crew</More></div>}</Panel>
    <Panel title={game.season.name} action={<span className="command-season-end">{game.season.ends_at?"Ends in "+until(game.season.ends_at,now):game.season.status}</span>} className="command-season"><div className="command-standing"><div><strong>{data.season?.my_rank?"#"+data.season.my_rank.rank:"—"}</strong><span>Your {data.season?.metric==="respect"?"respect":"season"} rank</span></div><div><GameIcon name="trophy" size={27}/><strong>{game.player.xp.toLocaleString("en-US")}</strong><span>Season Respect</span></div></div><Go href="/seasons?view=rankings">View Leaderboard</Go></Panel>
   </aside>
@@ -151,4 +151,3 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   </dialog>}
  </div>;
 }
-

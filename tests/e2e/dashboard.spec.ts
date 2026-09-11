@@ -24,7 +24,7 @@ test("command dashboard uses real game actions and district destinations",async(
  await modal.getByRole("button",{name:"Start operation",exact:true}).first().click();
  await expect(page.locator(".command-player-stats")).toContainText("$10,250");
  await expect(modal).toContainText("+10 respect");
- await expect(modal.getByRole("button",{name:"1m",exact:true}).first()).toBeDisabled();
+ await expect(modal.locator(".command-job .command-button").first()).toBeDisabled();
  await modal.getByRole("button",{name:"Close actions"}).click();
  await page.getByRole("button",{name:"Production",exact:true}).click();
  await modal.getByRole("button",{name:"Buy · $3,000",exact:true}).click();
@@ -54,4 +54,3 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
  await page.goto("/dashboard");await page.locator(".command-season").getByRole("link",{name:"View Leaderboard",exact:true}).click();
  await expect(page).toHaveURL(/\/seasons\?view=rankings$/);
 });
-

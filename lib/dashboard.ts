@@ -33,4 +33,3 @@ export const atlasAreas:{slug:string;name:string;subtitle:string;icon:string;col
  {slug:"blackwater-island",name:"Blackwater Island",subtitle:"Maximum security",icon:"bank",color:"#b1a786",label:[680,95],polygon:[[558,51],[641,27],[753,35],[820,82],[756,127],[641,116],[565,96]]},
  {slug:"drilling-shore",name:"Drilling Shore",subtitle:"Oil · Fuel · Strategic",icon:"rig",color:"#b89a65",label:[1053,470],polygon:[[948,422],[1030,364],[1147,396],[1169,479],[1090,525],[954,497]]}
 ];
-

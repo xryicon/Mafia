@@ -15,4 +15,3 @@ Artwork was generated with the built-in image generation tool (one call per asse
 City prompt: original panoramic 1920s noir industrial harbour city, elevated isometric composition, quarry upper left, redbrick old town middle left, art-deco towers centre, factories right, wharves lower left, prison island upper centre and drilling rigs lower right; charcoal, blue-black, restrained copper and antique gold, stormy fog and fine architectural detail; clean artwork with no text, UI, symbols or territory outlines.
 
 Portrait prompt: anonymous 1920s mafia boss, square chest-up crop, black fedora and trenchcoat, face deeply shadowed, smoky stone backdrop, subdued warm light from the left, charcoal and blue-black, realistic cloth; no text, UI, weapons or recognizable real person.
-

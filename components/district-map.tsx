@@ -1,8 +1,10 @@
 "use client";
-import {useRef,useState,type ReactNode,type PointerEvent} from "react";
+import {useRef,useState,useEffect,type ReactNode,type PointerEvent} from "react";
 import {centroid,points,plotTone,type DistrictState,type Plot} from "@/lib/districts";
-export function PanMap({children,label,background,height=800,instruction="Drag to explore · Select a plot"}:{children:ReactNode;label:string;background?:string;height?:number;instruction?:string}){
+export function PanMap({children,label,background,height=800,instruction="Drag to explore · Select a plot",focus}:{children:ReactNode;label:string;background?:string;height?:number;instruction?:string;focus?:[number,number]}){
  const [camera,setCamera]=useState({x:0,y:0,z:1}),drag=useRef<{x:number;y:number;px:number;py:number;moved:boolean}|null>(null),svg=useRef<SVGSVGElement>(null);
+ function fit(){const compact=focus&&matchMedia("(max-width:1050px)").matches;setCamera(compact?{x:600-focus![0],y:height/2-focus![1],z:1}:{x:0,y:0,z:1});}
+ useEffect(()=>{if(!focus)return;const mq=matchMedia("(max-width:1050px)");fit();mq.addEventListener("change",fit);return()=>mq.removeEventListener("change",fit);},[height,focus?.[0],focus?.[1]]);
  function down(e:PointerEvent<SVGSVGElement>){if(e.button!==0)return;drag.current={x:e.clientX,y:e.clientY,px:camera.x,py:camera.y,moved:false};}
  function move(e:PointerEvent<SVGSVGElement>){const d=drag.current;if(!d)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.moved=true;svg.current?.setPointerCapture(e.pointerId);const matrix=svg.current?.getScreenCTM();const scale=matrix?1/matrix.a:1200/(svg.current?.getBoundingClientRect().width||1200);setCamera(c=>({...c,x:d.px+(e.clientX-d.x)*scale,y:d.py+(e.clientY-d.y)*scale}));}}
  function zoom(step:number){setCamera(c=>{const z=Math.max(height===800?.75:.5,Math.min(3,c.z+step));return {z,x:600-(600-c.x)*z/c.z,y:height/2-(height/2-c.y)*z/c.z};});}
@@ -10,7 +12,7 @@ export function PanMap({children,label,background,height=800,instruction="Drag t
  <defs><pattern id="district-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#bd9a65" strokeOpacity=".09"/></pattern><filter id="district-glow"><feGaussianBlur stdDeviation="3"/></filter></defs>
  <g transform={"translate("+camera.x+" "+camera.y+") scale("+camera.z+")"}>{background?<image href={background} width="1200" height={height} preserveAspectRatio="xMidYMid slice"/>:<><rect width="1200" height="800" fill="#0b1d24"/><rect width="1200" height="800" fill="url(#district-grid)"/><path d="M50 80H940L1090 670H190Z" fill="#111e20" stroke="#92734e"/>{[102,230,360,490,615].map((y,i)=><g key={y}><path d={"M"+(65+i*25)+" "+y+"H"+(950+i*22)} stroke="#8a785d" strokeWidth="12" strokeOpacity=".3"/><path d={"M"+(65+i*25)+" "+y+"H"+(950+i*22)} stroke="#c9a870" strokeDasharray="3 18" strokeWidth="1"/></g>)}<text x="780" y="740" fill="#6a8b96" fontSize="17" letterSpacing="8">BLACKWATER HARBOR</text><path d="M220 650v65h35v-65m130 0v85h35v-85m130 0v68h35v-68" fill="#1d2b2e" stroke="#8b7352"/></>}{children}</g>
  <g aria-hidden="true" className="map-compass" transform="translate(70 722)"><circle r="29" fill="#071114dd" stroke="#ac864e"/><path d="M0-26L6 0 0 26-6 0Z" fill="#bd965e"/><path d="M-26 0L0-6 26 0 0 6Z" fill="none" stroke="#bd965e"/><text y="-39" textAnchor="middle">N</text></g>
- </svg><div className="map-zoom" aria-label="Map controls"><button onClick={()=>zoom(.25)} aria-label="Zoom in">+</button><button onClick={()=>zoom(-.25)} aria-label="Zoom out">−</button><button onClick={()=>setCamera({x:0,y:0,z:1})}>Fit map</button></div><span className="map-instruction">{instruction}</span></div>;
+ </svg><div className="map-zoom" aria-label="Map controls"><button onClick={()=>zoom(.25)} aria-label="Zoom in">+</button><button onClick={()=>zoom(-.25)} aria-label="Zoom out">−</button><button onClick={fit}>Fit map</button></div><span className="map-instruction">{instruction}</span></div>;
 }
 export function PlotMap({state,selected,onSelect,filter}:{state:DistrictState;selected:string|null;onSelect:(p:Plot)=>void;filter:string}){
  return <PanMap label={state.district.name+" plot map"}>{state.plots.map(p=>{const [x,y]=centroid(p.polygon),business=state.businesses.find(b=>b.plot_id===p.id),building=state.buildings.find(b=>b.plot_id===p.id),own=p.owner_id===state.player_id;

@@ -15,4 +15,3 @@ export default async function Dashboard(){
  if(game.error||!game.data)return <section className="control-layout"><h1>Your dashboard could not be loaded</h1><p>Reconnect to Blackwater to see your empire.</p><Link className="button" href="/dashboard">Try again</Link></section>;
  return <CommandDashboard initial={{game:game.data,city:city.error?null:city.data,district:district.error?null:district.data,season:season.error?null:season.data,mailbox:mailbox.error||!mailbox.data?null:mailboxSummary(mailbox.data)}}/>;
 }
-
