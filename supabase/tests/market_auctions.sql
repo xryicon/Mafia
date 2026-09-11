@@ -1,6 +1,6 @@
 begin;
 -- All fixtures and economic changes are rolled back after this suite.
-do $
+do $$
 #variable_conflict use_variable
 declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();c uuid:=gen_random_uuid();
  s uuid:=game_private.current_season();r jsonb;q jsonb;id uuid;other_id uuid;denied boolean;before_cash bigint;deadline timestamptz;score_before numeric;
