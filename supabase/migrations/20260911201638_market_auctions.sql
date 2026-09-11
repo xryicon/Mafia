@@ -133,7 +133,7 @@ begin
   if a.status<>'open' or a.ends_at<=clock_timestamp() then raise exception 'This auction has ended. Refresh the market.';end if;
   if a.seller_id=uid then raise exception 'You cannot bid on your own auction.';end if;
   amount:=(p_payload->>'amount')::bigint;
-  if amount is null or amount<case when a.bidder_id is null then a.starting_bid else a.current_bid+a.increment end or amount>game_private.setting('auction_max_bid') then raise exception 'Your bid is below the next bid or above the limit. Refresh the auction.';end if;
+  if amount is null or amount<(case when a.bidder_id is null then a.starting_bid else a.current_bid+a.increment end) or amount>game_private.setting('auction_max_bid') then raise exception 'Your bid is below the next bid or above the limit. Refresh the auction.';end if;
   -- Keep the previous leading bid in reserve until the replacement is funded.
   perform game_private.district_wallet(uid,-(amount-case when a.bidder_id=uid then a.escrow else 0 end),'Reserve auction bid: '||a.id);
   if a.bidder_id is not null and a.bidder_id<>uid then

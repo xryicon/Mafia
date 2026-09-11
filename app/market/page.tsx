@@ -14,4 +14,3 @@ export default async function Market({searchParams}:{searchParams:Promise<{view?
  const views:MarketView[]=["floor","auctions","mine","inventory","orders"];
  return <MarketWorkspace initial={data as MarketState} initialView={views.includes(query.view as MarketView)?query.view as MarketView:"floor"} initialGood={query.good} initialDistrict={query.district}/>;
 }
-

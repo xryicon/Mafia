@@ -1,5 +1,5 @@
 /* The Exchange uses the same command panels and copper accents as the dashboard. */
-.market-workspace{max-width:1920px;margin:0 auto;padding:12px 10px 22px;font:13px/1.5 Arial,Helvetica,sans-serif;color:#c4cdc8}
+.market-workspace{background:#080f11;min-height:calc(100dvh - var(--estate-header-height));max-width:1920px;margin:0 auto;padding:12px 10px 22px;font:13px/1.5 Arial,Helvetica,sans-serif;color:#c4cdc8}
 .market-workspace h1,.market-workspace h2,.market-workspace h3{font-family:Georgia,"Times New Roman",serif;font-weight:400;color:#e3c798}
 .market-workspace a{text-decoration:none}.market-workspace button,.market-workspace input,.market-workspace select{font:inherit}.market-workspace button:disabled{opacity:.45;cursor:not-allowed}
 .market-masthead{min-height:164px;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 25px;background:linear-gradient(90deg,#081319fa 8%,#081319d9 50%,#0813197a),url('/art/exchange.webp') center 48%/cover}
