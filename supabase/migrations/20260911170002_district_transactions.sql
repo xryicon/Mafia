@@ -48,6 +48,7 @@ begin
   select * into d from public.game_districts where id=p.district_id and archived_at is null;
  end if;
  if d.id is null then raise exception 'District unavailable.'; end if;
+ if p.status='locked' and action not in ('watch','offer_cancel','auction_finish','unlist') then raise exception 'This plot is locked.'; end if;
  if (d.status='lockdown' or exists(select 1 from public.game_district_territory where season_id=s and district_id=d.id and status='lockdown'))
  and action not in ('watch','offer_cancel','auction_finish','unlist') then raise exception 'This district is under lockdown.'; end if;
  select * into a from public.game_plot_auctions where plot_id=p.id and status='open' for update;

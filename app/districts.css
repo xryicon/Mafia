@@ -48,3 +48,5 @@
 @media(max-width:600px){.district-header-stats{margin:0 -19px}.district-header-stats>div{padding:13px 12px}.district-header-stats strong{font-size:12px}.district-header-stats span{font-size:7px}}
 
 .district-order-book{max-width:none;padding:24px;margin:20px 0}.district-order-columns{display:grid;grid-template-columns:1.4fr 1fr;gap:30px}.district-order-book h2{margin:0}.district-order-book .district-action-form{margin-top:0}@media(max-width:700px){.district-order-columns{grid-template-columns:1fr}.district-order-book{padding:18px}}
+
+@media(max-width:900px){.mobile-plot-sheet .plot-details>header{position:sticky;top:-24px;z-index:2;background:#08161b;padding:15px 0 12px;margin-top:-12px}.mobile-plot-sheet .plot-details>header h2{font-size:28px}}

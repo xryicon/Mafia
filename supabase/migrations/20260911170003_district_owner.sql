@@ -20,7 +20,8 @@ begin
   end if;
   select * into d from jsonb_populate_record(d,payload);
   if length(d.description)>4000 or length(d.tagline)>200 or not(d.image_url ~ '^/art/[a-zA-Z0-9._/-]+$' or d.image_url ~ '^https://') then raise exception 'Check the district text and image URL.'; end if;
-  if jsonb_typeof(d.city_polygon)<>'array' then raise exception 'Map coordinates must be an array.'; end if;
+  if jsonb_typeof(d.city_polygon)<>'array' or jsonb_array_length(d.city_polygon) not between 3 and 30 then raise exception 'A district needs 3 to 30 map points.'; end if;
+  if exists(select 1 from jsonb_array_elements(d.city_polygon) v where jsonb_typeof(v)<>'array' or jsonb_array_length(v)<>2 or (v->>0)::numeric not between 0 and 1200 or (v->>1)::numeric not between 0 and 800) then raise exception 'District map points must stay inside the 1200 by 800 city map.'; end if;
   update public.game_districts set slug=d.slug,name=d.name,description=d.description,tagline=d.tagline,
    district_type=d.district_type,image_url=d.image_url,industries=d.industries,strategic_importance=d.strategic_importance,
    tax_rate=d.tax_rate,police_heat=d.police_heat,property_value_index=d.property_value_index,property_trend=d.property_trend,
@@ -43,12 +44,12 @@ begin
   if exists(select 1 from jsonb_array_elements(t.polygon) v where jsonb_typeof(v)<>'array' or jsonb_array_length(v)<>2 or (v->>0)::numeric not between 0 and 1200 or (v->>1)::numeric not between 0 and 800) then raise exception 'Plot points must be inside the 1200 by 800 map.'; end if;
   select * into p from public.game_district_plots where template_id=t.id and season_id=s for update;
   if exists(select 1 from public.game_plot_auctions where plot_id=p.id and status='open') or exists(select 1 from public.game_plot_offers where plot_id=p.id and status='open') then raise exception 'Settle the plot auction and offers before editing its terms.'; end if;
-  if p.owner_id is not null and t.status<>'owned' then raise exception 'An owned plot must stay owned. Ownership history cannot be erased.'; end if;
-  update public.game_plot_templates set code=t.code,polygon=t.polygon,size=t.size,zoning=t.zoning,status=t.status,
+  
+  update public.game_plot_templates set code=t.code,polygon=t.polygon,size=t.size,zoning=t.zoning,status=case when t.entity_id is null and t.status='owned' then 'available' else t.status end,
    base_price=t.base_price,tax_rate=t.tax_rate,utility_level=t.utility_level,infrastructure_level=t.infrastructure_level,
    build_capacity=t.build_capacity,strategic_type=nullif(t.strategic_type,''),description=t.description where id=t.id;
   update public.game_district_plots set code=t.code,polygon=t.polygon,size=t.size,zoning=t.zoning,
-   status=case when owner_id is not null then 'owned' else t.status end,base_price=t.base_price,tax_rate=t.tax_rate,
+   status=case when owner_id is not null and t.status in ('available','owned') then 'owned' else t.status end,asking_price=case when t.status in ('reserved','locked') then null else asking_price end,base_price=t.base_price,tax_rate=t.tax_rate,
    utility_level=t.utility_level,infrastructure_level=t.infrastructure_level,build_capacity=t.build_capacity,
    strategic_type=nullif(t.strategic_type,''),version=version+1 where template_id=t.id and season_id=s;
   perform game_private.ensure_districts(s);

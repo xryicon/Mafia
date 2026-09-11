@@ -1,21 +1,36 @@
-# District implementation
+# Waterfront district system
 
-Build the first complete district, The Waterfront, using the existing Supabase RPC, Auth, immutable wallet ledger, permissions, seasonal records, settings, and audit patterns.
+Blackwater's city atlas uses an original commissioned noir city illustration with database-defined clickable district boundaries. The Waterfront is the first district: 24 plots, six city/company businesses, a Telegram Office, harbor strategic site, checkpoint and resource infrastructure.
 
-## Navigation and UI
-/districts is the city map. /districts/[slug] is the detailed district. Seven working tabs: Overview, Plots, Businesses, Resources, Market, Territory, Activity. Deep links preserve tab and selected plot/business. SVG maps use database geometry, support pan/zoom, keyboard/touch selection, ownership and business filters, and a desktop detail panel/mobile modal sheet. Keep the approved masthead, background and the blank Dashboard/Properties pages.
+## Player routes
 
-## World and persistence
-Permanent district/plot/building/zoning templates create season-specific plots, buildings, businesses, resources, territory and wars. New seasons instantiate fresh municipal properties, not old player ownership. Property sales, ownership history, bids, money movements and events are retained. User content is archived; activity visibility is separately moderated. Seed 24 plots, six real municipal/company businesses, one Telegram Office, Harbor strategic site, resources and honest creation events. Never invent transactions or real player ownership.
+- /districts: city map and district dossiers.
+- /districts/the-waterfront: Overview, Plots, Businesses, Resources, Market, Territory and Activity.
+- Plot selection is preserved in tab/plot URL parameters. A side panel on desktop becomes a modal bottom drawer on mobile.
+- The directory links businesses to plots and opens the business detail.
+- The existing /market supports district sell listings, funded buy orders, and returns to inventory without replacing the established marketplace.
+- Territory supports seasonal gang founding, open recruitment, paid influence, and multi-party wars. The founding player remains in their gang for the season.
 
-## Transactions
-Server RPCs validate active sessions, current/open season, permission, ownership, zoning, capacity, availability, configuration and expected quotes. Acquire the shared season lock and a district economy transaction lock; lock affected wallets in UUID order. Set game.reason before balance changes so the existing wallet trigger creates ledger entries. Implement purchase/list/withdraw, funded offers and auctions with refund/settlement, construction start/completion, business opening/management/production, watchlists, and territory contributions. Transfers include attached building/business title and write immutable sales/history/events. Financial requests reject stale quotes. No browser money/ownership/prices are authoritative.
+## Authority and accounting
 
-## Integration
-The local market summarizes real listings and new trade records and links to the existing full market. Record location on listings and successful trades; accept listing location only after server validation. Include land/building values and reserved property funds in season scoring without double-counting. Preserve historical records on reset. Territory supports multiple gang rows and multi-party wars; neutral is valid. Show objectives, operations, convoys, supply, defenses and participation when a war exists.
+Authenticated RPCs require an active player, rate-limit requests, and take the shared season lock before acting. District mutations serialize using advisory transaction lock 4704020; wallet pairs lock in UUID order, matching the original market. Purchases compare a server-calculated quote and plot version. Money changes use the existing game.reason wallet trigger, which appends immutable ledger entries.
 
-## Owner controls
-Add Districts & properties to the Owner workspace and a permission-protected management route for explicitly authorized staff. Forms manage districts, geometry/plots/zoning/prices/status, building types and allowed zoning, resources and strategic sites, building assignment/removal, tax, gang control/war data, images/descriptions and activity visibility. Require reasons and audit all changes. New economic permission is not granted to Moderators by default.
+Plot purchases and accepted offers/auctions transfer the plot, attached building and business atomically. Auctions and offers hold cash in reserve; outbid players and cancelled offers receive refunds. Duplicate purchases, premature settlements, self trades, invalid zoning and insufficient funds are rejected. Construction requirements, cost, duration, production and influence rules come from the database. Buy orders reserve their full value and can only be filled once using actual supplier inventory.
 
-## Verification
-Use GitHub-hosted TypeScript/build and browser tests plus PostgreSQL transaction/security regressions and two-connection purchase/bid races. Review screenshots at desktop and phone sizes. Apply tested migrations to Supabase, reconcile their actual versions with repository names, merge and confirm Cloudflare deployment. No local application execution.
+Sales, title history, escrow movements, trades and public events cannot be rewritten or deleted. Auction and offer records are retained. Event visibility uses a separate audited record. Owner mutations have explicit reasons and audit entries.
+
+## Seasons
+
+Catalog districts, zoning, building types, plot and site templates persist. Gameplay plots, businesses, buildings, resources and territory are instantiated separately for each season. Old titles and financial records remain available. New records start with catalog ownership; no player land carries into the next season. Net worth includes land, buildings and reserved bids, offers and buy orders. Locked-season timers shift when a season reopens.
+
+## Owner editing
+
+Owner panel → Districts & properties, or /districts/manage. Supports district text, imagery, city boundaries, tax/status/value indicators, plot geometry, sizes, zoning, prices, infrastructure, strategic designations, resource sites, building assignment/removal, building production rules, zoning permissions, control/influence, multi-party wars/operations, event publication and visibility. Moderators receive no district economic permission by default; districts.manage may be explicitly granted.
+
+Seeded entities are fictional city/company operators, not fake player accounts. Registered-business events describe actual seed registrations. Prices and revenue summaries use real records; empty markets show empty states.
+
+## Validation and deployment
+
+All application execution happens in GitHub Actions, per the project owner's preference. Tests include existing unit/browser/database regressions, district transactions, escrow conservation, gang participation and two concurrent purchase connections against disposable PostgreSQL. Visual captures cover desktop city/district/plot views and mobile drawers/Owner forms.
+
+Apply all district migrations in order only after isolated tests pass. Record actual Supabase migration versions in repository filenames. Never run the committed-fixture race script against production; it explicitly requires GitHub CI's local disposable PostgreSQL environment. Production smoke tests must roll back.
