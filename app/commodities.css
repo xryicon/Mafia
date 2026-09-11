@@ -1,0 +1,14 @@
+/* Shared commodity illustrations, sized for both inventory cards and compact HUD rows. */
+.commodity-art{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;max-width:100%;overflow:hidden;border:1px solid #a48b515c;background:#080f11;color:#c8ac78;vertical-align:middle;border-radius:2px}
+.commodity-art img{display:block;width:100%;height:100%;object-fit:cover}
+.market-stock-preview{display:flex;align-items:center;gap:13px;padding:10px 0;border-bottom:1px solid #a18b4d40}
+.market-stock-preview>div{min-width:0}.market-stock-preview small{display:block;font-size:8px;letter-spacing:1px;color:#929c8d}
+.market-stock-preview strong{display:block;margin-top:7px;font:18px/1.35 Georgia,serif;color:#e2cca3;overflow-wrap:anywhere}
+.market-inventory .commodity-art{box-shadow:0 5px 20px #0005}
+.market-commodities>button{gap:7px}
+.market-deal-commodity{display:flex;align-items:center;gap:17px;padding:13px 0;margin-bottom:10px;border-bottom:1px solid #a18b4d40}
+.market-deal-commodity p{font:18px/1.4 Georgia,serif;color:#e3cfaa;margin:0}
+.market-deal-commodity small{display:block;font:12px/1.5 Arial,sans-serif;color:#98aaa1;margin-top:6px}
+.district-order-commodity{display:flex;align-items:center;gap:11px;min-width:0}
+@media(max-width:1350px) and (min-width:1051px){.market-commodities>button{font-size:10px;padding:6px 2px}}
+@media(max-width:500px){.market-inventory>button{display:grid;grid-template-columns:96px minmax(0,1fr);text-align:left;column-gap:18px;padding:15px}.market-inventory .commodity-art{grid-row:1/4;width:96px!important;height:96px!important}.market-inventory strong,.market-inventory>button>span,.market-inventory small{grid-column:2}.market-inventory small{line-height:1.6}.market-inventory small svg{flex-shrink:0}}

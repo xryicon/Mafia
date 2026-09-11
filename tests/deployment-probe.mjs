@@ -53,3 +53,16 @@ if(commandDashboardDeployed){
   if(!art.ok||bytes<10000||!art.headers.get("content-type")?.includes("image/jpeg"))process.exitCode=1;
  }
 }
+
+const commodityArtworkDeployed=styles.includes(".commodity-art");
+console.log(JSON.stringify({commodityArtworkDeployed}));
+if(commodityArtworkDeployed){
+ for(const name of ["whiskey","silk","steel"]){
+  for(const suffix of ["","-256","-96"]){
+   const art=await fetch(origin+"/art/commodities/"+name+suffix+".webp",{signal:AbortSignal.timeout(20000)});
+   const bytes=(await art.arrayBuffer()).byteLength;
+   console.log(JSON.stringify({commodity:name+suffix,status:art.status,contentType:art.headers.get("content-type"),bytes}));
+   if(!art.ok||bytes<1000||!art.headers.get("content-type")?.includes("image/webp"))process.exitCode=1;
+  }
+ }
+}
