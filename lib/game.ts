@@ -1,4 +1,4 @@
-export type Good = { id: string; name: string; business_name: string; business_cost: number; batch_size: number; cycle_seconds: number };
+export type Good = { id: string; name: string; business_name: string; business_available?: boolean; business_cost: number; batch_size: number; cycle_seconds: number };
 export type Listing = { district_id?:string|null; id: string; seller_id: string; seller_handle: string; good_id: string; quantity: number; unit_price: number; status: string; created_at: string };
 export type Business = { player_id: string; good_id: string; collected_at: string };
 export type Job = {id:string;name:string;district:string;description:string;reward:number;xp:number;cooldown:number};

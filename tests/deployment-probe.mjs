@@ -18,7 +18,7 @@ for(const href of sheets){
 }
 console.log(JSON.stringify({deployedLayout:styles.includes(".header-power")&&styles.includes(".brand-online")?"clear-city-header":styles.includes(".fresh-canvas")&&styles.includes(".header-wallet")?"fresh-icon-header":styles.includes(".estate-city")?"reference-property-screen":"previous-layout",stylesheets:sheets.length}));
 
-for(const path of ["/dashboard","/market","/properties","/gangs","/seasons","/support","/players","/districts","/districts/the-waterfront","/districts/manage","/telegrams"]){
+for(const path of ["/dashboard","/market","/properties","/gangs","/seasons","/support","/players","/districts","/districts/the-waterfront","/districts/mines-and-quarries","/districts/manage","/telegrams"]){
  const response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
  const location=response.headers.get("location")||"";
  const protectedRoute=[302,303,307,308].includes(response.status)&&new URL(location,origin).pathname==="/login";
@@ -66,3 +66,12 @@ if(commodityArtworkDeployed){
   }
  }
 }
+
+const miningDeployed=styles.includes('.mining-district');
+console.log(JSON.stringify({miningDeployed}));
+if(miningDeployed){for(const name of ['map','map-small','mine','mine-small','quarry','quarry-small']){
+ const art=await fetch(origin+'/art/mining/'+name+'.webp',{signal:AbortSignal.timeout(20000)});
+ const bytes=(await art.arrayBuffer()).byteLength;
+ console.log(JSON.stringify({miningArtwork:name,status:art.status,bytes}));
+ if(!art.ok||bytes<1000||!art.headers.get('content-type')?.includes('image/webp'))process.exitCode=1;
+}}

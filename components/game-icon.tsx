@@ -1,5 +1,9 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    mountain: "M2 21L9 5l5 10 3-7 5 13H2 M6 12l3 2 3-2",
+    rail: "M8 2L4 22 M16 2l4 20 M7 5h10 M6 9h12 M5 14h14 M4 19h16",
+    lock: "M6 10h12v11H6V10 M8 10V6a4 4 0 0 1 8 0v4 M12 14v3",
+
     search: "M10 3a7 7 0 1 1 0 14 7 7 0 0 1 0-14 M15 15l7 7",
     coins: "M20 5c0 2-16 2-16 0s16-2 16 0v14c0 3-16 3-16 0V5 M4 10c0 3 16 3 16 0 M4 15c0 3 16 3 16 0",
     pickaxe: "m4 21 12-15 M8 2c6 0 10 4 14 10L10 5 M14 6l3 3",

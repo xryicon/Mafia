@@ -21,18 +21,18 @@ function Go({href,children,icon}:{href:string;children:ReactNode;icon?:string}){
 function Empty({children}:{children:ReactNode}){return <p className="command-empty">{children}</p>;}
 function Meter({value,color,label}:{value:number;color?:string;label:string}){return <span className="command-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><i style={{width:Math.max(0,Math.min(100,value))+"%",background:color}}/></span>;}
 
-function Atlas({districts,selected,onSelect}:{districts:District[];selected:string;onSelect:(slug:string)=>void}){
+function Atlas({districts,selected}:{districts:District[];selected:string}){
  const router=useRouter();
  const extra=districts.filter(d=>!atlasAreas.some(a=>a.slug===d.slug));
  return <section className="command-atlas" aria-label="City overview">
   <div className="command-atlas-title"><h1>BLACKWATER</h1><p>A CITY OF OPPORTUNITY</p></div>
   <span className="command-atlas-motto">CONTROL TERRITORY. BUILD EMPIRES. LEAVE A LEGACY.</span>
   <PanMap label="Blackwater command map" background="/art/command-city.jpg" height={560} focus={atlasAreas.find(a=>a.slug===selected)?.label} instruction="Drag to explore · Select a district">
-   {atlasAreas.map(area=>{const d=districts.find(d=>d.slug===area.slug),active=d?.slug===selected;return <g key={area.slug} className={"command-zone"+(active?" selected":"")+(d?"":" unopened")} style={{"--zone-color":area.color} as CSSProperties} role={d?"button":undefined} tabIndex={d?0:undefined} aria-label={d?"Select "+d.name:undefined} aria-pressed={d?active:undefined} onClick={()=>d&&onSelect(d.slug)} onDoubleClick={()=>d&&router.push("/districts/"+d.slug)} onKeyDown={e=>{if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();onSelect(d.slug);}}}>
+   {atlasAreas.map(area=>{const d=districts.find(d=>d.slug===area.slug),active=d?.slug===selected;return <g key={area.slug} className={"command-zone"+(active?" selected":"")+(d?"":" unopened")} style={{"--zone-color":area.color} as CSSProperties} role={d?"button":undefined} tabIndex={d?0:undefined} aria-label={d?"Select "+d.name:undefined} aria-pressed={d?active:undefined} onClick={()=>d&&router.push("/districts/"+d.slug)} onKeyDown={e=>{if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();router.push("/districts/"+d.slug);}}}>
     <title>{d?d.name+" · "+(d.runtime_status??d.status):area.name+" · Unopened district"}</title><polygon points={points(area.polygon)}/>
     <foreignObject x={area.label[0]-140} y={area.label[1]-53} width="280" height="95" className="command-zone-label"><div><GameIcon name={area.icon} size={30}/><strong>{d?.name??area.name}</strong><span>{d?(d.industries.slice(0,3).join(" · ")||area.subtitle):"Unopened district"}</span></div></foreignObject>
    </g>;})}
-   {extra.map(d=>{const polygon=d.city_polygon.map(([x,y])=>[x,y*560/800] as [number,number]),[x,y]=centroid(polygon);return <g key={d.id} className={"command-zone"+(selected===d.slug?" selected":"")} style={{"--zone-color":"#bda16e"} as CSSProperties} role="button" tabIndex={0} aria-label={"Select "+d.name} aria-pressed={selected===d.slug} onClick={()=>onSelect(d.slug)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();onSelect(d.slug);}}}><polygon points={points(polygon)}/><text x={x} y={y} textAnchor="middle">{d.name}</text></g>;})}
+   {extra.map(d=>{const polygon=d.city_polygon.map(([x,y])=>[x,y*560/800] as [number,number]),[x,y]=centroid(polygon);return <g key={d.id} className={"command-zone"+(selected===d.slug?" selected":"")} style={{"--zone-color":"#bda16e"} as CSSProperties} role="button" tabIndex={0} aria-label={"Select "+d.name} aria-pressed={selected===d.slug} onClick={()=>router.push("/districts/"+d.slug)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();router.push("/districts/"+d.slug);}}}><polygon points={points(polygon)}/><text x={x} y={y} textAnchor="middle">{d.name}</text></g>;})}
   </PanMap>
   <div className="command-atlas-signature">BLACKWATER <span>COMMERCE FUELS AMBITION</span></div>
  </section>;
@@ -92,7 +92,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   }catch(error){setFailed(true);setNotice(error instanceof Error?error.message:"Could not complete this action.");}
   finally{lock.current=false;setBusy(false);}
  }
- const selectDistrict=(slug:string)=>{if(!lock.current)void refresh(slug);};
+
  const change=()=>{travelSelect.current?.scrollIntoView({behavior:"smooth",block:"center"});travelSelect.current?.focus();};
  return <div className="command-dashboard">
   {notice&&<div className={"command-notice"+(failed?" error":"")} role={failed?"alert":"status"}>{notice}<button aria-label="Dismiss dashboard message" onClick={()=>setNotice("")}>×</button></div>}
@@ -112,7 +112,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <div className="command-location"><GameIcon name="pin" size={23}/><span>Viewing district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
    <div className="command-quick"><h3>QUICK ACTIONS</h3>
     <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="operations"/><span>Plan an Operation</span><GameIcon name="arrow" size={16}/></button>
-    <Go href={districtPath+"?tab=Resources"} icon="pickaxe">Explore Resources</Go>
+    <Go href="/districts/mines-and-quarries" icon="pickaxe">Explore Resources</Go>
     <button className="command-button" onClick={()=>setDialog("production")}><GameIcon name="tools"/><span>Production</span><GameIcon name="arrow" size={16}/></button>
     <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="briefcase"/><span>Find a Job</span><GameIcon name="arrow" size={16}/></button>
    </div>
@@ -120,7 +120,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <p className="command-player-signature">BLACKWATER <small>A PLAYER-DRIVEN CRIME ECONOMY</small></p>
   </aside>
   <div className="command-center">
-   <Atlas districts={ds?.districts??[]} selected={d?.slug??""} onSelect={selectDistrict}/>
+   <Atlas districts={ds?.districts??[]} selected={d?.slug??""}/>
    <div className="command-summary-grid">
     <Panel title="Territory Control" className="command-territory">
      <p className="command-subtitle">{d?.name??"District unavailable"} · {ds?.influence.length??0} gangs</p>
@@ -148,7 +148,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <Panel title={game.season.name} action={<span className="command-season-end">{game.season.ends_at?"Ends in "+until(game.season.ends_at,now):game.season.status}</span>} className="command-season"><div className="command-standing"><div><strong>{data.season?.my_rank?"#"+data.season.my_rank.rank:"—"}</strong><span>Your {data.season?.metric==="respect"?"respect":"season"} rank</span></div><div><GameIcon name="trophy" size={27}/><strong>{game.player.xp.toLocaleString("en-US")}</strong><span>Season Respect</span></div></div><Go href="/seasons?view=rankings">View Leaderboard</Go></Panel>
   </aside>
   {dialog&&<dialog ref={modal} className="command-modal" aria-labelledby="command-modal-title" onCancel={e=>{if(busy)e.preventDefault();else setDialog(null);}}><header><div><p className="eyebrow">YOUR NEXT MOVE</p><h2 id="command-modal-title">{dialog==="jobs"?"Work the city":"Your production network"}</h2></div><button disabled={busy} aria-label="Close actions" onClick={()=>setDialog(null)}>×</button></header>{notice&&<p className={"command-notice"+(failed?" error":"")} role={failed?"alert":"status"}>{notice}</p>}
-   {dialog==="jobs"?<><p>Earn cash and respect. Every completed operation is recorded.</p>{game.jobs.map(j=><article className="command-job" key={j.id}><GameIcon name="briefcase" size={25}/><div><h3>{j.name}</h3><p>{j.description}</p><small>{money(j.reward)} · +{j.xp} respect · {Math.ceil(j.cooldown/60)} min cooldown</small></div><button className="command-button" disabled={busy||refreshing||!playing||cooldown>0} onClick={()=>act("job",{job:j.id})}>{cooldown?until(game.player.job_ready_at,now):"Start operation"}<GameIcon name="arrow" size={15}/></button></article>)}{!game.jobs.length&&<Empty>No jobs are available this season.</Empty>}</>:<><p>Build supply for the player market. Acquisition costs and production rates are set by the city.</p>{game.goods.map(g=>{const owned=game.businesses.find(b=>b.good_id===g.id),units=owned?readyUnits(owned,g,productionTime,game.settings.offline_batches):0;return <article className="command-job" key={g.id}><GameIcon name="production" size={25}/><div><h3>{g.business_name}</h3><p>{g.batch_size} {g.name.toLowerCase()} every {Math.ceil(g.cycle_seconds/60)} min</p><small>{owned?units+" units ready":money(g.business_cost)+" acquisition"}</small></div><button className="command-button" disabled={busy||refreshing||!playing||(owned?!units:game.player.cash<g.business_cost)} onClick={()=>act(owned?"collect":"business",{good_id:g.id})}>{owned?"Collect "+units+" units":"Buy · "+money(g.business_cost)}</button></article>;})}<Go href={districtPath+"?tab=Plots"}>Develop your district properties</Go></>}
+   {dialog==="jobs"?<><p>Earn cash and respect. Every completed operation is recorded.</p>{game.jobs.map(j=><article className="command-job" key={j.id}><GameIcon name="briefcase" size={25}/><div><h3>{j.name}</h3><p>{j.description}</p><small>{money(j.reward)} · +{j.xp} respect · {Math.ceil(j.cooldown/60)} min cooldown</small></div><button className="command-button" disabled={busy||refreshing||!playing||cooldown>0} onClick={()=>act("job",{job:j.id})}>{cooldown?until(game.player.job_ready_at,now):"Start operation"}<GameIcon name="arrow" size={15}/></button></article>)}{!game.jobs.length&&<Empty>No jobs are available this season.</Empty>}</>:<><p>Build supply for the player market. Acquisition costs and production rates are set by the city.</p>{game.goods.filter(g=>g.business_available!==false).map(g=>{const owned=game.businesses.find(b=>b.good_id===g.id),units=owned?readyUnits(owned,g,productionTime,game.settings.offline_batches):0;return <article className="command-job" key={g.id}><GameIcon name="production" size={25}/><div><h3>{g.business_name}</h3><p>{g.batch_size} {g.name.toLowerCase()} every {Math.ceil(g.cycle_seconds/60)} min</p><small>{owned?units+" units ready":money(g.business_cost)+" acquisition"}</small></div><button className="command-button" disabled={busy||refreshing||!playing||(owned?!units:game.player.cash<g.business_cost)} onClick={()=>act(owned?"collect":"business",{good_id:g.id})}>{owned?"Collect "+units+" units":"Buy · "+money(g.business_cost)}</button></article>;})}<Go href={districtPath+"?tab=Plots"}>Develop your district properties</Go></>}
   </dialog>}
  </div>;
 }
