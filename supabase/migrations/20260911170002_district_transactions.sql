@@ -40,7 +40,7 @@ begin
  s:=game_private.season_guard();
  if (payload->>'season_id')::uuid is distinct from s then raise exception 'Season changed. Refresh the district.'; end if;
  perform pg_advisory_xact_lock(4704020);
- if action in ('job','influence') then
+ if action in ('job','influence','gang_create','gang_join','gang_leave') then
   select * into d from public.game_districts where id=(payload->>'district_id')::uuid and archived_at is null;
  else
   select * into p from public.game_district_plots where id=(payload->>'plot_id')::uuid and season_id=s and archived_at is null for update;
@@ -193,6 +193,26 @@ begin
   result:=game_private.act('job',payload);
   perform game_private.record_metric(auth.uid(),'crime',1);
   perform game_private.district_event(d.id,'economy','district_job',game_private.district_owner_name('player',auth.uid())||' completed '||(select name from public.game_jobs where id=payload->>'job'));
+ when 'gang_create' then
+  if exists(select 1 from public.game_season_gang_members where season_id=s and player_id=auth.uid()) then raise exception 'You already belong to a gang.'; end if;
+  if length(trim(coalesce(payload->>'name',''))) not between 3 and 60 then raise exception 'Choose a gang name of 3 to 60 characters.'; end if;
+  if exists(select 1 from public.game_season_gangs where season_id=s and lower(name)=lower(trim(payload->>'name'))) then raise exception 'That gang name is already in use.'; end if;
+  perform game_private.district_wallet(auth.uid(),-game_private.setting('district_gang_creation_cost'),'Establish seasonal gang');
+  insert into public.game_season_gangs(season_id,name,data) values(s,trim(payload->>'name'),jsonb_build_object('owner_id',auth.uid(),'recruitment','open')) returning id into gid;
+  insert into public.game_season_gang_members(season_id,player_id,gang_id) values(s,auth.uid(),gid);
+  perform game_private.district_event(d.id,'gang','gang_founding',trim(payload->>'name')||' established a crew in Blackwater',null,null,gid);
+ when 'gang_join' then
+  if exists(select 1 from public.game_season_gang_members where season_id=s and player_id=auth.uid()) then raise exception 'You already belong to a gang.'; end if;
+  select id into gid from public.game_season_gangs where season_id=s and id=(payload->>'gang_id')::uuid and data->>'recruitment'='open';
+  if gid is null then raise exception 'This gang is not recruiting.'; end if;
+  insert into public.game_season_gang_members(season_id,player_id,gang_id) values(s,auth.uid(),gid);
+  perform game_private.district_event(d.id,'gang','gang_membership',game_private.district_owner_name('player',auth.uid())||' joined '||game_private.district_owner_name('gang',gid),null,null,gid);
+ when 'gang_leave' then
+  select gang_id into gid from public.game_season_gang_members where season_id=s and player_id=auth.uid();
+  if gid is null then raise exception 'You are not in a gang.'; end if;
+  if exists(select 1 from public.game_season_gangs where id=gid and data->>'owner_id'=auth.uid()::text) then raise exception 'The founding player must remain in their gang this season.'; end if;
+  delete from public.game_season_gang_members where season_id=s and player_id=auth.uid();
+  perform game_private.district_event(d.id,'gang','gang_membership',game_private.district_owner_name('player',auth.uid())||' left '||game_private.district_owner_name('gang',gid),null,null,gid);
  when 'influence' then
   select gang_id into gid from public.game_season_gang_members where season_id=s and player_id=auth.uid();
   if gid is null then raise exception 'Join a gang before contributing influence.'; end if;

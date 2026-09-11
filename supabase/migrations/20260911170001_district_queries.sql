@@ -71,6 +71,7 @@ begin
  'district',to_jsonb(d),'season',(select jsonb_build_object('id',id,'name',name,'status',status) from public.game_seasons where id=s),
  'player_id',auth.uid(),'cash',(select cash from public.game_players where id=auth.uid()),
  'gang_id',(select gang_id from public.game_season_gang_members where season_id=s and player_id=auth.uid()),
+ 'gangs',coalesce((select jsonb_agg(jsonb_build_object('id',g.id,'name',g.name,'recruiting',g.data->>'recruitment'='open','founder',g.data->>'owner_id'=auth.uid()::text)) from public.game_season_gangs g where g.season_id=s),'[]'::jsonb),
  'can_manage',manage,'server_time',now(),
  'plots',coalesce((select jsonb_agg(to_jsonb(p)||jsonb_build_object(
   'owner_name',game_private.district_owner_name(p.owner_type,p.owner_id),

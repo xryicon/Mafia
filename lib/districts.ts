@@ -12,6 +12,7 @@ export type War={id:string;name:string;status:string;objectives:({name?:string;s
 export type DistrictState={
  districts:District[];district:District;season:{id:string;name:string;status:string};player_id:string;cash:number;gang_id:string|null;can_manage:boolean;server_time:string;
  plots:Plot[];buildings:Building[];businesses:Business[];sites:Site[];events:DistrictEvent[];territory:{controller_gang_id:string|null;controller_name:string;neutral_influence:number;fortification:number;status:string};
+ gangs:{id:string;name:string;recruiting:boolean;founder:boolean}[];
  influence:{gang_id:string;name:string;influence:number}[];wars:War[];auctions:Auction[];offers:Offer[];
  sales:{id:string;plot_id:string;buyer_id:string;price:number;tax:number;method:string;created_at:string}[];
  market:import("./game").Listing[];trades:{id:number;good_id:string;quantity:number;unit_price:number;created_at:string}[];market_volume:number;

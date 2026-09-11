@@ -2,7 +2,7 @@ create or replace function game_private.district_immutable() returns trigger lan
 -- District catalog is permanent. Ownership, construction and economic history are seasonal.
 insert into public.game_permissions(id,owner_only) values ('districts.manage',false) on conflict do nothing;
 insert into public.game_settings(key,value,minimum,maximum) values
- ('district_auction_hours',24,1,168),('district_bid_increment',100,1,1000000),
+ ('district_auction_hours',24,1,168),('district_gang_creation_cost',1000,1,1000000),('district_bid_increment',100,1,1000000),
  ('district_offer_hours',48,1,168),('district_influence_cost',500,1,1000000),
  ('district_influence_cooldown',300,1,86400),('district_control_threshold',60,1,100),
  ('district_offline_batches',24,1,1000)
