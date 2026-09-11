@@ -42,6 +42,10 @@ test("compact icon header and blank canvases match the fresh-start request",asyn
  await page.setViewportSize({width:375,height:812});
  for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/support","/players"]){
   await page.goto(path);await noOverflow(page);
+  const header=await page.locator(".estate-header").boundingBox(),wallet=await page.locator(".header-wallet").boundingBox();
+  console.log("HEADER_BOUNDS "+JSON.stringify({path,header,wallet}));
+  expect(wallet!.y).toBeGreaterThanOrEqual(header!.y);
+  expect(wallet!.y+wallet!.height).toBeLessThanOrEqual(header!.y+header!.height);
   const links=nav.getByRole("link");await expect(links).toHaveCount(6);
   for(const link of await links.all()){const box=await link.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(376);}
   if(path==="/dashboard")await capture(page,"clear-city-mobile");
