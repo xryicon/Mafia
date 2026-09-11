@@ -19,7 +19,7 @@ function Go({href,children,icon}:{href:string;children:ReactNode;icon?:string}){
 function Empty({children}:{children:ReactNode}){return <p className="command-empty">{children}</p>;}
 function Meter({value,color,label}:{value:number;color?:string;label:string}){return <span className="command-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><i style={{width:Math.max(0,Math.min(100,value))+"%",background:color}}/></span>;}
 
-function Atlas({districts,selected,onSelect,office}:{districts:District[];selected:string;onSelect:(slug:string)=>void;office:DashboardData["mailbox"]}){
+function Atlas({districts,selected,onSelect}:{districts:District[];selected:string;onSelect:(slug:string)=>void}){
  const router=useRouter();
  const extra=districts.filter(d=>!atlasAreas.some(a=>a.slug===d.slug));
  return <section className="command-atlas" aria-label="City overview">
@@ -32,7 +32,6 @@ function Atlas({districts,selected,onSelect,office}:{districts:District[];select
    </g>;})}
    {extra.map(d=>{const polygon=d.city_polygon.map(([x,y])=>[x,y*560/800] as [number,number]),[x,y]=centroid(polygon);return <g key={d.id} className={"command-zone"+(selected===d.slug?" selected":"")} style={{"--zone-color":"#bda16e"} as CSSProperties} role="button" tabIndex={0} aria-label={"Select "+d.name} aria-pressed={selected===d.slug} onClick={()=>onSelect(d.slug)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();onSelect(d.slug);}}}><polygon points={points(polygon)}/><text x={x} y={y} textAnchor="middle">{d.name}</text></g>;})}
   </PanMap>
-  {office&&<Link href="/telegrams" className="command-office-marker"><GameIcon name="mail" size={26}/><span><strong>TELEGRAM OFFICE</strong><small>City wide</small><em>Send. Trade. Conspire.</em></span></Link>}
   <div className="command-atlas-signature">BLACKWATER <span>COMMERCE FUELS AMBITION</span></div>
  </section>;
 }
@@ -119,7 +118,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <p className="command-player-signature">BLACKWATER <small>A PLAYER-DRIVEN CRIME ECONOMY</small></p>
   </aside>
   <div className="command-center">
-   <Atlas districts={ds?.districts??[]} selected={d?.slug??""} onSelect={selectDistrict} office={data.mailbox}/>
+   <Atlas districts={ds?.districts??[]} selected={d?.slug??""} onSelect={selectDistrict}/>
    <div className="command-summary-grid">
     <Panel title="Territory Control" className="command-territory">
      <p className="command-subtitle">{d?.name??"District unavailable"} · {ds?.influence.length??0} gangs</p>

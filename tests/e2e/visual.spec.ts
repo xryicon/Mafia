@@ -21,13 +21,17 @@ test("game navigation and remaining blank properties stay responsive",async({pag
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated visual fixture");
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
+ await page.setViewportSize({width:1672,height:941});await page.goto("/market");
+ await expect(page.getByLabel("Inventory stock")).toContainText("540");
+ await expect(page.locator(".estate-header")).toHaveCSS("height","62px");
+ await noOverflow(page);await capture(page,"shared-market-desktop");
  await page.setViewportSize({width:1044,height:700});await page.goto("/telegrams");
  await expect(page.locator(".header-cash")).toContainText("$2,480,000");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.getByRole("link")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
  await expect(nav.getByRole("link",{name:"Profile",exact:true})).toHaveCount(0);
- for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeVisible();
- await expect(page.locator(".estate-header")).toHaveCSS("height","78px");
+ for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeHidden();
+ await expect(page.locator(".estate-header")).toHaveCSS("height","120px");
  await expect(page.locator(".header-power")).toHaveText("Power 1,247");
  await expect(page.locator(".header-rank")).toHaveText("Caporegime");
  await expect(page.locator(".estate-brand .brand-online")).toHaveText("2 online");
@@ -40,8 +44,11 @@ test("game navigation and remaining blank properties stay responsive",async({pag
  }
  await capture(page,"empty-properties-desktop");
  await page.setViewportSize({width:375,height:812});
- for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/support","/players"]){
+ for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/staff","/support","/players","/profile","/seasons","/account","/districts/the-waterfront","/districts/manage"]){
   await page.goto(path);await noOverflow(page);
+  await expect(page.locator(".command-city")).toHaveCount(1);
+  await expect(page.locator(".estate-header")).toHaveCSS("height","143px");
+  await expect(page.locator(".estate-header img.don-portrait")).toHaveAttribute("src","/art/command-portrait.jpg");
   const header=await page.locator(".estate-header").boundingBox(),wallet=await page.locator(".header-wallet").boundingBox();
   console.log("HEADER_BOUNDS "+JSON.stringify({path,header,wallet}));
   expect(wallet!.y).toBeGreaterThanOrEqual(header!.y);
@@ -49,5 +56,6 @@ test("game navigation and remaining blank properties stay responsive",async({pag
   const links=nav.getByRole("link");await expect(links).toHaveCount(6);
   for(const link of await links.all()){const box=await link.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(376);}
   if(path==="/dashboard")await capture(page,"clear-city-mobile");
+  if(path==="/market")await capture(page,"shared-market-mobile");
  }
 });
