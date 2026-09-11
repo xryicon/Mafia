@@ -58,6 +58,7 @@ test("illustrated game uses real market offers and reachable mobile navigation",
  await page.setViewportSize({width:1440,height:1000});
  await page.goto("/dashboard");
  await loaded(page,".district-hero img");
+ await expect(page.locator(".city-status-row")).toContainText("2 online");
  await expect(page.getByRole("region",{name:"Player market overview"})).toBeVisible();
  await capture(page,"game-desktop");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
@@ -79,4 +80,14 @@ test("illustrated game uses real market offers and reachable mobile navigation",
   await noOverflow(page);
   if(name==="Businesses"){await page.locator(".business-grid").scrollIntoViewIfNeeded();for(const good of ["whiskey","silk","steel"])await loaded(page,".business-card."+good+" img");await capture(page,"business-mobile");}
  }
+});
+
+test("connected city and private Owner office visual review",async({page,context})=>{
+ test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
+ await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
+ for(const [width,height,suffix] of [[1440,1000,"desktop"],[375,812,"mobile"]] as const){
+  await page.setViewportSize({width,height});
+  for(const route of ["players","support","owner"]){await page.goto("/"+route);await expect(page.locator(".city-status-row")).toContainText("2 online");await noOverflow(page);await capture(page,route+"-"+suffix);}
+ }
+ await page.getByRole("button",{name:/City chat/}).click();await expect(page.getByRole("complementary",{name:"City chat"})).toBeVisible();await capture(page,"chat-mobile");
 });

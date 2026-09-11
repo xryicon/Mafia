@@ -8,7 +8,9 @@ export function LogoutButton() {
   async function logout() {
     setBusy(true); setError("");
     try {
-      const { error } = await createClient().auth.signOut({ scope: "local" });
+      const db = createClient();
+      await Promise.race([db.rpc("presence_leave").then(() => null, () => null), new Promise(resolve => setTimeout(resolve, 1500))]);
+      const { error } = await db.auth.signOut({ scope: "local" });
       if (error) throw error;
       window.location.assign("/login");
     } catch {

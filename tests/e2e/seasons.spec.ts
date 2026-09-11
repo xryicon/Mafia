@@ -12,7 +12,7 @@ test("mobile rankings, profile and Owner season controls",async({page,context})=
  await page.goto("/seasons");
  await page.getByRole("button",{name:"Hall of Fame",exact:true}).click();
  await expect(page.getByText("The first champions will appear",{exact:false})).toBeVisible();
- await page.getByRole("button",{name:"Owner controls",exact:true}).click();
+ await page.getByRole("link",{name:"Owner controls",exact:true}).click();
  await expect(page.getByRole("heading",{name:"Create season",exact:true})).toBeVisible();
  await expect(page.getByRole("heading",{name:"Lock season",exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);

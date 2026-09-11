@@ -1,9 +1,8 @@
-// Explicit destinations keep all post-auth redirects on this app.
+// Explicit destinations keep post-auth redirects on this app.
+const destinations = ["/dashboard", "/update-password", "/staff", "/owner", "/community", "/support", "/seasons", "/players", "/account"];
 export function safeNext(value: unknown): string {
-  return (value === "/update-password" || value === "/staff" || value === "/community" || value === "/seasons") ? value : "/dashboard";
+  return typeof value === "string" && destinations.includes(value) ? value : "/dashboard";
 }
-
 export function isProtectedPage(path: string): boolean {
-  return path === "/dashboard" || path.startsWith("/dashboard/") ||
-    path === "/seasons" || path.startsWith("/seasons/") || path === "/players" || path.startsWith("/players/") || path === "/update-password" || path === "/staff" || path.startsWith("/staff/") || path === "/community" || path.startsWith("/community/");
+  return destinations.some(destination => path === destination || path.startsWith(destination + "/"));
 }
