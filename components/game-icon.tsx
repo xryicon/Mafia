@@ -1,5 +1,10 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    home: "m2 11 10-9 10 9 M5 9v12h14V9 M9 21v-8h6v8",
+    trade: "M5 8h14l2 13H3L5 8 M8 8V5a4 4 0 0 1 8 0v3 M9 13h6 M12 11v7",
+    property: "m2 10 10-8 10 8 M5 9v13h14V9 M8 21v-7h8v7 M10 8h4",
+    district: "m12 2 9 20H3L12 2 M12 8v6 M12 18h.01 M6 18h12",
+    mail: "M2 5h20v14H2z M2 5l10 8L22 5 M2 19l7-7 M22 19l-7-7",
     bell: "M6 8a6 6 0 0 1 12 0v7l3 3H3l3-3V8 M10 21h4 M12 1v1",
     people: "M9 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M3 21v-8c0-4 12-4 12 0v8 M6 21v-7 M12 21v-7 M17 3a3 3 0 0 1 0 6 M18 12c3 0 4 1 4 3v6 M19 21v-7",
     production: "M3 21V9l6 3V7l6 5V3h4v18H3 M6 16h2 M11 16h2 M16 16h2",

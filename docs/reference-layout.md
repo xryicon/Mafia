@@ -1,11 +1,9 @@
-# Reference game layout
+# Fresh game frame
 
-The supplied property-screen reference defines the protected game's layout: a charcoal-teal background, warm brass accents, serif headings, wide original artwork, compact production cards and a property control column.
+The latest header reference replaces the earlier property-screen navigation: brass line icons above Dashboard, Market, Properties, Districts, Gangs and Telegrams. Profile is removed from the navigation. The live wallet sits beside the account portrait; the player menu retains Owner/Staff controls, Support, players, seasons, rankings, financial history and account security.
 
-The exact primary navigation is Dashboard, Market, Properties, Districts, Gangs, Profile. Properties reuses existing production businesses; Districts provides the existing operations. Gangs reads the seasonal gang register; this design change does not add gang creation, invites or combat. Profile opens the signed-in player's current and archived rankings.
+Dashboard, Properties and Districts deliberately render blank protected canvases, including old query-string variants. They do not mount the old gameplay views or poll game_state. Telegrams is also a blank protected starting point; messaging functionality has not been added.
 
-Public chat is removed from all game screens. Existing moderation evidence remains in the Owner office. Online presence, usernames, private tickets, rankings, seasons and Owner access are retained. The player menu opens their secondary destinations.
+Market and its inventory view continue to use the existing server-authoritative trading actions. Gangs retains the current seasonal register. Financial history now lives at /ledger, so Dashboard stays empty. Historical profile/ranking links still work through the player directory.
 
-All property quantities, batches, prices, cash and level use existing server records. The UI does not invent workers, fuel, equipment durability, property profits or mine upgrades. Production and market actions retain the existing transactional RPCs and ledger protections.
-
-The compact city_status endpoint maintains session presence and returns only the header's own account, status and recent activity; it excludes chat and ticket data. The gang directory excludes private metadata and aggregates visible current-season members. Both endpoints require an active account.
+No database records, balances, properties, moderation history or archived rankings are reset. Public chat remains absent. city_status continues to supply trusted header data and session presence.
