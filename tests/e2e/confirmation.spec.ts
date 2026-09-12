@@ -24,8 +24,10 @@ test("invalid or reused email links never display successful confirmation",async
 test("confirmation response clears tokens and preserves reset callback destination",async({request})=>{
  const response=await request.get("/auth/confirm?token_hash="+valid+"&type=email",{maxRedirects:0});
  expect(response.headers()["location"]).toMatch(/\/auth\/confirmed$/);expect(response.headers()["cache-control"]).toContain("no-store");expect(response.headers()["referrer-policy"]).toBe("no-referrer");expect(response.headers()["set-cookie"]).toContain("sb-127");
- const reset=await request.get("/auth/callback?code=fixture-reset&next=/update-password",{maxRedirects:0});expect(reset.headers()["location"]).toMatch(/\/update-password$/);
- const signup=await request.get("/auth/callback?code=fixture-signup",{maxRedirects:0});expect(signup.headers()["location"]).toMatch(/\/auth\/confirmed$/);
+ // Simulate the verifier cookie set when signup or password recovery starts.
+ const verifier={Cookie:"sb-127-auth-token-code-verifier=base64-"+Buffer.from(JSON.stringify("fixture-verifier")).toString("base64url")};
+ const reset=await request.get("/auth/callback?code=fixture-reset&next=/update-password",{maxRedirects:0,headers:verifier});expect(reset.headers()["location"]).toMatch(/\/update-password$/);
+ const signup=await request.get("/auth/callback?code=fixture-signup",{maxRedirects:0,headers:verifier});expect(signup.headers()["location"]).toMatch(/\/auth\/confirmed$/);
 });
 test("branded confirmation email renders on desktop and mobile with working links",async({page})=>{
  const html=(await readFile("supabase/templates/confirmation.html","utf8")).replaceAll("{{ .SiteURL }}","http://localhost:3000").replaceAll("{{ .TokenHash }}",valid);
