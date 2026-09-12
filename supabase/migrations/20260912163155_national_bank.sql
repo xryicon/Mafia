@@ -71,8 +71,8 @@ begin
    (select id,delta,balance_after,cash_after,created_at from public.game_bank_ledger where player_id=uid and season_id=s order by created_at desc,id desc limit 10 offset v_offset) x),
   'totals',(select jsonb_build_object('deposited',coalesce(sum(delta) filter(where delta>0),0),'withdrawn',coalesce(-sum(delta) filter(where delta<0),0),'transfers',count(*)) from public.game_bank_ledger where player_id=uid and season_id=s),
   'flow',(select jsonb_agg(x order by x.day) from (
-   select to_char(d.day,'YYYY-MM-DD') day,coalesce(sum(l.delta) filter(where l.delta>0),0) deposits,coalesce(-sum(l.delta) filter(where l.delta<0),0) withdrawals
-   from (select (clock_timestamp() at time zone 'UTC')::date-6+n day from generate_series(0,6) n) d
+   select to_char(d.day,'YYYY-MM-DD') as day,coalesce(sum(l.delta) filter(where l.delta>0),0) deposits,coalesce(-sum(l.delta) filter(where l.delta<0),0) withdrawals
+   from (select (clock_timestamp() at time zone 'UTC')::date-6+n as day from generate_series(0,6) n) d
    left join public.game_bank_ledger l on l.player_id=uid and l.season_id=s and l.created_at>=(d.day::timestamp at time zone 'UTC') and l.created_at<((d.day+1)::timestamp at time zone 'UTC')
    group by d.day) x)
  );

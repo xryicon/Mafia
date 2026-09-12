@@ -13,7 +13,7 @@ export function bankWorld(state){
   if(delta>state.player.cash)return {error:"Not enough cash."};if(balance+delta<0)return {error:"Not enough money in your bank account."};
   state.player.cash-=delta;balance+=delta;opened??=new Date().toISOString();
   const entry={id:randomUUID(),delta,balance_after:balance,cash_after:state.player.cash,created_at:new Date().toISOString()};entries.unshift(entry);
-  state.ledger.unshift({id:entry.id,cash_delta:-delta,balance:state.player.cash,reason:"National Bank "+kind,created_at:entry.created_at});
+  state.ledger.unshift({id:entry.id,delta:-delta,balance_after:state.player.cash,reason:"National Bank "+kind,created_at:entry.created_at});
   const result={message:kind==="deposit"?"Deposit complete. Your money is in the bank.":"Withdrawal complete. Your money is in your wallet.",receipt:entry};requests.set(p.request_id,{key,result});return result;
  };
  const setup=p=>{if(p.pause)enabled=0;if(p.close)playable=false;if(p.cash!==undefined)state.player.cash=p.cash;if(p.nextSeason)state.season={...state.season,id:randomUUID()};
