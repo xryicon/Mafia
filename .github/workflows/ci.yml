@@ -105,3 +105,8 @@ jobs:
 
       - name: Concurrent refinery purchases and fuel consumption
         run: bash supabase/tests/refinery_races.sh
+
+      - name: National Bank transfers and concurrency
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/bank.sql
+          bash supabase/tests/bank_races.sh

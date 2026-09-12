@@ -8,6 +8,7 @@ import "./dashboard.css";
 import "./bin-diving.css";
 import "./refineries.css";
 import "./operations.css";
+import "./bank.css";
 import "./market.css";
 import "./commodities.css";
 import "./mining.css";

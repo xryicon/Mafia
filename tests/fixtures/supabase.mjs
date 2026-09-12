@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {bankWorld} from "./bank.mjs";
 import {refineryWorld} from "./refineries.mjs";
 import {binWorld} from "./bin-diving.mjs";
 import {miningWorld} from "./mining.mjs";
@@ -28,8 +29,9 @@ let market=marketWorld(state,playerId);
 let mining=miningWorld(state,districts,playerId);
 let bins=binWorld(state,mining);
 let refineries=refineryWorld(state,playerId);
+let bank=bankWorld(state);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -53,6 +55,8 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
 
 
+ if(url.pathname.startsWith("/rest/v1/rpc/bank_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("bank_state")?bank.read(p.p_offset):bank.action(p.p_action,p.p_payload));return;}
+ if(url.pathname==="/__bank_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;bank.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/telegram_")){
   let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");
   if(url.pathname.endsWith("telegram_state"))send(200,{...telegrams.read(p),cash:state.player.cash});

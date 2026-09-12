@@ -28,7 +28,7 @@ test("game navigation and remaining blank properties stay responsive",async({pag
  await page.setViewportSize({width:1044,height:700});await page.goto("/telegrams");
  await expect(page.locator(".header-cash")).toContainText("$2,480,000");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Properties","Districts","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Properties","Bank","Gangs","Telegrams"]);
  await expect(nav.getByRole("link",{name:"Profile",exact:true})).toHaveCount(0);
  for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeHidden();
  await expect(page.locator(".estate-header")).toHaveCSS("height","120px");
@@ -44,7 +44,7 @@ test("game navigation and remaining blank properties stay responsive",async({pag
  }
  await capture(page,"empty-properties-desktop");
  await page.setViewportSize({width:375,height:812});
- for(const path of ["/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/staff","/support","/players","/profile","/seasons","/account","/districts/the-waterfront","/districts/manage"]){
+ for(const path of ["/bank","/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/staff","/support","/players","/profile","/seasons","/account","/districts/the-waterfront","/districts/manage"]){
   await page.goto(path);await noOverflow(page);
   await expect(page.locator(".command-city")).toHaveCount(1);
   await expect(page.locator(".estate-header")).toHaveCSS("height","143px");

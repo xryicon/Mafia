@@ -118,3 +118,12 @@ if(tradableLootDeployed){for(const [folder,ids] of [["loot",["pickaxe","pistol_b
  if(!r.ok||bytes<500||!r.headers.get("content-type")?.includes("image/webp"))throw new Error("Loot artwork unavailable: "+id+size);
  console.log(JSON.stringify({lootArt:id+size,status:r.status,bytes}));
 }}
+
+const nationalBankDeployed=styles.includes(".bank-page");console.log(JSON.stringify({nationalBankDeployed}));
+if(nationalBankDeployed){
+ const r=await fetch(origin+"/bank",{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Bank must require login");
+ for(const name of ["national-bank","national-bank-small"]){const a=await fetch(origin+"/art/"+name+".webp",{signal:AbortSignal.timeout(20000)});const bytes=(await a.arrayBuffer()).byteLength;
+ if(!a.ok||bytes<1000||!a.headers.get("content-type")?.includes("image/webp"))throw new Error("Bank artwork unavailable");console.log(JSON.stringify({bankArtwork:name,status:a.status,bytes}));}
+ console.log(JSON.stringify({bankProtectedRoute:r.status}));
+}
