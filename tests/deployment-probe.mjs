@@ -132,3 +132,6 @@ if(nationalBankDeployed){
 const inventoryDeployed=styles.includes(".inv-page");console.log(JSON.stringify({inventoryDeployed}));if(inventoryDeployed){const r=await fetch(origin+"/inventory",{redirect:"manual",signal:AbortSignal.timeout(20000)});if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Inventory must require login");console.log(JSON.stringify({inventoryProtectedRoute:r.status}));}
 
 console.log(JSON.stringify({inventoryLoadoutDeployed:styles.includes('.inv-loadout-grid')}));
+
+console.log(JSON.stringify({playerProfilesDeployed:styles.includes('.pp-hero')}));
+if(styles.includes('.pp-hero')){const r=await fetch(origin+'/players/11111111-1111-4111-8111-111111111111',{redirect:'manual',signal:AbortSignal.timeout(20000)});if(![302,303,307,308].includes(r.status)||!r.headers.get('location')?.includes('/login'))throw new Error('Player profiles must require login');console.log(JSON.stringify({playerProfileProtectedRoute:r.status}));}
