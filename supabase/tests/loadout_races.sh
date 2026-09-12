@@ -8,7 +8,7 @@ do $$declare u uuid:='eeeeeeee-6000-4000-8000-000000000001';s uuid:=game_private
  insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
  update public.game_inventory set quantity=0 where player_id=u;
  update public.game_inventory set quantity=49 where player_id=u and good_id='whiskey';
- insert into public.game_inventory_deliveries(id,season_id,player_id,good_id,quantity,reason) values('eeeeeeee-6000-4000-8000-000000000002',s,u,'iron_ore',4,'CI guaranteed delivery');
+ insert into public.game_inventory_deliveries(id,season_id,player_id,good_id,quantity,reason) values('eeeeeeee-6000-4000-8000-000000000002',s,u,'iron-ore',4,'CI guaranteed delivery');
 end$$;
 SQL
 # Two distinct collections compete for the final 2 kg.

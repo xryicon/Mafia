@@ -25,7 +25,7 @@ export function inventoryWorld(state,bin,setTool=()=>{}){
    else if(kind==="equip"){
     const id=g?.good_id??p.item_key?.replace(/^good:/,""),good=goods().find(g=>g.id===id);
     if(!good?.equipment_slots.includes(p.equipment_slot))fail("This item does not fit that equipment slot.");
-    if(g&&g.location!=="carried")fail("Retrieve or unequip this item first.");if(g&&g.condition===0)fail("This pickaxe is broken.");
+    if(g&&!['carried','equipped'].includes(g.location))fail("Retrieve this item first.");if(g?.equipment_slot===p.equipment_slot)fail("This item is already equipped there.");if(g&&g.condition===0)fail("This pickaxe is broken.");
     if(p.equipment_slot==="utility"&&bin().mining_shift)fail("Finish your mining shift before changing Utility equipment.");
     const old=gear.find(g=>g.location==="equipped"&&g.equipment_slot===p.equipment_slot);if(old){old.location="carried";old.equipment_slot=null;}
     if(!g){const row=state.inventory.find(x=>x.good_id===id);if(!row?.quantity)fail("This item is no longer carried.");row.quantity--;entry(id,-1,"carried",null,row.quantity);g={id:"equipped-"+nextGear++,good_id:id,quantity:1,condition:id==="pickaxe"?bin().tool_max:null,location:"equipped",equipment_slot:p.equipment_slot,building_id:null};gear.push(g);entry(id,1,"equipped",null,1);}
