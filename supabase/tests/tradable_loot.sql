@@ -1,0 +1,54 @@
+begin;
+create function pg_temp.loot_check(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+do $$
+declare owner uuid:=gen_random_uuid();a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();m uuid:=gen_random_uuid();who uuid;
+ s uuid:=game_private.current_season();item text;r jsonb;q jsonb;offer uuid;auction uuid;
+begin
+ insert into auth.users(id) values(owner),(a),(b),(m);
+ foreach who in array array[owner,a,b,m] loop perform set_config('request.jwt.claim.sub',who::text,true);perform public.game_state();end loop;
+ update public.game_user_roles set role_id='owner' where player_id=owner;
+ update public.game_user_roles set role_id='moderator' where player_id=m;
+ foreach item in array array['pickaxe','pistol_blueprint','bullet_blueprint'] loop
+  q:=jsonb_build_object('player_id',a,'good_id',item,'quantity',2,'reason','Test loot grant and trading');
+  perform set_config('request.jwt.claim.sub',m::text,true);
+  r:=public.staff_action('spawn_asset',q);perform pg_temp.loot_check(r?'error','Moderator granted loot');
+  perform set_config('request.jwt.claim.sub',b::text,true);
+  r:=public.staff_action('spawn_asset',q);perform pg_temp.loot_check(r?'error','Player granted loot');
+  perform set_config('request.jwt.claim.sub',owner::text,true);
+  r:=public.staff_action('spawn_asset',q);perform pg_temp.loot_check(not r?'error','Owner grant failed: '||r::text);
+  perform pg_temp.loot_check(exists(select 1 from public.game_audit where actor_id=owner and action='spawn_asset' and after_data->>'good_id'=item),'Grant missing audit');
+  perform set_config('request.jwt.claim.sub',a::text,true);
+  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>item)::int=2,'Grant missing from bin stash');
+  r:=public.game_action('business',jsonb_build_object('good_id',item));
+  perform pg_temp.loot_check(r?'error','Loot can be bought as a production business');
+  r:=public.game_action('list',jsonb_build_object('good_id',item,'quantity',1,'unit_price',100,'season_id',s));
+  perform pg_temp.loot_check(not r?'error','Loot listing failed: '||r::text);
+  select id into offer from public.game_listings where season_id=s and seller_id=a and good_id=item and status='active';
+  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>item)::int=1,'Listed loot remains in stash');
+  r:=public.market_auction_action('create',jsonb_build_object('good_id',item,'quantity',1,'starting_bid',100,'duration_minutes',5,'season_id',s,'request_id',gen_random_uuid()));
+  perform pg_temp.loot_check(not r?'error','Loot auction failed: '||r::text);auction:=(r->>'auction_id')::uuid;
+  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>item)::int=0,'Auction loot remains in stash');
+  r:=public.game_action('list',jsonb_build_object('good_id',item,'quantity',1,'unit_price',100));
+  perform pg_temp.loot_check(r?'error','Reserved loot can be sold twice');
+  if item='pickaxe' then
+   r:=public.bin_diving_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid()));
+   perform pg_temp.loot_check(r?'error','Reserved pickaxe can be equipped');
+  end if;
+  perform set_config('request.jwt.claim.sub',b::text,true);
+  r:=public.game_action('buy',jsonb_build_object('listing_id',offer));
+  perform pg_temp.loot_check(not r?'error','Loot purchase failed: '||r::text);
+  r:=public.game_action('buy',jsonb_build_object('listing_id',offer));
+  perform pg_temp.loot_check(r?'error','Loot can be purchased twice');
+  r:=public.market_auction_action('bid',jsonb_build_object('auction_id',auction,'amount',100,'season_id',s,'request_id',gen_random_uuid()));
+  perform pg_temp.loot_check(not r?'error','Loot bid failed: '||r::text);
+  update public.game_market_auctions set ends_at=clock_timestamp()-interval '1 second' where id=auction;
+  perform public.market_state();
+  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>item)::int=2,'Auction/purchase goods not delivered to buyer stash');
+ end loop;
+ r:=public.bin_diving_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid()));
+ perform pg_temp.loot_check(not r?'error','Purchased pickaxe cannot equip: '||r::text);
+ perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>'pickaxe')::int=1,'Equip did not consume exactly one purchased pickaxe');
+ perform pg_temp.loot_check(not exists(select 1 from public.game_players p where p.id in(a,b,owner,m) and p.cash<>(select sum(l.delta) from public.game_ledger l where l.player_id=p.id)),'Trade ledger does not reconcile');
+end $$;
+select 'PASS: Owner grants, permissions, audit, all loot trading and auctions, escrow, purchased equipment and ledger';
+rollback;

@@ -109,3 +109,10 @@ if(binDivingDeployed){
 
 const refineryDeployed=styles.includes(".ref-page");console.log(JSON.stringify({refineryDeployed}));
 if(refineryDeployed){const r=await fetch(origin+"/refineries",{redirect:"manual",signal:AbortSignal.timeout(20000)});if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Refineries must require login");console.log(JSON.stringify({refineryProtectedRoute:r.status}));}
+
+const tradableLootDeployed=styles.includes(".bin-tradable-loot");console.log(JSON.stringify({tradableLootDeployed}));
+if(tradableLootDeployed){for(const [folder,ids] of [["loot",["pickaxe","pistol_blueprint","bullet_blueprint"]],["resources",["iron-ingot","copper-ingot"]]])for(const id of ids)for(const size of ["","-256","-96"]){
+ const r=await fetch(origin+"/art/"+folder+"/"+id+size+".webp",{signal:AbortSignal.timeout(20000)});const bytes=(await r.arrayBuffer()).byteLength;
+ if(!r.ok||bytes<500||!r.headers.get("content-type")?.includes("image/webp"))throw new Error("Loot artwork unavailable: "+id+size);
+ console.log(JSON.stringify({lootArt:id+size,status:r.status,bytes}));
+}}

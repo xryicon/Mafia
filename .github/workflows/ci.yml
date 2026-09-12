@@ -66,7 +66,10 @@ jobs:
       - name: Migrate and seed isolated PostgreSQL
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
-          for migration in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$migration"; done
+          for migration in supabase/migrations/*.sql; do
+            if [[ "$migration" == *20260912133819_tradable_bin_loot.sql ]]; then psql -v ON_ERROR_STOP=1 -f supabase/tests/loot_upgrade.sql; fi
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
       - name: Economic and authorization regression tests
@@ -83,6 +86,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/market_auctions.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/mining.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bin_diving.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/tradable_loot.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/refineries.sql
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh
