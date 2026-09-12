@@ -106,3 +106,6 @@ if(binDivingDeployed){
  if(![302,303,307,308].includes(page.status)||!page.headers.get("location")?.includes("/login"))throw new Error("Bin diving must require login");
  console.log(JSON.stringify({binDivingArtwork:response.status,bytes,protectedRoute:page.status}));
 }
+
+const refineryDeployed=styles.includes(".ref-page");console.log(JSON.stringify({refineryDeployed}));
+if(refineryDeployed){const r=await fetch(origin+"/refineries",{redirect:"manual",signal:AbortSignal.timeout(20000)});if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Refineries must require login");console.log(JSON.stringify({refineryProtectedRoute:r.status}));}

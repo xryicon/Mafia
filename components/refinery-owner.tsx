@@ -1,0 +1,13 @@
+"use client";
+import {useState} from "react";
+import Link from "next/link";
+import {useRefinery} from "@/components/use-refinery";
+import type {Recipe,RefineryState} from "@/lib/refineries";
+function RecipeForm({recipe,data,busy,save}:{recipe:Recipe;data:RefineryState;busy:boolean;save:(r:Recipe,reason:string)=>Promise<boolean>}){
+ const [r,setR]=useState(recipe),[reason,setReason]=useState("");
+ return <form className="ref-panel ref-recipe-form" onSubmit={async e=>{e.preventDefault();if(await save(r,reason))setReason("");}}><header><h2>{recipe.name}</h2></header><label>Recipe name<input value={r.name} required minLength={2} maxLength={80} onChange={e=>setR({...r,name:e.target.value})}/></label><div className="ref-form-grid">{[["input_good_id","Input good"],["output_good_id","Output good"],["fuel_good_id","Fuel good"]].map(([key,label])=><label key={key}>{label}<select aria-label={recipe.name+" "+label} value={r[key as keyof Recipe] as string} onChange={e=>setR({...r,[key]:e.target.value})}>{data.goods.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>)}</div><div className="ref-form-grid">{[["input_units","Input per batch"],["output_units","Output per batch"],["fuel_units","Fuel per batch"]].map(([key,label])=><label key={key}>{label}<input type="number" min={1} max={10000} required step={1} value={r[key as keyof Recipe] as number} onChange={e=>setR({...r,[key]:Number(e.target.value)})}/></label>)}</div><label className="ref-check"><input type="checkbox" checked={r.enabled} onChange={e=>setR({...r,enabled:e.target.checked})}/> Recipe enabled</label><label>Reason for this change<input value={reason} required minLength={5} maxLength={500} onChange={e=>setReason(e.target.value)}/></label><button className="ref-gold" disabled={busy}>Save recipe →</button></form>;
+}
+export function RefineryOwner(){
+ const h=useRefinery(),data=h.data;
+ return <div className="ref-owner"><h2>Refineries & refining</h2><p>Manage conversions and fuel requirements. Coal is used now; a future fuel can be selected after its commodity is added.</p><div className="ref-buttons"><Link href="/refineries">Visit refineries ↗</Link><Link href="/districts/manage">Manage plots, buildings & prices ↗</Link><Link href="/owner?section=economy">Fee limits & economy settings ↗</Link></div>{h.notice&&<p role={h.failed?"alert":"status"}>{h.notice}{h.retry&&<button disabled={h.working} onClick={()=>void h.retryAction()}>Retry safely</button>}</p>}{!data?<p>Loading refinery settings… <button onClick={h.refresh}>Refresh</button></p>:!data.can_manage?<p>Owner permission required.</p>:data.recipes.map(r=><RecipeForm key={r.id+":"+r.version} recipe={r} data={data} busy={h.busy} save={(recipe,reason)=>h.act("recipe",{...recipe,reason})}/>)}</div>;
+}
