@@ -119,4 +119,6 @@ jobs:
           bash supabase/tests/inventory_races.sh
 
       - name: Equipment and actual carried capacity
-        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory_loadout.sql
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory_loadout.sql
+          bash supabase/tests/loadout_races.sh

@@ -6,7 +6,6 @@ export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
     rifle: "M2 17l5-5 6 1 7-7 2 2-9 9-4-2-5 5z M14 12l3 3 M8 13l1 4",
     pistol: "M3 6h18v5H10l-2 8H3l3-8H3V6 M11 11v4h4l2-4",
     ammo: "M4 8l2-5 2 5v13H4V8 M10 8l2-5 2 5v13h-4V8 M16 8l2-5 2 5v13h-4V8 M4 17h4 M10 17h4 M16 17h4",
-    shield: "M12 2l9 4v7c-1 5-5 8-9 10-4-2-8-5-9-10V6l9-4",
     medical: "M3 6h18v15H3V6 M8 6V3h8v3 M9 11h6v6H9v-6 M7 14h10 M12 9v10",
     bin: "M4 6h16 M9 3h6l1 3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
     blueprint: "M5 2h11l3 3v17H5V2 M15 2v5h4 M8 11h8 M8 15h5 M8 18h8",
