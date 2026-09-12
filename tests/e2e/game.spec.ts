@@ -32,10 +32,9 @@ test("market trading remains usable alongside the city dashboard",async({page,co
  await expect(page.getByLabel("Inventory stock")).toContainText("7");
  await expect(page.locator(".header-cash")).toContainText("$9,800");
  await page.setViewportSize({width:375,height:812});
- for(const [name,path] of [["Properties","/properties"]]){
+ for(const [name,path] of [["Inventory","/inventory"]]){
   await nav.getByRole("link",{name,exact:true}).click();await page.waitForURL(url=>url.pathname===path);
-  await expect(page.getByRole("main").locator(".fresh-canvas")).toBeVisible();
-  await expect(page.getByRole("main").locator("button,a,input,img,article,table,.estate-hero")).toHaveCount(0);
+  await expect(page.locator(".inv-page")).toBeVisible();
   await expect(nav.getByRole("link",{name,exact:true})).toHaveAttribute("aria-current","page");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }

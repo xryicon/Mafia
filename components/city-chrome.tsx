@@ -45,7 +45,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
   const escape=(e:KeyboardEvent)=>{if(e.key==="Escape"){if(account.current?.open){account.current.open=false;account.current.querySelector("summary")?.focus();}}};
   document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape);};
  },[]);
- const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/properties","Properties","property"],["/bank","Bank","bank"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"]];
+ const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/inventory","Inventory","inventory"],["/bank","Bank","bank"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"]];
  const blank=["/properties"].includes(path);
  useEffect(()=>{const update=(event:Event)=>setSummary((event as CustomEvent).detail);window.addEventListener("blackwater:dashboard",update);return()=>window.removeEventListener("blackwater:dashboard",update);},[]);
  const active=(href:string)=>path===href||path.startsWith(href+"/");

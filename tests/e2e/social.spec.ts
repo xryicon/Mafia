@@ -16,7 +16,7 @@ test("reference navigation removes chat and retains account destinations",async(
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
  await page.setViewportSize({width:1448,height:1086});await page.goto("/dashboard");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Properties","Bank","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Inventory","Bank","Gangs","Telegrams"]);
  await expect(page.getByRole("complementary",{name:"City chat"})).toHaveCount(0);await expect(page.getByRole("button",{name:/City chat/})).toHaveCount(0);
  await expect(page.locator(".estate-brand .brand-online")).toContainText("2 online");
  await page.getByLabel("Player menu",{exact:true}).click();
