@@ -277,3 +277,12 @@
  .command-city .estate-player-tools{grid-column:4;grid-row:1}
 }
 @media(min-width:501px) and (max-width:1050px){.command-player-stats>div:nth-child(3){display:flex}}
+
+/* Dashboard price board: active goods, five rows per page. */
+.command-market-prices .command-prices>a>span{min-width:0;overflow-wrap:anywhere}
+.command-price-pagination{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:11px}
+.command-price-pagination>span{font-size:10px;color:#b5aca0;white-space:nowrap}
+.command-price-pagination button{min-height:32px;padding:5px 7px;border:1px solid #a58a5659;background:#0a1518;color:#d6bd8f;font-size:10px}
+.command-price-pagination button:not(:disabled):hover{border-color:#d6bd8f;background:#c5a36b16}
+.command-price-pagination button:disabled{opacity:.35}
+@media(max-width:760px){.command-price-pagination button{min-height:44px;padding:8px 10px;font-size:12px}.command-price-pagination>span{font-size:12px}}
