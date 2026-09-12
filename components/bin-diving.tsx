@@ -1,6 +1,7 @@
 "use client";
 import {useState} from "react";
 import Link from "next/link";
+import {OperationHeader} from "@/components/operation-header";
 import {CommodityArtwork} from "@/components/commodity-artwork";
 import {GameIcon} from "@/components/game-icon";
 import {useBinDiving} from "@/components/use-bin-diving";
@@ -20,9 +21,9 @@ export function BinDiving({initial,initialDistrict}:{initial:BinState;initialDis
  const closed=!district||district.status==="lockdown";
  const blocked=h.busy||!playable||!data.rules.enabled||closed||seconds>0;
  const result=h.result,found=result&&loot.find(l=>l.id===result.outcome);
- return <div className="bin-page bin-tradable-loot" data-feature="bin-diving-v2">
+ return <div className="bin-page bin-tradable-loot operation-workspace bin-command" data-feature="bin-diving-command">
  <div className="bin-breadcrumb"><Link href="/dashboard">← Dashboard</Link><span>/</span><Link href="/districts">City map</Link><span>/ BIN DIVING</span>{data.can_manage&&<Link className="bin-owner-link" href="/owner?section=bin-diving">Owner controls ↗</Link>}</div>
- <header className="bin-hero"><div><p className="eyebrow">BLACKWATER / THE STREETS</p><h1>One man’s trash.<br/><em>Your next opportunity.</em></h1><p>Behind every empire, there’s a beginning.<br/>Work the backstreets. See what the city leaves behind.</p><span className="bin-hero-tag"><GameIcon name="bin" size={17}/> BIN DIVING</span></div></header>
+ <OperationHeader title="Bin Diving" kicker="THE STREETS" motto="One man’s trash. Your next opportunity." icon="bin" status={playable&&data.rules.enabled?"The streets are open":"Searching is paused"} caption={data.season.name}/>
  <div className="bin-strip"><span><GameIcon name="district" size={20}/><b>{data.districts.filter(d=>d.status!=="lockdown").length}</b> open districts</span><span><GameIcon name="clock" size={20}/><b>{binCountdown(data.rules.cooldown_seconds)}</b> between dives</span><span><GameIcon name="cash" size={20}/><b>{money(data.cash)}</b> your cash</span><span><GameIcon name="trophy" size={20}/>{data.season.name}</span></div>
  {h.notice&&<div className={"bin-notice"+(h.failed?" error":"")} role={h.failed?"alert":"status"}>{h.notice}{h.retry&&<button disabled={h.working} onClick={()=>void h.retryAction()}>Retry safely</button>}</div>}
  <div className="bin-layout">
@@ -30,9 +31,10 @@ export function BinDiving({initial,initialDistrict}:{initial:BinState;initialDis
  <label className="bin-mobile-select">District<select aria-label="District" value={district?.id??""} onChange={e=>setSelection(e.target.value)}><option value="" disabled>Select a district</option>{data.districts.map(d=><option key={d.id} value={d.id}>{d.name}{d.status==="lockdown"?" · Lockdown":""}</option>)}</select></label>
  <div className="bin-district-list" aria-label="Bin diving districts">{data.districts.map(d=><button key={d.id} aria-pressed={selection===d.id} onClick={()=>setSelection(d.id)}><GameIcon name={d.status==="lockdown"?"lock":"pin"} size={20}/><span><strong>{d.name}</strong><small>{d.status==="lockdown"?"In lockdown":"Open for diving"}</small></span><span aria-hidden="true">›</span></button>)}</div>
  {!data.districts.length&&<p>No districts are open yet. Check back when the city opens its streets.</p>}
+ {district&&<div className="bin-district-intel"><p className="eyebrow">DISTRICT INTEL</p><img src={district.image_url||"/art/harbor-small.webp"} alt="" width={640} height={360}/><dl><div><dt>Police heat</dt><dd>{district.police_heat} / 100</dd></div><div><dt>Between dives</dt><dd>{binCountdown(data.rules.cooldown_seconds)}</dd></div><div><dt>Entry fee</dt><dd>Free</dd></div></dl><Link href={"/districts/"+district.slug}>View selected district <GameIcon name="arrow" size={14}/></Link></div>}
  </aside>
  <section className="bin-search-column"><div className="bin-panel bin-search"><header><h2>{district?.name??"Choose a district"}</h2><span className={"bin-status "+(!closed?"open":"")}>{!district?"NO DISTRICT":closed?"LOCKDOWN":"OPEN STREETS"}</span></header>
- <div className="bin-search-scene"><GameIcon name="bin" size={65}/><p className="eyebrow">SEARCH THE BACKSTREETS</p><h2>A little luck goes a long way.</h2><p>{district?.tagline||"Pick a district and see what someone left behind."}</p></div>
+ <div className="bin-search-scene"><span className="bin-scene-stamp"><GameIcon name="bin" size={19}/> STREET SEARCH</span><div><p className="eyebrow">A LITTLE LUCK. A SHARP EYE.</p><h2>Work the backstreets.</h2><p>{district?.tagline||"Pick a district and see what someone left behind."}</p></div></div>
  <div className="bin-action-area"><button className="bin-gold" disabled={blocked} onClick={()=>void h.act("dive",{district_id:district?.id})}><GameIcon name={seconds?"clock":"search"} size={20}/>{h.working?"Searching…":seconds?"Next dive in "+binCountdown(seconds):"Search the bins"}<span aria-hidden="true">→</span></button>
  <p>{!playable?"Bin diving resumes when the season opens.":!data.rules.enabled?"The city Owner has paused bin diving.":closed?"Choose an open district to search.":seconds?"Catch your breath. This cooldown follows you across the city.":"Free to search. One result per dive. Luck makes no promises."}</p></div>
  </div>

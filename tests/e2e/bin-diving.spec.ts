@@ -4,6 +4,8 @@ async function capture(page:Page,name:string){const shot=await page.screenshot({
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture only");await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("dashboard entry, find a pickaxe, equip it and mine with the same equipment",async({page})=>{
  await page.setViewportSize({width:1600,height:1100});await page.goto("/dashboard");await page.getByRole("link",{name:"Bin Diving",exact:true}).click();await expect(page).toHaveURL(/bin-diving/);await expect(page.locator(".command-city")).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Bin Diving",exact:true})).toBeVisible();await expect(page.locator(".bin-district-intel")).toBeVisible();
+ for(const width of [1920,1448,1024,768,390,1600]){await page.setViewportSize({width,height:1100});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Bin diving overflow at "+width).toBe(true);}
  await capture(page,"bin-desktop");
  await page.getByRole("button",{name:"Search the bins"}).click();await expect(page.locator(".bin-result")).toContainText("Pickaxe");await expect(page.getByRole("button",{name:/Next dive in/})).toBeDisabled();
  await page.getByRole("button",{name:"Equip pickaxe",exact:false}).click();await expect(page.locator(".bin-equipment")).toContainText("100 condition remaining");
