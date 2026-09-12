@@ -21,6 +21,27 @@ function Go({href,children,icon}:{href:string;children:ReactNode;icon?:string}){
 function Empty({children}:{children:ReactNode}){return <p className="command-empty">{children}</p>;}
 function Meter({value,color,label}:{value:number;color?:string;label:string}){return <span className="command-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><i style={{width:Math.max(0,Math.min(100,value))+"%",background:color}}/></span>;}
 
+function MarketPrices({game}:{game:DashboardData["game"]}){
+ const [page,setPage]=useState(0);
+ const rows=game.goods.flatMap(g=>{
+  const offers=game.market.filter(o=>o.good_id===g.id&&o.status==="active"&&o.quantity>0);
+  return offers.length?[{good:g,price:Math.min(...offers.map(o=>o.unit_price)),offers:offers.length}]:[];
+ });
+ const pages=Math.max(1,Math.ceil(rows.length/5)),current=Math.min(page,pages-1);
+ useEffect(()=>setPage(p=>Math.min(p,pages-1)),[pages]);
+ return <Panel title="Market Prices" className="command-market-prices" action={<More href="/market">View Market</More>}>
+  <p className="command-subtitle">Live player offers · lowest ask</p>
+  <div className="command-prices">{rows.slice(current*5,current*5+5).map(({good,price,offers})=><Link href={"/market?good="+encodeURIComponent(good.id)} key={good.id}><CommodityArtwork goodId={good.id} size={26}/><span>{good.name}</span><strong>{money(price)}</strong><small>{offers} {offers===1?"offer":"offers"}</small></Link>)}</div>
+  {!rows.length&&<Empty>No active offers right now.</Empty>}
+  {pages>1&&<nav className="command-price-pagination" aria-label="Market prices pages">
+   <button type="button" aria-label="Previous market prices page" disabled={current===0} onClick={()=>setPage(current-1)}>← Previous</button>
+   <span aria-live="polite" aria-atomic="true">Page {current+1} / {pages}</span>
+   <button type="button" aria-label="Next market prices page" disabled={current===pages-1} onClick={()=>setPage(current+1)}>Next →</button>
+  </nav>}
+  <div className="command-market-note"><GameIcon name="trade" size={17}/><span>Players set the prices.<br/>Your stock creates the market.</span></div>
+ </Panel>;
+}
+
 function Atlas({districts,selected}:{districts:District[];selected:string}){
  const router=useRouter();
  const extra=districts.filter(d=>!atlasAreas.some(a=>a.slug===d.slug));
@@ -136,7 +157,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
     <Panel title="Recent Activity" action={<More href={districtPath+"?tab=Activity"}/>}>
      <ol className="command-activity">{activity.map(e=><li key={e.key}><time dateTime={e.created_at}>{since(e.created_at,now)}</time><GameIcon name={e.icon} size={15}/><Link href={e.href}>{e.description}</Link>{e.cash_delta!==0&&<strong className={e.cash_delta>0?"command-green":"command-red"}>{e.cash_delta>0?"+":"−"}{money(Math.abs(e.cash_delta))}</strong>}</li>)}</ol>{!activity.length&&<Empty>Your first move starts the story.</Empty>}
     </Panel>
-    <Panel title="Market Prices" action={<More href="/market">View Market</More>}><p className="command-subtitle">Live player offers · lowest ask</p><div className="command-prices">{game.goods.map(g=>{const offers=game.market.filter(o=>o.good_id===g.id&&o.status==="active");const price=offers.length?Math.min(...offers.map(o=>o.unit_price)):null;return <Link href={"/market?good="+g.id} key={g.id}><CommodityArtwork goodId={g.id} size={26}/><span>{g.name}</span><strong>{price!==null?money(price):"—"}</strong><small>{offers.length?offers.length+" offers":"No offers"}</small></Link>;})}</div><div className="command-market-note"><GameIcon name="trade" size={17}/><span>Players set the prices.<br/>Your stock creates the market.</span></div></Panel>
+    <MarketPrices game={game}/>
     <Panel title="Production Queue" action={<button className="command-more" onClick={()=>setDialog("production")}>Manage</button>}><div className="command-production">{game.businesses.slice(0,2).map(b=>{const g=game.goods.find(g=>g.id===b.good_id);if(!g)return null;const units=readyUnits(b,g,productionTime,game.settings.offline_batches);return <div key={b.good_id}><CommodityArtwork goodId={g.id} size={28}/><span>{g.name}<small>{g.business_name}</small></span><button disabled={busy||!playing||!units} onClick={()=>act("collect",{good_id:g.id})}>{units?units+" ready":playing?until(new Date(Date.parse(b.collected_at)+g.cycle_seconds*1000).toISOString(),now):"Paused"}</button></div>;})}{work.slice(0,2).map(b=><Link className="command-construction" href={districtPath+"?tab=Plots&plot="+b.plot_id} key={b.id}><GameIcon name="tools"/><span>Construction<small>Plot {ds?.plots.find(p=>p.id===b.plot_id)?.code}</small></span><small>{until(b.ready_at,now)}</small></Link>)}</div>{!game.businesses.length&&!work.length&&<Empty>No production running.<br/>Establish a business to supply the city.</Empty>}<button className="command-queue-button" onClick={()=>setDialog("production")}>+ Manage Production</button><Link className="command-queue-button" href={districtPath+"?tab=Plots"}>+ Build on Your Land</Link></Panel>
     <Panel title="Upcoming Events" action={<More href={districtPath+"?tab=Activity"}/>}><div className="command-upcoming">{upcoming.map(e=><Link key={e.key} href={e.href}><time dateTime={e.when}>{until(e.when,now)}</time><GameIcon name={e.icon}/><span>{e.name}<small>{e.detail}</small></span></Link>)}</div>{!upcoming.length&&<Empty>No scheduled events.<br/>Auctions, construction and season deadlines appear here.</Empty>}<button className="command-sync" disabled={refreshing||busy} onClick={()=>void refresh()}><GameIcon name="refresh" size={13}/>{refreshing?"Refreshing…":"Refresh city"}</button></Panel>
    </div>

@@ -58,3 +58,39 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
  await page.goto("/dashboard");await page.locator(".command-season").getByRole("link",{name:"View Leaderboard",exact:true}).click();
  await expect(page).toHaveURL(/\/seasons\?view=rankings$/);
 });
+
+test("dashboard prices show active offers only and paginate five goods per page",async({page})=>{
+ let mode:"full"|"one"|"empty"="full";
+ await page.route("**/rest/v1/rpc/game_state",async route=>{
+  const response=await route.fetch(),game=await response.json();
+  const goods=[...game.goods,...[["iron-ingot","Iron ingots"],["copper-ingot","Copper ingots"]].map(([id,name])=>({...game.goods[0],id,name}))];
+  const base=game.market[0];
+  const offers=goods.slice(0,7).map((g,i)=>({...base,id:"active-"+i,good_id:g.id,unit_price:100+i,quantity:2,status:"active"}));
+  offers.push({...base,id:"lower-ask",good_id:goods[0].id,unit_price:80,quantity:1,status:"active"});
+  offers.push({...base,id:"sold-cheaper",good_id:goods[0].id,unit_price:1,status:"sold"});
+  offers.push({...base,id:"sold-only",good_id:"copper-ingot",unit_price:1,status:"cancelled"});
+  offers.push({...base,id:"empty-stock",good_id:"copper-ingot",unit_price:1,quantity:0,status:"active"});
+  await route.fulfill({response,json:{...game,goods,market:mode==="empty"?[]:mode==="one"?offers.filter(o=>o.good_id===goods[0].id):offers}});
+ });
+ await page.setViewportSize({width:1672,height:1000});await page.goto("/dashboard");
+ await page.getByRole("button",{name:"Refresh city",exact:true}).click();
+ const board=page.locator(".command-market-prices"),rows=board.locator(".command-prices>a");
+ await expect(rows).toHaveCount(5);await expect(rows.first()).toContainText("$80");await expect(rows.first()).toContainText("2 offers");
+ await expect(board).not.toContainText("Copper ingots");await expect(board).not.toContainText("No offers");
+ await expect(board.getByRole("button",{name:"Previous market prices page"})).toBeDisabled();
+ await expect(board.getByRole("navigation")).toContainText("Page 1 / 2");
+ await board.scrollIntoViewIfNeeded();await capture(page,"dashboard-market-pages");
+ await board.getByRole("button",{name:"Next market prices page"}).click();
+ await expect(rows).toHaveCount(2);await expect(rows).toContainText(["Homemade bullet blueprint","Iron ingots"]);
+ await expect(board.getByRole("button",{name:"Next market prices page"})).toBeDisabled();
+ await expect(board.getByRole("navigation")).toContainText("Page 2 / 2");
+ await rows.filter({hasText:"Iron ingots"}).getAttribute("href").then(href=>expect(href).toBe("/market?good=iron-ingot"));
+ await page.setViewportSize({width:375,height:812});await board.scrollIntoViewIfNeeded();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"dashboard-market-pages-mobile");
+ await board.getByRole("button",{name:"Previous market prices page"}).click();await expect(rows).toHaveCount(5);
+ await board.getByRole("button",{name:"Next market prices page"}).click();
+ mode="one";await page.getByRole("button",{name:"Refresh city",exact:true}).click();
+ await expect(rows).toHaveCount(1);await expect(rows.first()).toContainText("Whiskey crates");await expect(board.getByRole("navigation")).toHaveCount(0);
+ mode="empty";await page.getByRole("button",{name:"Refresh city",exact:true}).click();
+ await expect(rows).toHaveCount(0);await expect(board).toContainText("No active offers right now.");
+});
