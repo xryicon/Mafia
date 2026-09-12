@@ -111,7 +111,8 @@ begin
    least(game_private.setting('refinery_default_output_percent'),game_private.setting('refinery_max_output_percent'))
   from public.game_district_businesses b join public.game_district_buildings x on x.id=b.building_id
   where b.season_id=s and x.building_type='refinery' and x.construction_status='ready' and b.archived_at is null and x.archived_at is null
-  on conflict(plot_id) do nothing;
+  on conflict(plot_id) do update set business_id=excluded.business_id,version=game_refineries.version+1
+   where game_refineries.business_id is distinct from excluded.business_id;
  end if;
  insert into public.game_season_valuations(season_id,good_id,unit_value)
  values(s,'iron-ingot',game_private.setting('refinery_iron_value')),(s,'copper-ingot',game_private.setting('refinery_copper_value')) on conflict do nothing;

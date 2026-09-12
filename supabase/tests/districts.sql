@@ -9,8 +9,8 @@ begin
  perform set_config('game.reason','Rollback-only district test funding',true);
  update public.game_players set cash=100000 where id in(a,b,c);
  select id into d from public.game_districts where slug='the-waterfront';
- if (select count(*) from public.game_district_plots where district_id=d and season_id=s)<>24 then raise exception 'Waterfront needs 24 plots'; end if;
- if (select count(*) from public.game_district_businesses where district_id=d and season_id=s and archived_at is null)<>6 then raise exception 'Waterfront needs six businesses'; end if;
+ if (select count(*) from public.game_district_plots where district_id=d and season_id=s and code ~ '^W[0-9]{2}$')<>24 then raise exception 'Waterfront needs 24 plots'; end if;
+ if (select count(*) from public.game_district_businesses where district_id=d and season_id=s and archived_at is null and business_type<>'Refinery')<>6 then raise exception 'Waterfront needs six businesses'; end if;
  perform set_config('request.jwt.claim.sub',a::text,true);
  select * into p from public.game_district_plots where district_id=d and season_id=s and code='W07';
  q:=jsonb_build_object('plot_id',p.id,'season_id',s,'version',p.version,'total',p.base_price+ceil(p.base_price*.03));
@@ -102,7 +102,7 @@ declare next_season uuid; old_season uuid:=game_private.current_season();
 begin
  insert into public.game_seasons(name,starting_cash,starting_crates) values('Rollback-only next season',10000,5) returning id into next_season;
  perform game_private.ensure_districts(next_season);
- if (select count(*) from public.game_district_plots where season_id=next_season and district_id=(select id from public.game_districts where slug='the-waterfront'))<>24 then raise exception 'Fresh season map not initialized';end if;
+ if (select count(*) from public.game_district_plots where season_id=next_season and district_id=(select id from public.game_districts where slug='the-waterfront') and code ~ '^W[0-9]{2}$')<>24 then raise exception 'Fresh season map not initialized';end if;
  if exists(select 1 from public.game_district_plots where season_id=next_season and owner_type='player') then raise exception 'Player ownership carried across seasons';end if;
  if not exists(select 1 from public.game_property_sales where season_id=old_season) then raise exception 'Old season sales were deleted';end if;
 end $$;

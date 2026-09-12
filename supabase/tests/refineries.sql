@@ -91,6 +91,29 @@ begin
  perform pg_temp.assert_ref((select owner_id=c from public.game_district_businesses where id=r.business_id),'Resale business owner stale');
  perform set_config('request.jwt.claim.sub',b::text,true);
  denied:=false;begin delete from public.game_refinery_receipts where refinery_id=r.id;exception when raise_exception then denied:=true;end;perform pg_temp.assert_ref(denied,'Refining history can be deleted');
+ -- New player construction joins the same refinery registry.
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ select * into p from public.game_district_plots where season_id=s and code='W07' and district_id=(select id from public.game_districts where slug='the-waterfront');
+ res:=public.district_action('buy',jsonb_build_object('season_id',s,'plot_id',p.id,'version',p.version,'total',p.base_price+ceil(p.base_price*.03)));
+ perform pg_temp.assert_ref(not res?'error','Construction plot purchase failed: '||res::text);
+ res:=public.district_action('build',jsonb_build_object('season_id',s,'plot_id',p.id,'building_type','refinery','cost',25000));
+ perform pg_temp.assert_ref(not res?'error','Refinery construction failed: '||res::text);
+ update public.game_district_buildings set ready_at=now()-interval '1 second' where plot_id=p.id and archived_at is null;
+ res:=public.district_action('complete',jsonb_build_object('season_id',s,'plot_id',p.id));
+ perform pg_temp.assert_ref(not res?'error','Refinery construction completion failed: '||res::text);
+ perform public.refinery_state();
+ perform pg_temp.assert_ref(exists(select 1 from public.game_refineries where plot_id=p.id),'Constructed refinery not registered');
+ -- Replacing a refinery building keeps its existing fuel and receipts accessible.
+ select * into p from public.game_district_plots where id=r.plot_id;
+ select quantity into fuel_before from public.game_refinery_fuel where refinery_id=r.id and good_id='coal';
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ res:=public.district_manage('building',jsonb_build_object('season_id',s,'plot_id',p.id,'building_type','refinery','reason','Restore the refinery building'));
+ perform pg_temp.assert_ref(not res?'error','Owner refinery replacement failed: '||res::text);
+ perform public.refinery_state();
+ perform pg_temp.assert_ref(exists(select 1 from public.game_refineries rr join public.game_district_businesses bb on bb.id=rr.business_id where rr.id=r.id and bb.archived_at is null),'Replacement business not registered');
+ perform pg_temp.assert_ref((select quantity from public.game_refinery_fuel where refinery_id=r.id and good_id='coal')=fuel_before,'Building replacement lost fuel');
+ perform pg_temp.assert_ref((select count(*) from public.game_refinery_receipts where refinery_id=r.id)=3,'Building replacement lost history');
+ perform set_config('request.jwt.claim.sub',b::text,true);
  update public.game_seasons set status='locked' where id=s;
  res:=public.refinery_action('refine',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.assert_ref(res?'error','Locked season allowed refining');
  insert into public.game_seasons(name,status,starting_cash,starting_crates) values('Next refining season','open',100,0) returning id into next_s;
