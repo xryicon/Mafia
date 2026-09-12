@@ -9,7 +9,7 @@ test("public player profile follows the reference without health or achievements
  await expect(page.locator(".pp-empire")).toContainText("Backroom distillery");await expect(page.locator(".pp-previous")).toContainText("The First Light");await capture(page,"profile-desktop");
  for(const width of [1448,1150,1024,900,768,650,580,390,360]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Profile overflow at "+width).toBe(true);}
  await page.setViewportSize({width:390,height:844});await capture(page,"profile-mobile");
- await page.getByRole("link",{name:"Send Telegram",exact:true}).click();await expect(page).toHaveURL(/telegrams\?to=HarborJack/);await expect(page.getByLabel("To",{exact:true})).toHaveValue("HarborJack");await expect(page.getByRole("button",{name:"Send Telegram",exact:true})).toBeVisible();
+ await page.getByRole("link",{name:"Send Telegram",exact:true}).click();await expect(page).toHaveURL(/telegrams\?to=HarborJack/);await expect(page.getByLabel("Recipient",{exact:true})).toHaveValue("HarborJack");await expect(page.getByRole("button",{name:"Send Telegram",exact:true})).toBeVisible();
 });
 test("description edits persist, render as text, and can be cleared",async({page})=>{
  await page.goto("/profile");await expect(page).toHaveURL("/players/"+playerId);await page.getByRole("button",{name:"Edit profile",exact:true}).click();
