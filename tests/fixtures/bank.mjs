@@ -16,8 +16,8 @@ export function bankWorld(state){
   state.ledger.unshift({id:entry.id,delta:-delta,balance_after:state.player.cash,reason:"National Bank "+kind,created_at:entry.created_at});
   const result={message:kind==="deposit"?"Deposit complete. Your money is in the bank.":"Withdrawal complete. Your money is in your wallet.",receipt:entry};requests.set(p.request_id,{key,result});return result;
  };
- const setup=p=>{if(p.pause)enabled=0;if(p.close)playable=false;if(p.cash!==undefined)state.player.cash=p.cash;if(p.nextSeason)state.season={...state.season,id:randomUUID()};
+ const setup=p=>{if(p.close)playable=false;if(p.cash!==undefined)state.player.cash=p.cash;if(p.nextSeason)state.season={...state.season,id:randomUUID()};
   if(p.history){state.player.cash=2480000;for(let i=0;i<14;i++)action(i%3===2?"withdraw":"deposit",{season_id:state.season.id,request_id:randomUUID(),amount:1000+i*250});}
  };
- return {read,action,setup};
+ return {read,action,setup:p=>{setup(p);if(p.pause)enabled=0;}};
 }
