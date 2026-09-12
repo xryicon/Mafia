@@ -20,7 +20,7 @@ begin
  set local role authenticated;
  res:=public.bank_state();
  perform pg_temp.assert_bank((res->>'balance')::bigint=0 and jsonb_array_length(res->'history')=0,'New bank is not empty');
- first:=public.bank_action('deposit',q);perform pg_temp.assert_bank(not first?'error','Deposit failed: '||first);
+ first:=public.bank_action('deposit',q);perform pg_temp.assert_bank(not first?'error','Deposit failed: '||first::text);
  res:=public.bank_action('deposit',q);perform pg_temp.assert_bank(res=first,'Retry changed receipt');
  res:=public.bank_action('deposit',q||'{"amount":2000}');perform pg_temp.assert_bank(res?'error','Reused nonce accepted changed amount');
  denied:=false;begin update public.game_bank_accounts set balance=99999;exception when insufficient_privilege then denied:=true;end;
@@ -42,14 +42,14 @@ begin
  perform pg_temp.assert_bank(not exists(select 1 from public.game_bank_accounts where player_id=b),'Failed withdrawal left an empty account');
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.bank_action('withdraw',q||jsonb_build_object('request_id',gen_random_uuid(),'amount',300));
- perform pg_temp.assert_bank(not res?'error','Withdrawal failed: '||res);
+ perform pg_temp.assert_bank(not res?'error','Withdrawal failed: '||res::text);
  perform pg_temp.assert_bank((select cash=initial_cash-700 from public.game_players where id=a),'Withdrawal did not credit cash');
  perform pg_temp.assert_bank((select balance=700 from public.game_bank_accounts where player_id=a),'Withdrawal balance incorrect');
  select score into after_score from game_private.season_scores(s,'net_worth') where player_id=a;
  perform pg_temp.assert_bank(initial_score=after_score,'Withdrawal changed net worth');
  foreach value in array array['0'::jsonb,'-1'::jsonb,'1.5'::jsonb,'"100"'::jsonb,'null'::jsonb,'true'::jsonb,'1000000001'::jsonb] loop
   res:=public.bank_action('deposit',q||jsonb_build_object('request_id',gen_random_uuid(),'amount',value));
-  perform pg_temp.assert_bank(res?'error','Invalid amount accepted: '||value);
+  perform pg_temp.assert_bank(res?'error','Invalid amount accepted: '||value::text);
  end loop;
  res:=public.bank_action('deposit',q||jsonb_build_object('request_id',gen_random_uuid(),'amount',initial_cash));
  perform pg_temp.assert_bank(res?'error','Overdraft deposit succeeded');
@@ -71,7 +71,7 @@ begin
  perform pg_temp.assert_bank(res?'error','Player paused the bank');
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
  res:=public.staff_action('setting','{"key":"bank_deposits_enabled","value":0,"reason":"Pause deposits test"}');
- perform pg_temp.assert_bank(not res?'error','Owner cannot configure bank: '||res);
+ perform pg_temp.assert_bank(not res?'error','Owner cannot configure bank: '||res::text);
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.bank_action('deposit',q||jsonb_build_object('request_id',gen_random_uuid(),'amount',100));
  perform pg_temp.assert_bank(res?'error','Paused bank accepted deposits');
@@ -103,17 +103,17 @@ begin
  -- Real season snapshot/reset path preserves archived money and immutable records.
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
  res:=public.season_action('create','{"name":"Bank next season","reason":"Bank reset test"}');
- perform pg_temp.assert_bank(not res?'error','Cannot create next season: '||res);next_s:=(res->>'season_id')::uuid;
+ perform pg_temp.assert_bank(not res?'error','Cannot create next season: '||res::text);next_s:=(res->>'season_id')::uuid;
  res:=public.season_action('lock',jsonb_build_object('season_id',s,'reason','Bank reset test'));
- perform pg_temp.assert_bank(not res?'error','Cannot lock season: '||res);
+ perform pg_temp.assert_bank(not res?'error','Cannot lock season: '||res::text);
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.bank_action('deposit',q||jsonb_build_object('request_id',gen_random_uuid(),'amount',1));perform pg_temp.assert_bank(res?'error','Closed season transfer allowed');
  res:=public.bank_action('deposit',q);perform pg_temp.assert_bank(res=first,'Closed season retry lost original receipt');
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
- res:=public.season_action('snapshot',jsonb_build_object('season_id',s,'reason','Bank snapshot test'));perform pg_temp.assert_bank(not res?'error','Cannot snapshot bank season: '||res);
- res:=public.season_action('archive',jsonb_build_object('season_id',s,'reason','Bank archive test'));perform pg_temp.assert_bank(not res?'error','Cannot archive bank season: '||res);
+ res:=public.season_action('snapshot',jsonb_build_object('season_id',s,'reason','Bank snapshot test'));perform pg_temp.assert_bank(not res?'error','Cannot snapshot bank season: '||res::text);
+ res:=public.season_action('archive',jsonb_build_object('season_id',s,'reason','Bank archive test'));perform pg_temp.assert_bank(not res?'error','Cannot archive bank season: '||res::text);
  res:=public.season_action('launch_next',jsonb_build_object('season_id',next_s,'expected_current_season',s,'confirmation','RESET '||(select name from public.game_seasons where id=s),'reason','Bank reset test'));
- perform pg_temp.assert_bank(not res?'error','Cannot reset bank season: '||res);
+ perform pg_temp.assert_bank(not res?'error','Cannot reset bank season: '||res::text);
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.bank_state();perform pg_temp.assert_bank((res->>'balance')::bigint=0 and (res->>'total')::int=0,'Old balance leaked into new season');
  res:=public.bank_action('deposit',q);perform pg_temp.assert_bank(res?'error','Old request crossed season');
