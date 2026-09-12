@@ -19,7 +19,8 @@ for(const href of sheets){
 console.log(JSON.stringify({deployedLayout:styles.includes(".header-power")&&styles.includes(".brand-online")?"clear-city-header":styles.includes(".fresh-canvas")&&styles.includes(".header-wallet")?"fresh-icon-header":styles.includes(".estate-city")?"reference-property-screen":"previous-layout",stylesheets:sheets.length}));
 
 for(const path of ["/dashboard","/market","/properties","/gangs","/seasons","/support","/players","/districts","/districts/the-waterfront","/districts/mines-and-quarries","/districts/manage","/telegrams"]){
- const response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ let response=await fetch(origin+path,{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ if(path==="/properties"&&new URL(response.headers.get("location")||path,origin).pathname==="/inventory")response=await fetch(origin+"/inventory",{redirect:"manual",signal:AbortSignal.timeout(20000)});
  const location=response.headers.get("location")||"";
  const protectedRoute=[302,303,307,308].includes(response.status)&&new URL(location,origin).pathname==="/login";
  console.log(JSON.stringify({path,status:response.status,protectedRoute}));

@@ -82,7 +82,10 @@ create trigger stored_inventory_entry after insert or update on public.game_stor
 create function game_private.protect_stored_goods() returns trigger language plpgsql security definer set search_path='' as $$
 declare plot uuid;changed boolean:=true;
 begin
- if TG_TABLE_NAME='game_district_buildings' then
+ if TG_TABLE_NAME='game_districts' then
+  if (TG_OP='DELETE' or new.archived_at is distinct from old.archived_at) and exists(select 1 from public.game_storage_inventory i join public.game_district_buildings b on b.id=i.building_id join public.game_district_plots p on p.id=b.plot_id where p.district_id=old.id and i.season_id=game_private.current_season() and i.quantity>0) then raise exception 'Empty the district storage buildings before archiving this district.';end if;
+  return coalesce(new,old);
+ elsif TG_TABLE_NAME='game_district_buildings' then
   plot:=old.plot_id;
   changed:=TG_OP='DELETE' or new.owner_type is distinct from old.owner_type or new.owner_id is distinct from old.owner_id or new.archived_at is distinct from old.archived_at or new.building_type is distinct from old.building_type or new.plot_id is distinct from old.plot_id or new.season_id is distinct from old.season_id or new.construction_status is distinct from old.construction_status;
  elsif TG_TABLE_NAME='game_district_plots' then
@@ -94,6 +97,7 @@ begin
  end if;
  return coalesce(new,old);
 end$$;
+create trigger protect_district_storage before update or delete on public.game_districts for each row execute function game_private.protect_stored_goods();
 create trigger protect_building_storage before update or delete on public.game_district_buildings for each row execute function game_private.protect_stored_goods();
 create trigger protect_plot_storage before update or delete on public.game_district_plots for each row execute function game_private.protect_stored_goods();
 create trigger protect_storage_auction before insert or update on public.game_plot_auctions for each row execute function game_private.protect_stored_goods();

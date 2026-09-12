@@ -43,6 +43,7 @@ begin
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.game_action('list','{"good_id":"whiskey","quantity":3,"unit_price":100}');perform pg_temp.check_inventory(res?'error','Market listed protected warehouse stock');
  -- Stocked property cannot be sold, auctioned, offered or removed.
+ denied:=false;begin update public.game_districts set archived_at=now() where id=p.district_id;exception when raise_exception then denied:=true;end;perform pg_temp.check_inventory(denied,'District archive stranded stored items');
  res:=public.district_action('sell',jsonb_build_object('season_id',s,'plot_id',p.id,'price',10000,'offers_allowed',true));perform pg_temp.check_inventory(res?'error','Stocked property listed');
  denied:=false;begin insert into public.game_plot_auctions(plot_id,seller_id,minimum_bid,tax_rate,ends_at) values(p.id,a,1000,3,now()+interval '1 day');exception when raise_exception then denied:=true;end;perform pg_temp.check_inventory(denied,'Stocked property auction opened');
  denied:=false;begin update public.game_district_plots set owner_id=b where id=p.id;exception when raise_exception then denied:=true;end;perform pg_temp.check_inventory(denied,'Storage ownership transferred');

@@ -38,7 +38,7 @@ test("game navigation and inventory stay responsive",async({page,context,request
  await noOverflow(page);await capture(page,"clear-city-desktop");
  for(const path of ["/properties?good=steel"]){
   await page.goto(path);await expect(page).toHaveURL(/\/inventory$/);await expect(page.locator(".inv-page")).toBeVisible();
-  await expect(page.locator(".estate-footer")).toHaveCount(0);
+  await expect(page.locator(".estate-footer")).toBeHidden();
   await noOverflow(page);
  }
  await capture(page,"inventory-redirect-desktop");

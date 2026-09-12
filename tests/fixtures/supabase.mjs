@@ -58,7 +58,7 @@ const server = http.createServer(async(req,res) => {
 
 
  if(url.pathname.startsWith("/rest/v1/rpc/inventory_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("inventory_state")?inventory.read(p.p_offset):url.pathname.endsWith("inventory_manage")?inventory.manage(p.p_action,p.p_payload):inventory.action(p.p_action,p.p_payload));return;}
- if(url.pathname==="/__inventory_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;inventory.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
+ if(url.pathname==="/__inventory_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;const setup=JSON.parse(raw||"{}");if(setup.full){mining.activate();for(const g of refineries.read().goods)if(!state.goods.some(x=>x.id===g.id))state.goods.push(g);}inventory.setup(setup);send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/bank_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("bank_state")?bank.read(p.p_offset):bank.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/__bank_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;bank.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/telegram_")){
