@@ -7,6 +7,7 @@ import "./telegrams.css";
 import "./dashboard.css";
 import "./bin-diving.css";
 import "./refineries.css";
+import "./operations.css";
 import "./market.css";
 import "./commodities.css";
 import "./mining.css";
