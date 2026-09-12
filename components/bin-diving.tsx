@@ -25,7 +25,7 @@ export function BinDiving({initial,initialDistrict}:{initial:BinState;initialDis
  {h.notice&&<div className={"bin-notice"+(h.failed?" error":"")} role={h.failed?"alert":"status"}>{h.notice}{h.retry&&<button disabled={h.working} onClick={()=>void h.retryAction()}>Retry safely</button>}</div>}
  <div className="bin-layout">
  <aside className="bin-panel bin-district-panel"><header><h2>Choose your district</h2><button onClick={h.refresh} aria-label="Refresh bin diving"><GameIcon name="refresh" size={16}/></button></header><p className="bin-muted">New streets open. New places to search.</p>
- <label className="bin-mobile-select">District<select value={district?.id??""} onChange={e=>setSelection(e.target.value)}><option value="" disabled>Select a district</option>{data.districts.map(d=><option key={d.id} value={d.id}>{d.name}{d.status==="lockdown"?" · Lockdown":""}</option>)}</select></label>
+ <label className="bin-mobile-select">District<select aria-label="District" value={district?.id??""} onChange={e=>setSelection(e.target.value)}><option value="" disabled>Select a district</option>{data.districts.map(d=><option key={d.id} value={d.id}>{d.name}{d.status==="lockdown"?" · Lockdown":""}</option>)}</select></label>
  <div className="bin-district-list" aria-label="Bin diving districts">{data.districts.map(d=><button key={d.id} aria-pressed={selection===d.id} onClick={()=>setSelection(d.id)}><GameIcon name={d.status==="lockdown"?"lock":"pin"} size={20}/><span><strong>{d.name}</strong><small>{d.status==="lockdown"?"In lockdown":"Open for diving"}</small></span><span aria-hidden="true">›</span></button>)}</div>
  {!data.districts.length&&<p>No districts are open yet. Check back when the city opens its streets.</p>}
  </aside>

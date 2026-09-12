@@ -50,8 +50,8 @@ create function game_private.bin_state() returns jsonb language plpgsql security
 declare s uuid; uid uuid:=auth.uid();
 begin
  perform game_private.require_active();
- perform game_private.state();
  s:=game_private.season_guard(false);
+ if not exists(select 1 from public.game_players where id=uid) then perform game_private.state(); end if;
  return jsonb_build_object(
   'season',(select jsonb_build_object('id',id,'name',name,'status',status,'ends_at',ends_at) from public.game_seasons where id=s),
   'server_time',clock_timestamp(),
@@ -83,6 +83,7 @@ declare
 begin
  perform game_private.require_active(); if not game_private.rate('actions',game_private.setting('actions_per_minute')) then return jsonb_build_object('error','Too many actions. Try again in a minute.'); end if;
  begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or octet_length(p_payload::text)>4096 then raise exception 'Invalid action details.'; end if;
   s:=game_private.season_guard(false);
   if (p_payload->>'season_id')::uuid is distinct from s then raise exception 'The season changed. Refresh before continuing.'; end if;
   nonce:=(p_payload->>'request_id')::uuid;

@@ -12,7 +12,7 @@ begin
  r:=public.bin_diving_state();
  perform pg_temp.check_bin(jsonb_array_length(r->'districts')=(select count(*) from public.game_districts where archived_at is null),'Dynamic catalog missing districts');
  rules:=(r->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed reward verification','cash_chance',100,'pickaxe_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0,'cash_min',77,'cash_max',77);
- r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Owner cannot configure: '||r);
+ r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Owner cannot configure: '||r::text);
  perform pg_temp.check_bin(exists(select 1 from public.game_audit where action='game_bin_rules.update' and actor_id=owner and reason like '%guaranteed reward%'),'Rules change was not audited');
  r:=public.bin_diving_action('configure',rules||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Stale owner edit accepted');
  rules:=rules||jsonb_build_object('version',(select version from public.game_bin_rules),'request_id',gen_random_uuid(),'pickaxe_chance',1);
@@ -30,7 +30,7 @@ begin
  reset role;
  select cash into before_cash from public.game_players where id=a;
  q:=jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid(),'cash',999999,'outcome','pistol_blueprint','player_id',b);
- first:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(not first?'error','First dive failed: '||first);
+ first:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(not first?'error','First dive failed: '||first::text);
  perform pg_temp.check_bin((select cash from public.game_players where id=a)=before_cash+77,'Cash reward trusts frontend or missing ledger');
  perform pg_temp.check_bin((first->'receipt'->>'cash')::int=77 and first->'receipt'->>'outcome'='cash','Forged outcome accepted');
  r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r=first,'Retry returned a different roll');
@@ -50,24 +50,24 @@ begin
  update public.game_districts set archived_at=null where id=d;
  insert into public.game_districts(slug,name) values('test-new-bin-district','Newly Opened District') returning id into new_d;
  perform pg_temp.check_bin(exists(select 1 from jsonb_array_elements(public.bin_diving_state()->'districts') x where x->>'id'=new_d::text),'New district requires code edits');
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',new_d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(not r?'error','Cannot dive in newly opened district: '||r);
+ r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',new_d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(not r?'error','Cannot dive in newly opened district: '||r::text);
  foreach item in array array['pickaxe','pistol_blueprint','bullet_blueprint','nothing'] loop
   perform set_config('request.jwt.claim.sub',owner::text,true);
   rules:=(public.bin_diving_state()->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed item verification','cash_chance',0,'pickaxe_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0);
   if item<>'nothing' then rules:=rules||jsonb_build_object(item||'_chance',100);end if;
-  r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Item configuration failed: '||r);
+  r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Item configuration failed: '||r::text);
   target:=gen_random_uuid();insert into auth.users(id) values(target);perform set_config('request.jwt.claim.sub',target::text,true);perform public.game_state();
   q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d);
-  r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r->'receipt'->>'outcome'=item,'100% item roll failed: '||r);
+  r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r->'receipt'->>'outcome'=item,'100% item roll failed: '||r::text);
   if item<>'nothing' then perform pg_temp.check_bin((select quantity from public.game_bin_inventory where player_id=target and season_id=s and game_bin_inventory.item=(r->'receipt'->>'outcome'))=1,'Item missing from stash');end if;
   if item='pickaxe' then
    q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid());first:=public.bin_diving_action('equip',q);
-   perform pg_temp.check_bin(not first?'error','Pickaxe cannot equip: '||first);
+   perform pg_temp.check_bin(not first?'error','Pickaxe cannot equip: '||first::text);
    perform pg_temp.check_bin((select durability from public.game_mining_tools where player_id=target and season_id=s)=game_private.setting('mining_pickaxe_durability'),'Found tool incompatible with mining');
    perform pg_temp.check_bin((select quantity from public.game_bin_inventory where player_id=target and season_id=s and game_bin_inventory.item='pickaxe')=0,'Equip did not consume spare');
    r:=public.bin_diving_action('equip',q);perform pg_temp.check_bin(r=first,'Equip retry is not idempotent');
    r:=public.mining_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'mine_id',(select m.id from public.game_mines m join public.game_district_plots p on p.id=m.plot_id where p.code='MQ-01' and m.season_id=s)));
-   perform pg_temp.check_bin(not r?'error','Found pickaxe cannot start a public shift: '||r);
+   perform pg_temp.check_bin(not r?'error','Found pickaxe cannot start a public shift: '||r::text);
    r:=public.mining_action('pickaxe',jsonb_build_object('season_id',s,'request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Pickaxe purchase was re-enabled');
   end if;
  end loop;

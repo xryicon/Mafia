@@ -106,4 +106,3 @@ if(binDivingDeployed){
  if(![302,303,307,308].includes(page.status)||!page.headers.get("location")?.includes("/login"))throw new Error("Bin diving must require login");
  console.log(JSON.stringify({binDivingArtwork:response.status,bytes,protectedRoute:page.status}));
 }
-
