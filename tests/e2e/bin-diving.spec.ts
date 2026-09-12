@@ -30,7 +30,7 @@ test("Owner can save percentages and ordinary players cannot edit them",async({p
  const streets=await context.newPage();await streets.goto("/bin-diving");await expect(streets.locator(".bin-loot-grid article").filter({hasText:"Pickaxe"}).locator(".bin-chance")).toHaveText("8%");
  await page.goto("/owner?section=bin-diving");await page.getByLabel("Pickaxe chance (%)",{exact:true}).fill("25");await page.getByRole("button",{name:"Save bin diving rules"}).click();await expect(page.getByRole("status")).toContainText("rules saved");
  await expect(streets.locator(".bin-loot-grid article").filter({hasText:"Pickaxe"}).locator(".bin-chance")).toHaveText("25%");
- await streets.getByRole("link",{name:"← Dashboard",exact:true}).click();await streets.goBack();await expect(streets.locator(".bin-loot-grid article").filter({hasText:"Pickaxe"}).locator(".bin-chance")).toHaveText("25%");await streets.close();
+ await streets.getByRole("link",{name:"← Dashboard",exact:true}).click();await expect(streets).toHaveURL(/\/dashboard$/);await expect(streets.locator(".command-dashboard")).toBeVisible();await streets.goBack();await expect(streets.locator(".bin-loot-grid article").filter({hasText:"Pickaxe"}).locator(".bin-chance")).toHaveText("25%");await streets.close();
  await page.reload();await expect(page.getByLabel("Pickaxe chance (%)",{exact:true})).toHaveValue("25");
  await page.getByLabel("Loose cash chance (%)").fill("100");await expect(page.getByRole("button",{name:"Save bin diving rules"})).toBeDisabled();
  await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{player:true}});await page.reload();await expect(page.locator(".bin-owner")).toContainText("Owner permission required.");
@@ -68,5 +68,5 @@ test("Owner grants reach the stash and both market sale formats, with matching a
  }
  await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","1","1"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");
  await page.goto("/refineries");
- for(const id of ["iron-ingot","copper-ingot"]){const art=page.locator('img[src*="/art/resources/'+id+'"]').first();await art.scrollIntoViewIfNeeded();await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
+ for(const id of ["iron-ingot","copper-ingot"]){await page.getByLabel("Refining recipe").selectOption(id.replace("-ingot",""));const art=page.locator('img[src*="/art/resources/'+id+'"]').first();await art.scrollIntoViewIfNeeded();await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
 });
