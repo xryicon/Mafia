@@ -45,4 +45,5 @@ test("existing accounts claim a username before joining the city",async({page,co
  await expect(dialog).toBeVisible();await page.keyboard.press("Escape");await expect(dialog).toBeVisible();
  await dialog.getByLabel("Your username",{exact:true}).fill("ClaimedName");await dialog.getByRole("button",{name:"Claim my name",exact:true}).click();
  await expect(dialog).not.toBeVisible();await expect(page.getByRole("heading",{name:"BLACKWATER",exact:true})).toBeVisible();
+ await page.unrouteAll({behavior:"wait"});
 });
