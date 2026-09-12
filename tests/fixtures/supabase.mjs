@@ -31,9 +31,9 @@ let mining=miningWorld(state,districts,playerId);
 let bins=binWorld(state,mining);
 let refineries=refineryWorld(state,playerId);
 let bank=bankWorld(state);
-let inventory=inventoryWorld(state,()=>bins.read());
+let inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);inventory=inventoryWorld(state,()=>bins.read());};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,

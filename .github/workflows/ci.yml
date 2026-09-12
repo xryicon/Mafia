@@ -72,6 +72,8 @@ jobs:
           done
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
+      - name: Configure bulk economy fixtures
+        run: psql -v ON_ERROR_STOP=1 -c "select set_config('game.reason','CI bulk economy fixture capacity',false); update public.game_settings set value=1000000000 where key='inventory_weight_limit_grams';"
       - name: Economic and authorization regression tests
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/player_economy.sql
@@ -115,3 +117,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory.sql
           bash supabase/tests/inventory_races.sh
+
+      - name: Equipment and actual carried capacity
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory_loadout.sql

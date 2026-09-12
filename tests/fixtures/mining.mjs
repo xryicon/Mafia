@@ -21,5 +21,5 @@ export function miningWorld(state,waterfront,playerId){
  if(action==='bid'){const a=site.auction;if(!a||p.price<a.minimum_bid)return {error:'Bid too low.'};state.player.cash-=p.price+Math.ceil(p.price*.03)-a.escrow;Object.assign(a,{bid:p.price,bidder_id:playerId,bidder_name:state.player.handle,escrow:p.price+Math.ceil(p.price*.03)});result.message='Mine bid reserved.';}
  if(action==='cancel_auction'){site.auction=null;result.message='Auction cancelled.';}
  nonce.set(key,result);return result;}
- return {district,read,action,activate,equip:()=>{durability=100;},finish:()=>{if(shift)shift.ready_at=new Date(Date.now()-1000).toISOString();},player:()=>{admin=false;},catalog};
+ return {district,read,action,activate,setDurability:value=>{durability=value;},equip:()=>{durability=100;},finish:()=>{if(shift)shift.ready_at=new Date(Date.now()-1000).toISOString();},player:()=>{admin=false;},catalog};
 }

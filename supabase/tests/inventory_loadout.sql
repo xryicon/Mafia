@@ -1,0 +1,87 @@
+begin;
+create function pg_temp.check_loadout(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+select set_config('game.reason','CI actual 20 slot and 100 kg limits',true);
+update public.game_settings set value=100000 where key='inventory_weight_limit_grams';
+do $$
+declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();s uuid:=game_private.current_season();r jsonb;q jsonb;first jsonb;g uuid;bid uuid;p uuid;d uuid;denied boolean;v bigint;cash_before bigint;listing uuid;i int;auction uuid;receipt uuid;
+begin
+ insert into auth.users(id) values(a),(b);
+ perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',b::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ update public.game_inventory set quantity=0 where season_id=s and player_id=a;
+ insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'pickaxe',2),(s,a,'pistol_blueprint',1) on conflict(season_id,player_id,good_id) do update set quantity=excluded.quantity;
+ r:=public.inventory_state();
+ perform pg_temp.check_loadout((r->'capacity'->>'slots')::int=20 and (r->'capacity'->>'weight_grams')::int=100000,'Incorrect carry limits');
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:pickaxe','position',20,'version',r->'version');
+ first:=public.inventory_action('move',q);perform pg_temp.check_loadout(not first?'error','Move failed: '||first::text);
+ r:=public.inventory_action('move',q);perform pg_temp.check_loadout(r=first,'Move replay changed result');
+ r:=public.inventory_action('move',q||jsonb_build_object('request_id',gen_random_uuid(),'position',19));perform pg_temp.check_loadout(r?'error','Stale slot version accepted');
+ perform pg_temp.check_loadout(exists(select 1 from game_private.inventory_positions where player_id=a and item_key='good:pickaxe' and position=20),'Move not persisted');
+ r:=public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:pistol_blueprint','equipment_slot','primary'));perform pg_temp.check_loadout(r?'error','Blueprint equipped as weapon');
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:pickaxe','equipment_slot','utility');
+ first:=public.inventory_action('equip',q);perform pg_temp.check_loadout(not first?'error','Equip failed: '||first::text);
+ r:=public.inventory_action('equip',q);perform pg_temp.check_loadout(r=first,'Equip retry consumed twice');
+ select id into g from public.game_inventory_gear where player_id=a and equipment_slot='utility';
+ perform pg_temp.check_loadout((select grams from game_private.carried_load(s,a))=5050,'Equipped weight double counted or excluded');
+ update public.game_mining_tools set durability=37 where season_id=s and player_id=a;
+ r:=public.inventory_action('unequip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(not r?'error','Unequip failed: '||r::text);
+ perform pg_temp.check_loadout((select condition from public.game_inventory_gear where id=g)=37 and (select durability from public.game_mining_tools where season_id=s and player_id=a)=0,'Unequip restored wear or retained mining access');
+ select id,district_id into p,d from public.game_district_plots where season_id=s and status='available' and owner_type='none' and zoning='industrial' and archived_at is null and not exists(select 1 from public.game_district_buildings where plot_id=game_district_plots.id and archived_at is null) order by code limit 1;
+ update public.game_district_plots set owner_id=a,owner_type='player',status='owned' where id=p;
+ insert into public.game_district_buildings(season_id,plot_id,building_type,owner_id,owner_type,construction_status,cost,ready_at) values(s,p,'warehouse',a,'player','ready',3000,now()) returning id into bid;
+ r:=public.inventory_action('gear_store',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g,'building_id',bid));perform pg_temp.check_loadout(not r?'error','Gear store failed: '||r::text);
+ perform pg_temp.check_loadout((select grams from game_private.carried_load(s,a))=2550 and game_private.storage_load(s,bid)=1,'Stored equipment capacity incorrect');
+ denied:=false;begin update public.game_districts set archived_at=now() where id=d;exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Archive stranded stored gear');
+ denied:=false;begin update public.game_district_plots set owner_id=b where id=p;exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Gear property changed owner');
+ denied:=false;begin update public.game_district_buildings set building_type='garage' where id=bid;exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Stored gear building replaced');
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(r?'error','Foreign player retrieved gear');
+ set local role authenticated;
+ denied:=false;begin update public.game_inventory_gear set condition=999;exception when insufficient_privilege then denied:=true;end;perform pg_temp.check_loadout(denied,'Direct equipment writes allowed');
+ reset role;perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(not r?'error','Gear retrieval failed');
+ r:=public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g,'equipment_slot','utility'));perform pg_temp.check_loadout(not r?'error','Re-equip failed');
+ perform pg_temp.check_loadout((select durability from public.game_mining_tools where season_id=s and player_id=a)=37,'Stored tool restored its wear');
+ r:=public.inventory_action('equip',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_loadout(not r?'error','Fresh gear swap failed');
+ perform pg_temp.check_loadout((select condition=37 and location='carried' from public.game_inventory_gear where id=g),'Swap destroyed old tool');
+ -- Twenty real stack slots; equipped items still contribute weight.
+ r:=public.inventory_action('gear_store',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g,'building_id',bid));
+ update public.game_inventory set quantity=0 where player_id=a and season_id=s;
+ for i in 1..21 loop
+  insert into public.game_goods(id,name,business_name,business_cost,batch_size,cycle_seconds,business_available,weight_grams) values('ci-slot-'||i,'CI slot '||i,'Test only',1,1,60,false,1);
+  if i<=20 then insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'ci-slot-'||i,1);end if;
+ end loop;
+ perform pg_temp.check_loadout((select slots from game_private.carried_load(s,a))=20,'Twenty stacks not accepted');
+ denied:=false;begin insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'ci-slot-21',1);exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Twenty-first stack accepted');
+ update public.game_inventory set quantity=2 where player_id=a and good_id='ci-slot-1';
+ perform pg_temp.check_loadout((select slots from game_private.carried_load(s,a))=20,'Stack quantity consumed another slot');
+ update public.game_inventory set quantity=0 where player_id=a;
+ -- 2.5 kg equipped + 97.5 kg carried = precisely 100 kg.
+ update public.game_goods set weight_grams=500 where id='ci-slot-1';
+ update public.game_inventory set quantity=195 where player_id=a and good_id='ci-slot-1';
+ perform pg_temp.check_loadout((select grams from game_private.carried_load(s,a))=100000,'Exact 100 kg rejected');
+ denied:=false;begin update public.game_inventory set quantity=196 where player_id=a and good_id='ci-slot-1';exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Weight limit ignored');
+ r:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(r?'error' and (select location from public.game_inventory_gear where id=g)='storage','Overweight retrieval lost stored equipment');
+ -- A manual market purchase must atomically preserve both wallets and offered stock.
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.game_action('list','{"good_id":"whiskey","quantity":2,"unit_price":300}');perform pg_temp.check_loadout(not r?'error','Fixture listing failed');
+ select id into listing from public.game_listings where seller_id=b and status='active' limit 1;
+ perform set_config('request.jwt.claim.sub',a::text,true);select cash into cash_before from public.game_players where id=a;
+ r:=public.game_action('buy',jsonb_build_object('listing_id',listing));perform pg_temp.check_loadout(r?'error','Overweight market purchase accepted');
+ perform pg_temp.check_loadout((select cash from public.game_players where id=a)=cash_before and (select status from public.game_listings where id=listing)='active','Failed purchase charged cash or consumed listing');
+ -- Guaranteed auction returns remain collectable when the bag is full.
+ update public.game_inventory set quantity=0 where player_id=a and good_id='ci-slot-1';
+ update public.game_inventory set quantity=3 where player_id=a and good_id='whiskey';
+ r:=public.market_auction_action('create',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'good_id','whiskey','quantity',3,'starting_bid',200,'duration_minutes',5));perform pg_temp.check_loadout(not r?'error','Auction creation failed: '||r::text);auction:=(r->>'auction_id')::uuid;
+ update public.game_inventory set quantity=195 where player_id=a and good_id='ci-slot-1';
+ r:=public.market_auction_action('cancel',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'auction_id',auction));perform pg_temp.check_loadout(not r?'error','Full bag froze auction return: '||r::text);
+ select id into receipt from public.game_inventory_deliveries where player_id=a and good_id='whiskey' and quantity=3 limit 1;perform pg_temp.check_loadout(receipt is not null,'Auction return was lost');
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'delivery_id',receipt,'quantity',3);
+ r:=public.inventory_action('claim_delivery',q);perform pg_temp.check_loadout(r?'error','Overweight delivery collected');
+ update public.game_inventory set quantity=180 where player_id=a and good_id='ci-slot-1';
+ first:=public.inventory_action('claim_delivery',q);perform pg_temp.check_loadout(not first?'error','Delivery collection failed');
+ r:=public.inventory_action('claim_delivery',q);perform pg_temp.check_loadout(r=first and (select quantity from public.game_inventory where player_id=a and good_id='whiskey')=3,'Delivery retry duplicated goods');
+end$$;
+select 'PASS: saved positions, stale requests, six-slot compatibility, equipment wear, storage ownership, twenty slots, 100kg, atomic purchases and held auction deliveries';
+rollback;

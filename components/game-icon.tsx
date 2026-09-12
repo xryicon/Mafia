@@ -1,5 +1,13 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    weight: "M6 8h12l3 13H3L6 8 M9 8V5a3 3 0 0 1 6 0v3",
+    move: "M12 2v20 M2 12h20 M8 6l4-4 4 4 M8 18l4 4 4-4 M6 8l-4 4 4 4 M18 8l4 4-4 4",
+    plus: "M12 5v14 M5 12h14",
+    rifle: "M2 17l5-5 6 1 7-7 2 2-9 9-4-2-5 5z M14 12l3 3 M8 13l1 4",
+    pistol: "M3 6h18v5H10l-2 8H3l3-8H3V6 M11 11v4h4l2-4",
+    ammo: "M4 8l2-5 2 5v13H4V8 M10 8l2-5 2 5v13h-4V8 M16 8l2-5 2 5v13h-4V8 M4 17h4 M10 17h4 M16 17h4",
+    shield: "M12 2l9 4v7c-1 5-5 8-9 10-4-2-8-5-9-10V6l9-4",
+    medical: "M3 6h18v15H3V6 M8 6V3h8v3 M9 11h6v6H9v-6 M7 14h10 M12 9v10",
     bin: "M4 6h16 M9 3h6l1 3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
     blueprint: "M5 2h11l3 3v17H5V2 M15 2v5h4 M8 11h8 M8 15h5 M8 18h8",
     mountain: "M2 21L9 5l5 10 3-7 5 13H2 M6 12l3 2 3-2",
