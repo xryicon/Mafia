@@ -82,6 +82,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/telegram_groups.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/market_auctions.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/mining.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/bin_diving.sql
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh
 
@@ -93,3 +94,6 @@ jobs:
 
       - name: Concurrent mining shifts and claims
         run: bash supabase/tests/mining_races.sh
+
+      - name: Concurrent bin diving rewards and district cooldown
+        run: bash supabase/tests/bin_races.sh

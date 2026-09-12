@@ -1,5 +1,7 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    bin: "M4 6h16 M9 3h6l1 3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
+    blueprint: "M5 2h11l3 3v17H5V2 M15 2v5h4 M8 11h8 M8 15h5 M8 18h8",
     mountain: "M2 21L9 5l5 10 3-7 5 13H2 M6 12l3 2 3-2",
     rail: "M8 2L4 22 M16 2l4 20 M7 5h10 M6 9h12 M5 14h14 M4 19h16",
     lock: "M6 10h12v11H6V10 M8 10V6a4 4 0 0 1 8 0v4 M12 14v3",
