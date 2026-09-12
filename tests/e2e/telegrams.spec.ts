@@ -95,7 +95,7 @@ test("profile pictures stay consistent in the header, profile, dashboard and sen
  await expect(page.getByRole("status")).toContainText("Profile picture saved");
  await expect(page.locator(".don-portrait")).toHaveAttribute("src",photo);
  await page.goto("/dashboard");await expect(page.locator(".command-portrait")).toHaveAttribute("src",photo);
- await page.goto("/profile");await expect(page.locator(".control-heading .profile-picture-preview")).toHaveAttribute("src",photo);
+ await page.goto("/profile");await expect(page.locator(".pp-portrait")).toHaveAttribute("src",photo);
  await page.goto("/telegrams");await page.locator(".tg-conversations").getByRole("button").first().click();
  await expect(page.locator(".tg-thread-header .tg-seal")).toHaveAttribute("src","/art/command-portrait.jpg");
  await page.getByLabel("Your reply").fill("My portrait follows my messages.");await page.getByRole("button",{name:"Send Telegram",exact:true}).click();

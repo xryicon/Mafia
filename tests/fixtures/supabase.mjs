@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {readProfile,saveDescription} from "./profiles.mjs";
 import {inventoryWorld} from "./inventory.mjs";
 import {bankWorld} from "./bank.mjs";
 import {refineryWorld} from "./refineries.mjs";
@@ -33,7 +34,7 @@ let refineries=refineryWorld(state,playerId);
 let bank=bankWorld(state);
 let inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -108,6 +109,9 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/profile_avatar"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);state.player.avatar_url=telegrams.avatar(p.p_url);send(200,{message:"Profile picture saved.",avatar_url:state.player.avatar_url});return;}
  if(url.pathname==="/rest/v1/rpc/game_state"){send(200,{...state,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/rest/v1/rpc/season_state"){send(200,{current_season_id:season.id,season,seasons:[season],boards:[{metric:"cash",label:"Cash",enabled:true,direction:"desc",include_banned:false,hall_of_fame:true,available:true,description:"Season cash."}],valuations:[],rankings:[{player_id:playerId,handle:state.player.handle,score:state.player.cash,rank:1}],total:1,offset:0,metric:"cash",my_rank:{rank:1,score:state.player.cash},hall_of_fame:[],hall_total:0,can_manage:true,can_reset:true,server_time:new Date().toISOString()});return;}
+ if(url.pathname==="/__profile_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);if(p.description!==undefined){state.player.description=p.description;state.player.description_version=(state.player.description_version??1)+1;}if(p.archived)state.profile_archived=true;send(200,{ok:true});return;}
+ if(url.pathname==="/rest/v1/rpc/player_profile"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw);send(200,readProfile(state,p.p_player));return;}
+ if(url.pathname==="/rest/v1/rpc/profile_description"){let raw="";for await(const chunk of req)raw+=chunk;send(200,saveDescription(state,JSON.parse(raw)));return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{is_self:true,avatar_url:state.player.avatar_url||"/art/command-portrait.jpg",handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
  if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
  if(url.pathname==="/__reset_world"&&process.env.GAME_TEST_FIXTURE==="1"){resetWorld();send(200,{ok:true});return;}
@@ -128,7 +132,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/player_directory"){
  let raw="";for await(const chunk of req)raw+=chunk;const {p_search="",p_online=false,p_offset=0}=JSON.parse(raw);
  const players=[{id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",respect:800,rank:1,online:true,role:"player"},{id:playerId,username:state.player.handle,respect:state.player.xp,rank:2,online:true,role:"owner"},{id:"88888888-8888-4888-8888-888888888888",username:"IronRose",respect:0,rank:3,online:false,role:"player"}].filter(p=>p.username.toLowerCase().includes(p_search.toLowerCase())&&(!p_online||p.online));
- send(200,{players:players.slice(p_offset,p_offset+50),total:players.length,offset:p_offset,page_size:50,my_rank:2,online_count:2,season,server_time:new Date().toISOString()});return;
+ send(200,{players:players.slice(p_offset,p_offset+50).map(p=>({...p,avatar_url:p.id===playerId?state.player.avatar_url:"/art/command-portrait.jpg"})),total:players.length,offset:p_offset,page_size:50,my_rank:2,online_count:2,season,server_time:new Date().toISOString()});return;
  }
  if(url.pathname==="/rest/v1/rpc/community_state"){send(200,community);return;}
  if(url.pathname==="/rest/v1/rpc/staff_action"||url.pathname==="/rest/v1/rpc/community_action"){

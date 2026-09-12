@@ -1,0 +1,54 @@
+begin;
+create function pg_temp.check_profile(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+do $$declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();o uuid:=gen_random_uuid();s uuid:=game_private.current_season();r jsonb;denied boolean;next_s uuid;
+begin
+ insert into auth.users(id,raw_user_meta_data) values(a,'{"username":"ProfilePlayerA"}'),(b,'{"username":"ProfilePlayerB"}'),(o,'{"username":"ProfileOwner"}');
+ perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',b::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',o::text,true);perform public.game_state();
+ update public.game_user_roles set role_id='owner' where player_id=o;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ set local role authenticated;
+ r:=public.profile_description('Trading at the docks.',1);perform pg_temp.check_profile(not r?'error','Description write failed: '||r::text);
+ r:=public.profile_description('A stale edit',1);perform pg_temp.check_profile(r?'error' and (r->>'conflict')::boolean,'Stale description overwrote newer text');
+ r:=public.profile_description(repeat('a',301),2);perform pg_temp.check_profile(r?'error','Oversized description saved');
+ r:=public.profile_description(E'Line one\n<script>alert("test")</script>',2);perform pg_temp.check_profile(not r?'error','Literal description characters were not accepted');
+ r:=public.player_profile(a);perform pg_temp.check_profile(r->>'description'=E'Line one\n<script>alert("test")</script>' and (r->>'is_self')::boolean,'Own description not returned');
+ perform pg_temp.check_profile(not(r ?| array['health','achievements','hall_of_fame','email','skills','inventory','cash','subscription']),'Private or excluded fields leaked');
+ denied:=false;begin update game_private.identities set description='forged' where player_id=b;exception when insufficient_privilege then denied:=true;end;perform pg_temp.check_profile(denied,'Direct description ownership bypass');
+ denied:=false;begin update public.game_players set xp=9000 where id=a;exception when insufficient_privilege then denied:=true;end;perform pg_temp.check_profile(denied,'Browser changed profile power');
+ reset role;
+ perform pg_temp.check_profile((select description from game_private.identities where player_id=b)='','Other profile changed');
+ perform pg_temp.check_profile(exists(select 1 from public.game_audit where actor_id=a and reason='Player updated their profile description'),'Description history missing');
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.player_profile(a);perform pg_temp.check_profile(not (r->>'is_self')::boolean and r->'description_version'='null'::jsonb,'Visitor can edit another profile');
+ perform pg_temp.check_profile((r->>'respect')::int=0 and r->>'title'='Associate','Profile power not from current season');
+ r:=public.player_profile(gen_random_uuid());perform pg_temp.check_profile(r is null,'Unknown profile should be missing');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.profile_avatar('https://example.com/portrait.webp');perform pg_temp.check_profile(not r?'error','Existing picture update failed');
+ r:=public.player_directory('ProfilePlayerA',false,0);perform pg_temp.check_profile(r->'players'->0->>'avatar_url'='https://example.com/portrait.webp','Directory portrait mismatches profile');
+ -- Business ownership is read from the current game tables.
+ insert into public.game_businesses(season_id,player_id,good_id) values(s,a,'whiskey');
+ r:=public.player_profile(a);perform pg_temp.check_profile((r->>'business_total')::int=1 and r->'businesses'->0->>'name'='Backroom distillery','Owned business absent');
+ r:=public.player_profile(b);perform pg_temp.check_profile((r->>'business_total')::int=0,'Business ownership crossed profiles');
+ r:=public.profile_description('',3);perform pg_temp.check_profile(not r?'error','Clear description failed');
+ r:=public.profile_description('Permanent player biography.',4);perform pg_temp.check_profile(not r?'error','Biography save failed');
+ -- A season reset preserves identity content, while the business collection clears.
+ perform set_config('request.jwt.claim.sub',o::text,true);
+ r:=public.season_action('create','{"name":"Profile next season","reason":"CI permanent profile verification"}');next_s:=(r->>'season_id')::uuid;perform pg_temp.check_profile(next_s is not null,'Next season fixture failed');
+ r:=public.season_action('lock',jsonb_build_object('season_id',s,'reason','CI profile season lock'));perform pg_temp.check_profile(not r?'error','Lock failed');
+ r:=public.season_action('snapshot',jsonb_build_object('season_id',s,'reason','CI profile snapshot'));perform pg_temp.check_profile(not r?'error','Snapshot failed');
+ r:=public.season_action('archive',jsonb_build_object('season_id',s,'reason','CI profile archive'));perform pg_temp.check_profile(not r?'error','Archive failed');
+ r:=public.season_action('launch_next',jsonb_build_object('season_id',next_s,'expected_current_season',s,'confirmation','RESET '||(select name from public.game_seasons where id=s),'reason','CI profile next season'));perform pg_temp.check_profile(not r?'error','Launch failed: '||r::text);
+ r:=public.player_profile(a);perform pg_temp.check_profile(r->>'description'='Permanent player biography.' and r->>'avatar_url'='https://example.com/portrait.webp','Season reset lost permanent profile');
+ perform pg_temp.check_profile((r->>'business_total')::int=0 and jsonb_array_length(r->'previous')>0,'Profile current/past seasons not separated');
+ -- Banned and deleted players follow the existing player directory visibility rule.
+ update public.game_players set deleted_at=now() where id=b;
+ r:=public.player_profile(b);perform pg_temp.check_profile(r is null,'Deleted player visible');
+ set local role anon;
+ denied:=false;begin perform public.player_profile(a);exception when insufficient_privilege then denied:=true;end;perform pg_temp.check_profile(denied,'Anonymous profile access allowed');
+ denied:=false;begin perform public.profile_description('Anonymous edit',1);exception when insufficient_privilege then denied:=true;end;perform pg_temp.check_profile(denied,'Anonymous description edit allowed');
+ reset role;
+end$$;
+select 'PASS: profile ownership, descriptions, stale edits, length, portrait consistency, privacy, business ownership and season persistence';
+rollback;

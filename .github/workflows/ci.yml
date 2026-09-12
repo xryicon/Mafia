@@ -122,3 +122,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory_loadout.sql
           bash supabase/tests/loadout_races.sh
+
+      - name: Player profile privacy and persistence
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/player_profiles.sql
