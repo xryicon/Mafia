@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {binWorld} from "./bin-diving.mjs";
 import {miningWorld} from "./mining.mjs";
 import {marketWorld} from "./market.mjs";
 import {telegramWorld} from "./telegrams.mjs";
@@ -24,8 +25,9 @@ let districts=districtWorld(playerId,season,state.goods);
 let telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);
 let market=marketWorld(state,playerId);
 let mining=miningWorld(state,districts,playerId);
+let bins=binWorld(state,mining);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -59,6 +61,8 @@ const server = http.createServer(async(req,res) => {
   return;
  }
  if(url.pathname==="/rest/v1/rpc/district_state"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,{...mining.district(p.p_slug),server_time:new Date().toISOString()});return;}
+ if(url.pathname.startsWith('/rest/v1/rpc/bin_diving_')){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');send(200,url.pathname.endsWith('bin_diving_state')?bins.read():bins.action(p.p_action,p.p_payload));return;}
+ if(url.pathname==='/__bin_setup'&&process.env.GAME_TEST_FIXTURE==='1'){let raw='';for await(const chunk of req)raw+=chunk;bins.setup(JSON.parse(raw||'{}'));send(200,{ok:true});return;}
  if(url.pathname.startsWith('/rest/v1/rpc/mining_')){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');if(url.pathname.endsWith('mining_state'))send(200,mining.read());else send(200,mining.action(url.pathname.endsWith('mining_manage')?'manage':p.p_action,p.p_payload));return;}
  if(url.pathname==='/__mining_equipped'&&process.env.GAME_TEST_FIXTURE==='1'){mining.equip();send(200,{ok:true});return;}
  if(url.pathname==='/__finish_mining'&&process.env.GAME_TEST_FIXTURE==='1'){mining.finish();send(200,{ok:true});return;}

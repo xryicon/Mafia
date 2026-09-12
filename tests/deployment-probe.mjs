@@ -96,3 +96,13 @@ if(confirmationDeployed){
   if(!response.ok||!response.headers.get("content-type")?.startsWith("image/")||bytes<300)throw new Error("Confirmation artwork unavailable");
  }
 }
+
+const binDivingDeployed=styles.includes(".bin-page");
+console.log(JSON.stringify({binDivingDeployed}));
+if(binDivingDeployed){
+ const response=await fetch(origin+"/art/bin-diving.png",{signal:AbortSignal.timeout(20000)});const bytes=(await response.arrayBuffer()).byteLength;
+ if(!response.ok||!response.headers.get("content-type")?.startsWith("image/")||bytes<1000)throw new Error("Bin diving artwork unavailable");
+ const page=await fetch(origin+"/bin-diving",{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ if(![302,303,307,308].includes(page.status)||!page.headers.get("location")?.includes("/login"))throw new Error("Bin diving must require login");
+ console.log(JSON.stringify({binDivingArtwork:response.status,bytes,protectedRoute:page.status}));
+}
