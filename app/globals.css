@@ -216,3 +216,10 @@ html{scroll-behavior:smooth;scroll-padding-top:30px}body{background:var(--bg);fo
 @media(max-width:600px){.fresh-city .estate-player-numbers>span{font-size:9px;line-height:1.25}.fresh-city .estate-player-numbers{max-width:139px}}
 
 @media(max-width:600px){.fresh-city .estate-player-tools{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;align-self:center;gap:7px}.fresh-city .header-wallet{flex-shrink:0}}
+
+/* Shared, tradable loot artwork. */
+.bin-tradable-loot .bin-loot-art.illustrated{background:#070e11;padding:0;overflow:hidden;border-color:#69533c;min-width:0}
+.bin-loot-art.illustrated .commodity-art{width:100%!important;height:100%!important;border:0}
+.bin-tradable-loot .bin-stash-row{display:grid;grid-template-columns:48px minmax(0,1fr) auto}
+.bin-trade-link{grid-column:2/4;font-size:11px;color:var(--gold);justify-self:start;margin-top:-5px}
+.bin-tradable-loot .bin-odds .bin-loot-art{width:80px;height:80px}

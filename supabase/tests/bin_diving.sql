@@ -23,7 +23,7 @@ begin
  r:=public.bin_diving_action('configure',rules||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Moderator can edit loot economy');
  perform set_config('request.jwt.claim.sub',a::text,true);
  set local role authenticated;
- denied:=false;begin update public.game_bin_inventory set quantity=999;exception when insufficient_privilege then denied:=true;end;
+ denied:=false;begin update public.game_inventory set quantity=999;exception when insufficient_privilege then denied:=true;end;
  perform pg_temp.check_bin(denied,'Browser can edit loot');
  denied:=false;begin update public.game_bin_rules set cash_chance=100;exception when insufficient_privilege then denied:=true;end;
  perform pg_temp.check_bin(denied,'Browser can edit drop chances');
@@ -59,12 +59,12 @@ begin
   target:=gen_random_uuid();insert into auth.users(id) values(target);perform set_config('request.jwt.claim.sub',target::text,true);perform public.game_state();
   q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d);
   r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r->'receipt'->>'outcome'=item,'100% item roll failed: '||r::text);
-  if item<>'nothing' then perform pg_temp.check_bin((select quantity from public.game_bin_inventory where player_id=target and season_id=s and game_bin_inventory.item=(r->'receipt'->>'outcome'))=1,'Item missing from stash');end if;
+  if item<>'nothing' then perform pg_temp.check_bin((select quantity from public.game_inventory where player_id=target and season_id=s and game_inventory.good_id=(r->'receipt'->>'outcome'))=1,'Item missing from stash');end if;
   if item='pickaxe' then
    q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid());first:=public.bin_diving_action('equip',q);
    perform pg_temp.check_bin(not first?'error','Pickaxe cannot equip: '||first::text);
    perform pg_temp.check_bin((select durability from public.game_mining_tools where player_id=target and season_id=s)=game_private.setting('mining_pickaxe_durability'),'Found tool incompatible with mining');
-   perform pg_temp.check_bin((select quantity from public.game_bin_inventory where player_id=target and season_id=s and game_bin_inventory.item='pickaxe')=0,'Equip did not consume spare');
+   perform pg_temp.check_bin((select quantity from public.game_inventory where player_id=target and season_id=s and game_inventory.good_id='pickaxe')=0,'Equip did not consume spare');
    r:=public.bin_diving_action('equip',q);perform pg_temp.check_bin(r=first,'Equip retry is not idempotent');
    r:=public.mining_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'mine_id',(select m.id from public.game_mines m join public.game_district_plots p on p.id=m.plot_id where p.code='MQ-01' and m.season_id=s)));
    perform pg_temp.check_bin(not r?'error','Found pickaxe cannot start a public shift: '||r::text);

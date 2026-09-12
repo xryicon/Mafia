@@ -12,11 +12,14 @@ export function useBinDiving(initial?:BinState){
   if(r.error||!r.data)throw new Error("The streets could not refresh. Try again.");
   if(alive.current&&version===sequence.current){setData(r.data);offset.current=Date.parse(r.data.server_time)-Date.now();setNow(Date.now()+offset.current);}
  },[]);
- useEffect(()=>{alive.current=true;if(!initial)void refresh().catch(e=>{setFailed(true);setNotice(e.message);});
+ useEffect(()=>{alive.current=true;void refresh().catch(e=>{setFailed(true);setNotice(e.message);});
   const tick=setInterval(()=>setNow(Date.now()+offset.current),1000);
   const poll=()=>{if(!document.hidden&&!lock.current)void refresh().catch(()=>{setFailed(true);setNotice("Live updates paused. Refresh to reconnect.");});};
-  const timer=setInterval(poll,20000);window.addEventListener("focus",poll);
-  return()=>{alive.current=false;sequence.current++;clearInterval(tick);clearInterval(timer);window.removeEventListener("focus",poll);};
+  const timer=setInterval(poll,10000);window.addEventListener("focus",poll);document.addEventListener("visibilitychange",poll);
+  const channel=typeof BroadcastChannel!=="undefined"?new BroadcastChannel("blackwater-bin-updates"):null;
+  if(channel)channel.onmessage=poll;
+  window.addEventListener("blackwater:game",poll);
+  return()=>{alive.current=false;sequence.current++;clearInterval(tick);clearInterval(timer);window.removeEventListener("focus",poll);document.removeEventListener("visibilitychange",poll);window.removeEventListener("blackwater:game",poll);channel?.close();};
  },[refresh,initial]);
  const run=async(action:string,payload:Record<string,unknown>={}):Promise<boolean>=>{
   if(lock.current||!data)return false;lock.current=true;++sequence.current;setBusy(true);setNotice("");setFailed(false);
@@ -28,6 +31,7 @@ export function useBinDiving(initial?:BinState){
    uncertain=false;setRetry(null);if(r.data?.error)throw new Error(r.data.error);
    if(r.data?.receipt){setResult(r.data.receipt);setData(old=>old?{...old,ready_at:r.data.receipt.ready_at}:old);}
    setNotice(r.data?.message??"Saved.");window.dispatchEvent(new Event("blackwater:game"));
+   if(typeof BroadcastChannel!=="undefined"){const channel=new BroadcastChannel("blackwater-bin-updates");channel.postMessage("refresh");channel.close();}
    try{await refresh();}catch{setNotice((r.data?.message??"Saved.")+" Refresh to see your updated totals.");}
    return true;
   }catch(e){setFailed(true);setNotice(e instanceof Error?e.message:"Could not finish this action.");if(uncertain)setRetry(request);return false;}

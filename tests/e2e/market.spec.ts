@@ -44,7 +44,7 @@ test("players create auctions, reserve bids, receive goods, and keep the command
  await expect.poll(()=>page.locator(".market-stock-preview img").evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  await capture(page,"market-exchange-desktop");
  await sections.getByRole("button",{name:"Inventory",exact:true}).click();
- await expect(page.locator(".market-inventory .commodity-art img")).toHaveCount(3);
+ await expect(page.locator(".market-inventory .commodity-art img")).toHaveCount(6);
  await expect.poll(()=>page.locator(".market-inventory .commodity-art img").evaluateAll(imgs=>imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
  await capture(page,"market-commodity-inventory");
  await sections.getByRole("button",{name:"Auctions",exact:true}).click();

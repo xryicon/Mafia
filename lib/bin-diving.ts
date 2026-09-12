@@ -9,8 +9,8 @@ export type BinState={
 export const loot=[
  {id:"cash",name:"Loose cash",icon:"coins",description:"A little forgotten money. Straight into your wallet."},
  {id:"pickaxe",name:"Pickaxe",icon:"pickaxe",description:"Equip it and work a public site in Mines & Quarries."},
- {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"A crafting collectible. Keep it for a future workshop."},
- {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"A crafting collectible. Keep it for a future workshop."}
+ {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."},
+ {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."}
 ] as const;
 export const emptyChance=(r:BinRules)=>Math.max(0,Math.round((100-r.cash_chance-r.pickaxe_chance-r.pistol_blueprint_chance-r.bullet_blueprint_chance)*100)/100);
 export const binCountdown=(seconds:number)=>Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");

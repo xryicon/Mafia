@@ -11,7 +11,7 @@ const season={id:"55555555-5555-4555-8555-555555555555",name:"Founding Season",s
 const state = {season,
  jobs:[{"id":"docks","name":"Dock errand","district":"THE DOCKS","description":"Build connections.","reward":250,"xp":10,"cooldown":60},{"id":"warehouse","name":"Warehouse shift","district":"INDUSTRIAL QUARTER","description":"Keep goods moving.","reward":600,"xp":20,"cooldown":180},{"id":"courier","name":"Night courier","district":"OLD TOWN","description":"Work the night shift.","reward":1100,"xp":40,"cooldown":360}],
  settings:{market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
- permissions:['economy.manage','roles.manage','players.rename','tickets.manage','chat.delete','audit.view','evidence.view','seasons.manage','seasons.reset'],ledger:[],
+ permissions:['assets.spawn','economy.manage','roles.manage','players.rename','tickets.manage','chat.delete','audit.view','evidence.view','seasons.manage','seasons.reset'],ledger:[],
  player:{id:playerId,handle:"HarborBoss",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
  goods:[
   {id:"whiskey",name:"Whiskey crates",business_name:"Backroom distillery",business_cost:3000,batch_size:3,cycle_seconds:300},
@@ -126,6 +126,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/staff_action"||url.pathname==="/rest/v1/rpc/community_action"){
  let raw="";for await(const chunk of req)raw+=chunk;
  const {action,payload:p}=JSON.parse(raw);
+ if(action==="spawn_asset"){let row=state.inventory.find(i=>i.good_id===p.good_id);if(!row){row={good_id:p.good_id,quantity:0};state.inventory.push(row);}row.quantity+=Number(p.quantity);}
  if(action==="setting")state.settings[p.key]=Number(p.value);
  if(action==="chat")community.chat.unshift({id:String(Date.now()),player_id:playerId,handle:state.player.handle,username:state.player.handle,role:"owner",created_at:new Date().toISOString(),body:p.body});
  if(action==="ticket"||action==="report")community.cases.unshift({id:String(Date.now()),player_id:playerId,kind:action,subject:p.subject,body:p.body,status:"open",response:null,created_at:new Date().toISOString()});
