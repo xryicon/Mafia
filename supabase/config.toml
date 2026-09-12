@@ -1,0 +1,8 @@
+# Only these authentication settings are managed here; all other hosted settings stay unchanged.
+project_id = "blackwater-mafia"
+[auth]
+site_url = "https://mafia.xryicon.workers.dev"
+additional_redirect_urls = ["https://mafia.xryicon.workers.dev/auth/callback", "https://mafia.xryicon.workers.dev/auth/callback?next=/auth/confirmed", "https://mafia.xryicon.workers.dev/auth/callback?next=/update-password"]
+[auth.email.template.confirmation]
+subject = "Your place in Blackwater is waiting — confirm your account"
+content_path = "./supabase/templates/confirmation.html"
