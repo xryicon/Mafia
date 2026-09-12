@@ -12,7 +12,7 @@ Players enter from Dashboard → Bin Diving, a district header, or the mining eq
 
 ## Release validation
 GitHub Actions runs the production build, TypeScript checks, browser flows at desktop/mobile sizes, the full existing regression suite, PostgreSQL ownership/accounting tests, and parallel request tests. No app or database is run locally.
-Apply only the new bin_diving migration after these checks pass, then merge the prepared release to trigger Cloudflare deployment.
+Apply only the new bin_diving and bin_diving_history_index migrations after these checks pass, then merge the prepared release to trigger Cloudflare deployment.
 
 ## Artwork
 Mode: built-in image generation. Asset: public/art/bin-diving.png.
