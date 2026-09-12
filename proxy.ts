@@ -32,5 +32,5 @@ export async function proxy(request: NextRequest) {
 // Public forms must render even if session refresh or deployment configuration fails.
 // Protected pages and the API still validate users independently on the server.
 export const config = {
-  matcher: ["/bin-diving/:path*", "/telegrams/:path*", "/ledger/:path*", "/market/:path*", "/properties/:path*", "/districts/:path*", "/gangs/:path*", "/profile/:path*", "/owner/:path*", "/support/:path*", "/account/:path*", "/seasons/:path*", "/players/:path*", "/staff/:path*", "/community/:path*", "/dashboard/:path*", "/update-password", "/api/:path*", "/auth/:path*"],
+  matcher: ["/refineries/:path*", "/bin-diving/:path*", "/telegrams/:path*", "/ledger/:path*", "/market/:path*", "/properties/:path*", "/districts/:path*", "/gangs/:path*", "/profile/:path*", "/owner/:path*", "/support/:path*", "/account/:path*", "/seasons/:path*", "/players/:path*", "/staff/:path*", "/community/:path*", "/dashboard/:path*", "/update-password", "/api/:path*", "/auth/:path*"],
 };

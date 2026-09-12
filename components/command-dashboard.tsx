@@ -112,7 +112,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <div className="command-location"><GameIcon name="pin" size={23}/><span>Viewing district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
    <div className="command-quick"><h3>QUICK ACTIONS</h3>
     <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="operations"/><span>Plan an Operation</span><GameIcon name="arrow" size={16}/></button>
-    <Go href="/districts/mines-and-quarries" icon="pickaxe">Explore Resources</Go><Go href="/bin-diving" icon="bin">Bin Diving</Go>
+    <Go href="/districts/mines-and-quarries" icon="pickaxe">Explore Resources</Go><Go href="/bin-diving" icon="bin">Bin Diving</Go><Go href="/refineries" icon="production">Refineries</Go>
     <button className="command-button" onClick={()=>setDialog("production")}><GameIcon name="tools"/><span>Production</span><GameIcon name="arrow" size={16}/></button>
     <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="briefcase"/><span>Find a Job</span><GameIcon name="arrow" size={16}/></button>
    </div>

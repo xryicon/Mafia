@@ -17,7 +17,7 @@ function Equipment({data}:{data:MiningState}){
  return <Panel title="Your field equipment" className="mine-equipment">
   <div className="mine-equipment-item"><span className="mine-tool-icon"><GameIcon name="pickaxe" size={34}/></span><div><h3>Mining pickaxe</h3><span className={"mine-status "+(condition?"status-open":"")}>{condition?condition+" condition remaining":"Not equipped"}</span></div></div>
   {condition>0?<><div className="mine-meter"><span style={{width:Math.min(100,condition/data.settings.mining_pickaxe_durability*100)+"%"}}/></div><p>Use your pickaxe at public sites. Each shift wears down its condition.</p></>:<p>You’ll need to find a pickaxe before working a public site. Search the bins across Blackwater to find equipment.</p>}
-  <Link className="command-action" href="/bin-diving">Find equipment · Bin Diving →</Link><span className="mine-equipment-note"><GameIcon name="lock" size={13}/>Pickaxes are found, never bought.</span>
+  <Link className="command-action" href="/bin-diving">Find equipment · Bin Diving →</Link><Link className="command-action" href="/refineries">Refine your ore →</Link><span className="mine-equipment-note"><GameIcon name="lock" size={13}/>Pickaxes are found, never bought.</span>
  </Panel>;
 }
 function MineBid({site,data,now,busy,act}:{site:Mine;data:MiningState;now:number;busy:boolean;act:MiningAction}){
