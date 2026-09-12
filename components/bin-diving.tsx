@@ -8,7 +8,7 @@ import {useBinDiving} from "@/components/use-bin-diving";
 import {loot,emptyChance,binCountdown,type BinState,type LootItem} from "@/lib/bin-diving";
 import {money} from "@/lib/game";
 export function LootArt({item}:{item:string}){
- if(["pickaxe","pistol_blueprint","bullet_blueprint"].includes(item))return <span className={"bin-loot-art illustrated "+item}><CommodityArtwork goodId={item} size={70}/></span>;
+ if(["pickaxe","pistol_blueprint","bullet_blueprint"].includes(item))return <span className={"bin-loot-art illustrated "+item}><CommodityArtwork goodId={item} size={96}/></span>;
  const entry=loot.find(l=>l.id===item);
  return <span className={"bin-loot-art "+item} aria-hidden="true"><GameIcon name={entry?.icon??"bin"} size={34}/>{item.includes("blueprint")&&<small>{item==="pistol_blueprint"?"H.P. / 01":"H.B. / 02"}</small>}</span>;
 }
