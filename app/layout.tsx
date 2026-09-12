@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import {SiteChrome} from "@/components/site-chrome";
 import "./globals.css";
+import "./confirmation.css";
 import "./districts.css";
 import "./telegrams.css";
 import "./dashboard.css";

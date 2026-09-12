@@ -30,6 +30,7 @@ const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"333
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
  moderator_permissions:["players.warn"],permission_catalog:[{id:"players.warn",owner_only:false}],audit:[]});
+let confirmationUsed=false;
 const server = http.createServer(async(req,res) => {
  res.setHeader("Access-Control-Allow-Origin","http://localhost:3000");
  res.setHeader("Access-Control-Allow-Headers",req.headers["access-control-request-headers"] || "*");
@@ -39,9 +40,12 @@ const server = http.createServer(async(req,res) => {
  const url=new URL(req.url,"http://127.0.0.1:54329");
  const send=(status,data)=>{res.writeHead(status);res.end(JSON.stringify(data));};
  if(url.pathname==="/health"){send(200,{ok:true});return;}
- if(url.pathname==="/auth/v1/token"){send(400,{error:"invalid_grant",error_description:"Invalid test code"});return;}
+ if(url.pathname==="/auth/v1/token"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");if(process.env.GAME_TEST_FIXTURE==="1"&&["fixture-reset","fixture-signup"].includes(p.auth_code)){send(200,{access_token:token,refresh_token:"test-refresh",expires_in:3600,token_type:"bearer",user});return;}send(400,{error:"invalid_grant",error_description:"Invalid test code"});return;}
+ if(url.pathname==="/auth/v1/verify"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");if(p.type!=="email"||p.token_hash!=="a".repeat(64)||confirmationUsed){send(403,{code:"otp_expired",message:"Email link is invalid or has expired"});return;}confirmationUsed=true;send(200,{access_token:token,refresh_token:"test-refresh",expires_in:3600,token_type:"bearer",user});return;}
+ if(url.pathname==="/auth/v1/resend"&&process.env.GAME_TEST_FIXTURE==="1"){send(200,{});return;}
  if(url.pathname==="/rest/v1/rpc/username_available"){let raw="";for await(const chunk of req)raw+=chunk;const {candidate}=JSON.parse(raw);send(200,{available:candidate.toLowerCase()!=="harborboss"});return;}
  if(req.headers.authorization!=="Bearer "+token){send(401,{code:"bad_jwt",message:"Invalid session"});return;}
+ if(url.pathname==="/__reset_confirmation"&&process.env.GAME_TEST_FIXTURE==="1"){confirmationUsed=false;send(200,{ok:true});return;}
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
 
 

@@ -81,3 +81,18 @@ if(resourceArtworkDeployed){for(const good of ['iron-ore','copper-ore','coal','s
  const response=await fetch(origin+'/art/resources/'+good+size+'.webp',{signal:AbortSignal.timeout(20000)});const bytes=(await response.arrayBuffer()).byteLength;
  console.log(JSON.stringify({resourceArt:good+size,status:response.status,bytes}));if(!response.ok||bytes<1000||!response.headers.get('content-type')?.includes('image/webp'))process.exitCode=1;
 }}
+
+const confirmationDeployed=styles.includes(".confirmation-frame");
+console.log(JSON.stringify({confirmationDeployed}));
+if(confirmationDeployed){
+ for(const [path,text] of [["/auth/confirmed","Check your invitation."],["/auth/confirm","This link has expired."]]){
+  const response=await fetch(origin+path,{signal:AbortSignal.timeout(20000)});const body=await response.text();
+  console.log(JSON.stringify({confirmationPage:path,status:response.status,url:response.url}));
+  if(!response.ok||!body.includes(text)||body.includes("Account confirmed."))throw new Error("Invalid public confirmation state");
+ }
+ for(const asset of ["waterfront.jpg","waterfront.webp","brand.png","economy.png","empire.png","gangs.png","browser.png"]){
+  const response=await fetch(origin+"/art/email/"+asset,{signal:AbortSignal.timeout(20000)});const bytes=(await response.arrayBuffer()).byteLength;
+  console.log(JSON.stringify({confirmationArtwork:asset,status:response.status,bytes}));
+  if(!response.ok||!response.headers.get("content-type")?.startsWith("image/")||bytes<300)throw new Error("Confirmation artwork unavailable");
+ }
+}

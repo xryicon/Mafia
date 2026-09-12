@@ -1,0 +1,38 @@
+/* Shared with the waterfront confirmation email. */
+.confirmation-frame{background:#040c0f;min-height:100dvh}
+.confirmation-page{max-width:1100px;margin:auto;background:#081215;color:#e8e1cf;font:15px/1.6 Arial,Helvetica,sans-serif;box-shadow:0 0 90px #0008}
+.confirmation-page a{text-decoration:none}.confirmation-hero{position:relative;min-height:620px;isolation:isolate;background:#09151a;overflow:hidden}
+.confirmation-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 65%;z-index:-2}
+.confirmation-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#020b10a8,transparent 80%),linear-gradient(0deg,#081215 0%,transparent 18%,transparent 80%,#06101677)}
+.confirmation-brandbar{margin:0 6%;padding:29px 0 23px;display:flex;justify-content:space-between;align-items:center;gap:25px;border-bottom:1px solid #c3955338}
+.confirmation-brandbar .bw-brand{font-size:29px}.confirmation-brandbar .bw-brand svg{width:55px;height:64px}.confirmation-brandbar>p{font-size:10px;letter-spacing:4px;line-height:2.2;color:#c6c9c4;margin:0}
+.confirmation-welcome{padding:93px 6% 104px}.confirmation-welcome>p:first-child{font-size:13px;letter-spacing:8px;margin:0 0 10px;font-weight:600}
+.confirmation-welcome>div{font:clamp(58px,9vw,110px)/1.08 Georgia,"Times New Roman",serif;color:#f0ebdc;letter-spacing:-3px;text-shadow:0 3px 15px #0008}
+.confirmation-welcome>span{display:block;height:2px;width:45px;background:#c49a5e;margin:21px 0}
+.confirmation-welcome>p:last-child{font-size:11px;letter-spacing:4px;line-height:2.2;color:#e0dfd5}
+.confirmation-message{text-align:center;padding:0 50px 44px;position:relative;max-width:800px;margin:0 auto}
+.confirmation-seal{display:grid;place-items:center;width:56px;height:56px;border:1px solid #c89b605c;background:#101c1c;color:#cba775;transform:rotate(45deg);margin:-26px auto 29px;box-shadow:0 0 0 7px #071114cc}
+.confirmation-seal svg{transform:rotate(-45deg)}.confirmation-seal.invalid{color:#c89173}
+.confirmation-kicker{font-size:8px;letter-spacing:2.8px;color:#ba9c72;margin:0 0 11px}
+.confirmation-message h1{font:italic clamp(34px,5vw,52px)/1.18 Georgia,"Times New Roman",serif;color:#cba16c;margin:0 0 17px}
+.confirmation-copy{font-size:15px;line-height:1.9;color:#b9c2be;margin:0 0 24px}
+.confirmation-button{display:flex;align-items:center;justify-content:center;gap:24px;min-height:59px;padding:16px 25px;max-width:430px;margin:auto;color:#111818;font-size:12px;font-weight:700;letter-spacing:3px;background:linear-gradient(120deg,#cfa970,#b28b52);border:1px solid #ddba80;box-shadow:inset 0 0 0 3px #d1af77,inset 0 0 0 4px #6e53267a}
+.confirmation-button:hover{filter:brightness(1.1)}.confirmation-button:focus-visible,.confirmation-secondary:focus-visible{outline:2px solid #e0ba76;outline-offset:5px}
+.confirmation-secondary{display:block;color:#c4ae88;font-size:12px;margin-top:20px;text-decoration:underline!important}
+.confirmation-small{display:block;margin-top:19px;color:#a99170;font-size:9px;letter-spacing:1.3px}
+.confirmation-opportunity{padding:0 5% 42px}.confirmation-divider{display:flex;align-items:center;gap:18px;font-size:8px;letter-spacing:4px;color:#b8a585;white-space:nowrap;margin:0 0 30px}
+.confirmation-divider>span{height:1px;flex:1;background:#b88c4444}
+.confirmation-features{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));text-align:center}
+.confirmation-features article{padding:0 22px;border-right:1px solid #a7834840}.confirmation-features article:last-child{border:0}
+.confirmation-features img{display:block;margin:0 auto 13px;width:52px;height:61px}
+.confirmation-features h2{font:600 10px/1.9 Arial,sans-serif;letter-spacing:2.8px;color:#e0e0d2;min-height:38px;margin:0 0 11px}
+.confirmation-features p{font-size:12px;letter-spacing:1px;line-height:1.9;color:#aab8b2;max-width:150px;margin:auto}
+.confirmation-motto{background:linear-gradient(90deg,#06121870,#06121855),url('/art/email/waterfront.webp') center 94%/cover;border-block:1px solid #a8884c30;display:flex;align-items:center;justify-content:space-between;gap:35px;padding:30px 7%;min-height:185px}
+.confirmation-motto p{font:italic 39px/1.25 Georgia,serif;color:#ede8d8;margin:0;text-shadow:0 2px 8px #000}.confirmation-motto>span{font-size:8px;letter-spacing:2.5px;line-height:2.1;color:#ccc9b9}
+.confirmation-footer{display:flex;justify-content:space-between;align-items:center;padding:32px 6% 39px;gap:24px}
+.confirmation-footer .bw-brand{font-size:20px}.confirmation-footer .bw-brand svg{width:40px;height:47px}
+.confirmation-footer>div{text-align:right}.confirmation-footer>div>a{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#bbbcad;margin-left:25px}
+.confirmation-footer>div>p{font-size:8px;letter-spacing:2px;color:#929e94;margin-top:22px}
+@media(max-width:600px){.confirmation-brandbar{padding:20px 0;gap:12px}.confirmation-brandbar .bw-brand{font-size:18px}.confirmation-brandbar .bw-brand svg{width:35px;height:42px}.confirmation-brandbar .bw-brand small{font-size:8px;letter-spacing:5px}.confirmation-brandbar>p{display:none}.confirmation-hero{min-height:435px}.confirmation-backdrop{object-position:61% center}.confirmation-welcome{padding:72px 7% 68px}.confirmation-welcome>div{font-size:55px;letter-spacing:-2px}.confirmation-welcome>p:first-child{font-size:9px;letter-spacing:6px}.confirmation-welcome>p:last-child{font-size:8px;letter-spacing:2.5px}.confirmation-message{padding:0 24px 35px}.confirmation-message h1{font-size:34px}.confirmation-copy{font-size:13px}.confirmation-button{font-size:10px;letter-spacing:2px;gap:18px;min-height:57px;padding:16px 15px}.confirmation-kicker{font-size:7px;letter-spacing:1.8px}.confirmation-small{font-size:8px;line-height:1.8}.confirmation-features{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 0}.confirmation-features article{padding:0 13px}.confirmation-features article:nth-child(2n){border:0}.confirmation-features h2{font-size:9px;letter-spacing:2px}.confirmation-features p{font-size:11px}.confirmation-divider{font-size:7px;letter-spacing:2px;gap:11px}.confirmation-motto{display:block;padding:29px 8%}.confirmation-motto p{font-size:33px}.confirmation-motto>span{display:block;margin-top:21px}.confirmation-footer{flex-direction:column;align-items:flex-start;padding:29px 8%;gap:20px}.confirmation-footer>div{text-align:left}.confirmation-footer>div>a{margin:0 24px 0 0}.confirmation-footer>div>p{font-size:7px}}
+
+.confirmation-resend{max-width:430px;margin:20px auto 0;text-align:left;font-size:12px;color:#c7ad83}.confirmation-resend summary{text-align:center;cursor:pointer;padding:8px}.confirmation-resend form{padding:13px 0}.confirmation-resend label{display:block;color:#bec7bb;font-size:12px}.confirmation-resend input{display:block;width:100%;background:#0c1a1e;border:1px solid #b2905759;color:#e7e5d7;margin:7px 0 13px;padding:12px;font-size:16px}.confirmation-resend button{width:100%;padding:13px;color:#d7b987;background:#132022;border:1px solid #cba1666b;font-size:12px;cursor:pointer}.confirmation-resend button:disabled{opacity:.5;cursor:wait}.confirmation-resend [role=status]{color:#b5c7ba;font-size:12px;line-height:1.8}

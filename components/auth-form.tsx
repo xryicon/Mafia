@@ -53,7 +53,7 @@ export function AuthForm({ mode, next = "/dashboard", initialMessage = "" }: { m
         if (!available.data?.available) throw new Error("That username is taken or reserved. Choose another name.");
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: window.location.origin + "/auth/callback", data: { username } },
+          options: { emailRedirectTo: window.location.origin + "/auth/callback?next=/auth/confirmed", data: { username } },
         });
         if (error) {
           const check = await supabase.rpc("username_available", { candidate: username });
