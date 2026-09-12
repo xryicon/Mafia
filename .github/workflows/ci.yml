@@ -110,3 +110,8 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bank.sql
           bash supabase/tests/bank_races.sh
+
+      - name: Inventory storage security and concurrency
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/inventory.sql
+          bash supabase/tests/inventory_races.sh

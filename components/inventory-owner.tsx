@@ -1,0 +1,19 @@
+"use client";
+import {useEffect,useState} from "react";
+import {createClient} from "@/lib/supabase/client";
+import {categoryNames,type InventoryState} from "@/lib/inventory";
+export function InventoryOwner(){
+ const [data,setData]=useState<InventoryState|null>(null),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[type,setType]=useState("warehouse"),[good,setGood]=useState("");
+ const refresh=async()=>{const r=await createClient().rpc("inventory_state");if(r.error)throw new Error("Inventory controls could not load.");setData(r.data);};
+ useEffect(()=>{void refresh().catch(e=>setNotice(e.message));},[]);
+ const save=async(action:string,form:HTMLFormElement)=>{setBusy(true);try{const p=Object.fromEntries(new FormData(form));const r=await createClient().rpc("inventory_manage",{p_action:action,p_payload:p});if(r.error||r.data?.error)throw new Error(r.data?.error||"Could not save inventory rules.");setNotice(r.data.message);await refresh();}catch(e){setNotice(e instanceof Error?e.message:"Save failed.");}finally{setBusy(false);}};
+ if(!data)return <p>{notice||"Loading inventory controls…"}</p>;
+ if(!data.management)return <p>Owner inventory permission required.</p>;
+ const rule=data.management.rules.find(r=>r.building_type===type),item=data.goods.find(g=>g.id===good)??data.goods[0];
+ return <section className="inv-owner"><h2>Inventory & secure storage</h2><p>Capacity applies per building, in item units. Lowering capacity never removes stored goods; retrieval remains available when new deposits are paused. Building prices and construction requirements stay in Districts & properties.</p>{notice&&<p role="status">{notice}</p>}
+ <label>Storage building type<select value={type} onChange={e=>setType(e.target.value)}>{data.management.building_types.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
+ <form key={type+":"+rule?.version} onSubmit={e=>{e.preventDefault();void save("rule",e.currentTarget);}}><input type="hidden" name="building_type" value={type}/><input type="hidden" name="version" value={rule?.version??""}/><label>Capacity per building<input name="capacity" type="number" min={1} max={1000000000} defaultValue={rule?.capacity??200} required/></label><label>New storage deposits<select name="enabled" defaultValue={String(rule?.enabled??true)}><option value="true">Open</option><option value="false">Paused — retrieval remains available</option></select></label><label>Audit reason<input name="reason" minLength={5} maxLength={500} required/></label><button disabled={busy}>Save storage rules</button></form>
+ <h2>Existing item information</h2><label>Item<select value={item?.id??""} onChange={e=>setGood(e.target.value)}>{data.goods.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+ {item&&<form key={JSON.stringify(item)} onSubmit={e=>{e.preventDefault();void save("good",e.currentTarget);}}><input name="good_id" type="hidden" value={item.id}/><label>Category<select name="category" defaultValue={item.category}>{Object.entries(categoryNames).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label>Item description<textarea name="description" maxLength={1000} defaultValue={item.description}/></label><label>Audit reason<input name="reason" minLength={5} maxLength={500} required/></label><button disabled={busy}>Save item information</button></form>}
+ </section>;
+}
