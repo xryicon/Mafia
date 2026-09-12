@@ -63,6 +63,10 @@ begin
  perform pg_temp.check_loadout((select grams from game_private.carried_load(s,a))=100000,'Exact 100 kg rejected');
  denied:=false;begin update public.game_inventory set quantity=196 where player_id=a and good_id='ci-slot-1';exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Weight limit ignored');
  r:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(r?'error' and (select location from public.game_inventory_gear where id=g)='storage','Overweight retrieval lost stored equipment');
+ -- Bin diving cannot reroll rewards by refusing loot with a full bag.
+ r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));
+ perform pg_temp.check_loadout(r?'error' and r->>'error' like '%Inventory before searching%', 'Full-bag loot preflight missing: '||r::text);
+ perform pg_temp.check_loadout(not exists(select 1 from public.game_bin_dives where player_id=a),'Failed dive consumed a roll');
  -- A manual market purchase must atomically preserve both wallets and offered stock.
  perform set_config('request.jwt.claim.sub',b::text,true);
  r:=public.game_action('list','{"good_id":"whiskey","quantity":2,"unit_price":300}');perform pg_temp.check_loadout(not r?'error','Fixture listing failed');
@@ -82,6 +86,15 @@ begin
  update public.game_inventory set quantity=180 where player_id=a and good_id='ci-slot-1';
  first:=public.inventory_action('claim_delivery',q);perform pg_temp.check_loadout(not first?'error','Delivery collection failed');
  r:=public.inventory_action('claim_delivery',q);perform pg_temp.check_loadout(r=first and (select quantity from public.game_inventory where player_id=a and good_id='whiskey')=3,'Delivery retry duplicated goods');
+ -- Owner weights are audited and immediately affect server load calculations.
+ update public.game_user_roles set role_id='owner' where player_id=b;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ r:=public.inventory_manage('good','{"good_id":"pickaxe","category":"tools","description":"Mining equipment","weight_grams":3000,"equipment_slots":["utility"],"reason":"CI adjust equipment weight"}');
+ perform pg_temp.check_loadout(not r?'error' and (select weight_grams from public.game_goods where id='pickaxe')=3000,'Owner weight update failed');
+ perform pg_temp.check_loadout(exists(select 1 from public.game_audit where actor_id=b and reason like 'Inventory rules:%'),'Item weight update not audited');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ denied:=false;begin perform public.inventory_manage('good','{"good_id":"pickaxe","category":"tools","description":"Spoofed","weight_grams":1,"equipment_slots":["primary"],"reason":"Unauthorized weight edit"}');exception when raise_exception then denied:=true;end;
+ perform pg_temp.check_loadout(denied,'Player changed item weight');
 end$$;
 select 'PASS: saved positions, stale requests, six-slot compatibility, equipment wear, storage ownership, twenty slots, 100kg, atomic purchases and held auction deliveries';
 rollback;

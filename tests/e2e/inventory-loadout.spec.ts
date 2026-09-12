@@ -3,7 +3,7 @@ import {cookie,token} from "../fixtures/identity.mjs";
 const headers={Authorization:"Bearer "+token};
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture");await request.post("http://127.0.0.1:54329/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("twenty saved slots, six equipment spaces, drag swaps and touch movement",async({page,request})=>{
- await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true,storage:true}});await page.goto("/inventory");
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true,storage:true}});await page.setViewportSize({width:1672,height:1600});await page.goto("/inventory");
  await expect(page.locator(".inv-slot")).toHaveCount(20);await expect(page.locator(".inv-gear-slot")).toHaveCount(6);await expect(page.locator(".inv-carry-capacity")).toContainText("100 kg");
  for(const label of ["Primary weapon","Secondary weapon","Ammo","Armor","Utility","Medical"])await expect(page.locator(".inv-gear-slot").filter({hasText:label})).toBeVisible();
  const pickaxe=page.locator(".inv-slot .inv-item").filter({hasText:"Pickaxe"});await pickaxe.dragTo(page.locator('[data-slot="20"]'));await expect(page.locator('[data-slot="20"]')).toContainText("Pickaxe");
@@ -13,7 +13,7 @@ test("twenty saved slots, six equipment spaces, drag swaps and touch movement",a
  await page.reload();await expect(page.locator('[data-slot="19"]')).toContainText("Pickaxe");expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 test("equipment drag, wear, unequip, safe storage and retrieval",async({page,request})=>{
- await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true,storage:true}});await page.goto("/inventory");
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true,storage:true}});await page.setViewportSize({width:1672,height:1600});await page.goto("/inventory");
  await page.locator(".inv-slot .inv-item").filter({hasText:"Pickaxe"}).dragTo(page.getByRole("button",{name:"Utility, empty",exact:true}));
  await expect(page.getByRole("button",{name:"Utility: Pickaxe",exact:true})).toBeVisible();
  await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{condition:37}});await page.reload();
