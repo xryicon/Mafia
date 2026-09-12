@@ -5,8 +5,8 @@ test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTU
 test("dashboard entry, find a pickaxe, equip it and mine with the same equipment",async({page})=>{
  await page.setViewportSize({width:1600,height:1100});await page.goto("/dashboard");await page.getByRole("link",{name:"Bin Diving",exact:true}).click();await expect(page).toHaveURL(/bin-diving/);await expect(page.locator(".command-city")).toBeVisible();
  await expect(page.getByRole("heading",{name:"Bin Diving",exact:true})).toBeVisible();await expect(page.locator(".bin-district-intel")).toBeVisible();
- for(const width of [1920,1448,1024,768,390,1600]){await page.setViewportSize({width,height:1100});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Bin diving overflow at "+width).toBe(true);}
- await capture(page,"bin-desktop");
+ for(const width of [1920,1448,1366,1280,1024,850,768,390,360,1600]){await page.setViewportSize({width,height:1100});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Bin diving overflow at "+width).toBe(true);}
+ await capture(page,"bin-desktop");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-details");
  await page.getByRole("button",{name:"Search the bins"}).click();await expect(page.locator(".bin-result")).toContainText("Pickaxe");await expect(page.getByRole("button",{name:/Next dive in/})).toBeDisabled();
  await page.getByRole("button",{name:"Equip pickaxe",exact:false}).click();await expect(page.locator(".bin-equipment")).toContainText("100 condition remaining");
  await page.getByRole("link",{name:"Explore Mines & Quarries"}).click();await expect(page.locator(".mine-equipment")).toContainText("100 condition remaining");
@@ -68,7 +68,7 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await page.locator(".market-commodities").getByRole("button").filter({hasText:item==="pistol_blueprint"?"Homemade pistol blueprint":"Homemade bullet blueprint"}).click();
   await page.getByRole("button",{name:"Withdraw auction",exact:true}).click();await expect(ticket.locator(".market-stock-note")).toContainText("1 units available");
  }
- await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","1","1"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");
+ await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","1","1"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-mobile-details");await page.locator(".bin-stash").scrollIntoViewIfNeeded();await capture(page,"bin-stash-mobile");
  await page.goto("/refineries");
  for(const id of ["iron-ingot","copper-ingot"]){await page.getByLabel("Refining recipe").selectOption(id.replace("-ingot",""));const art=page.locator('img[src*="/art/resources/'+id+'"]').first();await art.scrollIntoViewIfNeeded();await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
 });
