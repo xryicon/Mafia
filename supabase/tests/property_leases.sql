@@ -67,6 +67,11 @@ begin
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.property_action('renew',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',1,'rent',300));perform pg_temp.verify(res?'error','Stale rent quote was accepted');
  res:=public.property_action('renew',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',2,'rent',450));perform pg_temp.verify(not res?'error','Current lease renewal failed');
+
+ select ends_at into expiry from public.game_property_leases where building_id=bid and released_at is null;
+ update public.game_seasons set status='locked',locked_at=clock_timestamp()-interval '30 minutes' where id=s;
+ update public.game_seasons set status='open' where id=s;
+ perform pg_temp.verify((select ends_at from public.game_property_leases where building_id=bid and released_at is null)>=expiry+interval '30 minutes','Locked season consumed paid lease time');
  -- Expired contents remain private and can be retrieved after a new tenant moves in.
  update public.game_property_leases set starts_at=now()-interval '2 days',ends_at=now()-interval '1 day' where building_id=bid and released_at is null;
  res:=public.inventory_action('store',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',1,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Expired lease accepted deposits');

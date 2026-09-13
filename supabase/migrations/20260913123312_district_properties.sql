@@ -61,7 +61,9 @@ create function game_private.property_access(s uuid,u uuid,bid uuid,deposit bool
  and ((b.owner_type='player' and b.owner_id=u and p.owner_type='player' and p.owner_id=u)
  or (b.owner_type='city' and p.owner_type='city' and b.owner_id=p.owner_id and exists(
  select 1 from public.game_property_leases l where l.building_id=b.id and l.season_id=s and l.player_id=u
- and (not deposit or (l.released_at is null and l.ends_at>statement_timestamp()))))))
+ and ((l.released_at is null and l.ends_at>statement_timestamp()) or (not deposit and (
+ exists(select 1 from public.game_storage_inventory i where i.season_id=s and i.building_id=bid and i.player_id=u and i.quantity>0)
+ or exists(select 1 from public.game_inventory_gear g where g.season_id=s and g.building_id=bid and g.player_id=u and g.location='storage'))))))))
 $$;
 create function game_private.property_station_space(s uuid,bid uuid,u uuid) returns bigint language sql stable security definer set search_path='' as $$
  select coalesce((select sum(space) from public.game_property_stations where season_id=s and building_id=bid and player_id=u and removed_at is null
