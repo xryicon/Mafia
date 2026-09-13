@@ -131,6 +131,7 @@ begin
     stamp:=clock_timestamp();
     select max(ready_at) into ready from public.game_bin_dives where season_id=s and player_id=uid;
     if ready>stamp then raise exception 'Give the streets a moment. Your cooldown applies across every district.'; end if;
+    if (r.pickaxe_chance>0 and not game_private.inventory_fits(s,uid,'pickaxe',1)) or (r.lockpick_chance>0 and not game_private.inventory_fits(s,uid,'lockpick',1)) or (r.pistol_blueprint_chance>0 and not game_private.inventory_fits(s,uid,'pistol_blueprint',1)) or (r.bullet_blueprint_chance>0 and not game_private.inventory_fits(s,uid,'bullet_blueprint',1)) then raise exception 'Free space and weight in Inventory before searching for loot.';end if;
     roll:=floor(random()*10000)::integer;
     outcome:=case when roll<r.cash_chance*100 then 'cash'
      when roll<(r.cash_chance+r.pickaxe_chance)*100 then 'pickaxe'
