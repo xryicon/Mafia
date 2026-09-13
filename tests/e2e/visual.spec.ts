@@ -14,7 +14,8 @@ test("public artwork and signup remain responsive",async({page})=>{
  await page.setViewportSize({width:1448,height:1086});await page.goto("/");await loaded(page,".bw-hero img");await expect(page.getByRole("heading",{level:1})).toContainText("Every fortune");
  await page.emulateMedia({reducedMotion:"reduce"});await capture(page,"landing-desktop");await page.locator("#economy").scrollIntoViewIfNeeded();
  await page.getByRole("button",{name:"Steel",exact:true}).click();await page.getByLabel("Set your price").fill("200");await expect(page.locator(".preview-total")).toContainText("$2,400");
- await page.setViewportSize({width:375,height:812});await page.goto("/signup");await loaded(page,".auth-intro img");await expect(page.getByLabel("Username",{exact:true})).toBeVisible();await noOverflow(page);
+ await page.setViewportSize({width:375,height:812});await page.goto("/");await loaded(page,".bw-hero img");await noOverflow(page);await capture(page,"landing-mobile");
+ await page.goto("/signup");await loaded(page,".auth-intro img");await expect(page.getByLabel("Username",{exact:true})).toBeVisible();await noOverflow(page);
  await capture(page,"signup-mobile",true);
 });
 test("game navigation and inventory stay responsive",async({page,context,request})=>{

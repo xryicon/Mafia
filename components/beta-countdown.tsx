@@ -10,7 +10,7 @@ function splitTime(milliseconds:number):CountdownParts{
 }
 
 function utcLabel(startsAt:string){
- return new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC",timeZoneName:"short"}).format(new Date(startsAt));
+ return new Intl.DateTimeFormat("en-US",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC",timeZoneName:"short"}).format(new Date(startsAt));
 }
 
 export function BetaCountdown({startsAt,serverTime}:{startsAt:string;serverTime:string}){
@@ -20,7 +20,7 @@ export function BetaCountdown({startsAt,serverTime}:{startsAt:string;serverTime:
   const browserStart=Date.now();
   const tick=()=>setNow(serverStart+(Date.now()-browserStart));
   tick();const timer=window.setInterval(tick,1000);
-  setDateLabel(new Intl.DateTimeFormat(undefined,{dateStyle:"long",timeStyle:"short"}).format(new Date(startsAt)));
+  setDateLabel(new Intl.DateTimeFormat("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"}).format(new Date(startsAt)));
   return()=>window.clearInterval(timer);
  },[serverStart,startsAt]);
  const remaining=start-now,parts=splitTime(remaining),open=remaining<=0;
