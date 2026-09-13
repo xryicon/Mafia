@@ -81,7 +81,7 @@ test("bullet holes stay on moving paper, repeated hits leave holes, and fresh ta
  await expect(holes).toHaveCount(2);
  const state=await rpc(request,"range_state");expect(state.session.hits).toBe(1);expect(state.session.shots).toBe(2);
  await page.getByRole("button",{name:"Refresh shooting range"}).click();await expect(holes).toHaveCount(2);
- await page.setViewportSize({width:390,height:844});await capture(page,"range-paper-holes-mobile");
+ await page.setViewportSize({width:390,height:844});await page.locator(".range-lane").scrollIntoViewIfNeeded();await page.mouse.move(0,0);await expect(holes.first()).toBeVisible();await capture(page,"range-paper-holes-mobile");
  await expect(page.locator(".range-bullet-hole")).toHaveCount(0,{timeout:15000});
 });
 

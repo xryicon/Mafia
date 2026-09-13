@@ -37,3 +37,7 @@ Additional PostgreSQL tests cover ten-round exhaustion, timed and partial reload
 ## Paper impacts
 
 Accepted shots leave torn-paper bullet holes at their exact target-relative positions. Geometry uses the shot's server-recorded elapsed_ms, not response arrival time. Marks sit inside each moving target group and are clipped to its paper edges; repeat shots and non-scoring hits on paper leave holes without changing score rules. Shots outside the paper leave no paper damage. Refresh responses are deduplicated by shot id, and the next round or session clears the visual damage. No database changes are needed: the existing last_shot record already returns the required timing and coordinates.
+
+### Live shot-response regression
+
+The original SQL alias x collided with the numeric x column, so to_jsonb(x) returned a single coordinate as last_shot. The real PostgreSQL tests now check the complete returned shot object on accepted hits, misses, retries and refreshes, including its id, coordinates, timestamp and round. The corrective migration returns explicit display fields and preserves the existing private function permissions and all recorded gameplay.

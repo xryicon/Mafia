@@ -1,0 +1,24 @@
+-- The alias x collided with the shot table's x column: to_jsonb(x) returned
+-- a coordinate instead of a shot object. Return explicit display fields.
+-- This replaces only the existing read response; shot history, magazine
+-- state, consumption, scoring and function privileges are preserved.
+create or replace function game_private.range_state() returns jsonb language plpgsql security definer set search_path='' as $$
+declare s uuid;u uuid:=auth.uid();t timestamptz:=clock_timestamp();v public.game_range_sessions;
+begin
+ perform game_private.require_active();s:=game_private.season_guard(false);perform pg_advisory_xact_lock(4704020);
+ update public.game_range_sessions set status='finished',finished_at=ends_at where season_id=s and player_id=u and status='active' and ends_at+make_interval(secs=>(config->>'lag_tolerance_ms')::numeric/1000)<t;
+ select * into v from public.game_range_sessions where season_id=s and player_id=u order by started_at desc,id limit 1;
+ if v.status='active' then
+  insert into game_private.range_magazines(weapon_id,season_id,player_id,ammo_id,loaded)
+   select v.weapon_id,s,u,a.id,0 from public.game_inventory_gear a where a.season_id=s and a.player_id=u and a.location='equipped' and a.equipment_slot='ammo' and a.good_id=v.weapon_rule->>'ammo_good_id' and a.quantity>0 on conflict(weapon_id) do nothing;
+ end if;
+ return jsonb_build_object('season',(select jsonb_build_object('id',id,'name',name,'status',status) from public.game_seasons where id=s),'server_time',clock_timestamp(),
+ 'config',game_private.range_config(),'can_manage',game_private.has_permission('range.manage'),
+ 'weapons',(select coalesce(jsonb_agg(jsonb_build_object('id',g.id,'good_id',g.good_id,'name',i.name,'slot',g.equipment_slot,'raw_condition',g.condition,'condition',least(w.condition_max,coalesce(g.condition,w.condition_max)),'condition_max',w.condition_max,'wear_per_shot',w.wear_per_shot,'enabled',coalesce(w.enabled,false),'ammo_good_id',w.ammo_good_id,'ammo_name',a.name,'magazine',game_private.range_magazine_state(g.id,case when v.status='active' and v.weapon_id=g.id then v.weapon_rule else to_jsonb(w) end)) order by g.equipment_slot),'[]') from public.game_inventory_gear g join public.game_goods i on i.id=g.good_id left join public.game_range_weapons w on w.good_id=g.good_id left join public.game_goods a on a.id=w.ammo_good_id where g.season_id=s and g.player_id=u and g.location='equipped' and g.equipment_slot in ('primary','secondary') and g.quantity=1),
+ 'ammo',(select jsonb_build_object('id',g.id,'good_id',g.good_id,'name',i.name,'quantity',g.quantity) from public.game_inventory_gear g join public.game_goods i on i.id=g.good_id where g.season_id=s and g.player_id=u and g.location='equipped' and g.equipment_slot='ammo' and g.quantity>0),
+ 'session',case when v.id is null then null else to_jsonb(v)||jsonb_build_object('hit_targets',(select coalesce(jsonb_agg(round::text||':'||lane),'[]') from public.game_range_shots where session_id=v.id and hit),'last_shot',(select jsonb_build_object('id',shot_row.id,'hit',shot_row.hit,'points',shot_row.points,'round',shot_row.round,'lane',shot_row.lane,'x',shot_row.x,'y',shot_row.y,'elapsed_ms',shot_row.elapsed_ms,'created_at',shot_row.created_at) from public.game_range_shots shot_row where shot_row.session_id=v.id order by shot_row.created_at desc,shot_row.id desc limit 1)) end,
+ 'stats',(select jsonb_build_object('sessions',count(*),'best_score',coalesce(max(score),0),'shots',coalesce(sum(shots),0),'hits',coalesce(sum(hits),0),'best_accuracy',coalesce(max(round(hits*100.0/nullif(shots,0))),0)) from public.game_range_sessions where season_id=s and player_id=u and status<>'active'),
+ 'recent',(select coalesce(jsonb_agg(x order by x.started_at desc),'[]') from (select id,score,hits,shots,status,started_at from public.game_range_sessions where season_id=s and player_id=u and status<>'active' order by started_at desc limit 5) x),
+ 'leaders',(select coalesce(jsonb_agg(x order by x.score desc,x.player_id),'[]') from (select p.id as player_id,p.handle as username,game_private.player_avatar(p.id) as avatar_url,max(r.score) as score from public.game_range_sessions r join public.game_players p on p.id=r.player_id where r.season_id=s and p.deleted_at is null and r.shots>0 and (r.status<>'active' or r.ends_at+make_interval(secs=>(r.config->>'lag_tolerance_ms')::numeric/1000)<t) group by p.id order by max(r.score) desc,p.id limit 5) x),
+ 'management',case when game_private.has_permission('range.manage') then jsonb_build_object('weapons',(select coalesce(jsonb_agg(w order by w.good_id),'[]') from public.game_range_weapons w),'goods',(select jsonb_agg(jsonb_build_object('id',id,'name',name,'equipment_slots',equipment_slots) order by name) from public.game_goods where equipment_slots&&array['primary','secondary','ammo']),'settings',(select jsonb_agg(g order by key) from public.game_settings g where key like 'range\_%' escape '\')) else null end);
+end$$;
