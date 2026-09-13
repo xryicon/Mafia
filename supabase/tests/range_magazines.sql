@@ -33,6 +33,14 @@ do $$declare u uuid:=gen_random_uuid();other uuid:=gen_random_uuid();s uuid:=gam
  perform pg_temp.mag_check((select quantity=0 from public.game_inventory_gear where id=ammo) and (select loaded=0 from game_private.range_magazines where weapon_id=gun) and (select condition=88 from public.game_inventory_gear where id=gun),'Reload generated bullets or lost condition');
  perform pg_temp.mag_check((select sum(delta) from public.game_inventory_ledger where gear_id=ammo)=0,'Consumed ammo ledger does not reconcile');
  r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(r?'error','Reload succeeded without bullets');
+ -- Removing ammunition cancels its pending reload; re-equipping cannot complete the old timer.
+ update public.game_inventory set quantity=5 where season_id=s and player_id=u and good_id='homemade-bullets';
+ r:=public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:homemade-bullets','equipment_slot','ammo','quantity',5));perform pg_temp.mag_check(not r?'error','New ammunition equip failed');
+ select id into ammo from public.game_inventory_gear where player_id=u and equipment_slot='ammo';
+ r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(not r?'error','Fresh ammunition reload failed');
+ r:=public.inventory_action('unequip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||ammo));perform pg_temp.mag_check(not r?'error','Reloading ammunition unequip failed');
+ r:=public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:homemade-bullets','equipment_slot','ammo','quantity',5));perform pg_temp.mag_check(not r?'error','Ammunition re-equip failed');
+ perform pg_sleep(1.85);r:=public.range_state();perform pg_temp.mag_check((r->'weapons'->0->'magazine'->>'loaded')::int=0 and not(r->'weapons'->0->'magazine'->>'reloading')::boolean and (r->'ammo'->>'quantity')::int=5,'Cancelled reload completed after equipment changed');
  perform set_config('request.jwt.claim.sub',other::text,true);perform public.game_state();r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(r?'error','Foreign player reloaded weapon');
  perform pg_temp.mag_check(not has_function_privilege('authenticated','game_private.range_magazine_state(uuid,jsonb)','execute') and not has_table_privilege('authenticated','game_private.range_magazines','update'),'Magazine internals exposed');
  update public.game_user_roles set role_id='owner' where player_id=other;
