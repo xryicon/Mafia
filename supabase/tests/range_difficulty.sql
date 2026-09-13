@@ -32,10 +32,10 @@ begin
  perform pg_temp.range_check((r#>>'{state,session,participated_rounds}')::int=2 and (select xp from public.game_players where id=u)=xp_before,'XP awarded before completion or participation missing');
  perform pg_sleep(greatest(0,4.03-extract(epoch from(clock_timestamp()-v.started_at))));
  q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id,'xp',999999);r:=public.range_action('finish',q);
- perform pg_temp.range_check(not r?'error' and (r#>>'{state,session,xp_awarded}')::int=50,'Beginner completion XP: '||r::text);
- perform pg_temp.range_check((select xp from public.game_players where id=u)=xp_before+50 and (select xp from public.game_season_players where player_id=u and season_id=s)=xp_before+50,'XP not synchronized to seasonal respect');
+ perform pg_temp.range_check(not r?'error' and (r#>>'{state,session,xp_awarded}')::int=27,'Beginner completion XP: '||r::text);
+ perform pg_temp.range_check((select xp from public.game_players where id=u)=xp_before+27 and (select xp from public.game_season_players where player_id=u and season_id=s)=xp_before+27,'XP not synchronized to seasonal respect');
  perform public.range_action('finish',q);perform public.range_action('finish',q||jsonb_build_object('request_id',gen_random_uuid()));perform public.range_state();
- perform pg_temp.range_check((select count(*) from game_private.range_xp_ledger where session_id=v.id)=1 and (select xp from public.game_players where id=u)=xp_before+50,'Duplicate completion paid XP again');
+ perform pg_temp.range_check((select count(*) from game_private.range_xp_ledger where session_id=v.id)=1 and (select xp from public.game_players where id=u)=xp_before+27,'Duplicate completion paid XP again');
  perform pg_temp.range_check((select cooldown_until=ends_at+interval '10 minutes' from public.game_range_sessions where id=v.id),'Cooldown is not ten minutes after completion');
  for i in 0..1 loop
   r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary','difficulty',case when i=0 then 'beginner' else 'advanced' end,'cooldown_until','2000-01-01'));
@@ -51,7 +51,7 @@ begin
  -- Active session reward remains snapshotted even when Owner edits later.
  update public.game_settings set value=200 where key='range_advanced_completion_xp';
  perform pg_sleep(3.05);r:=public.range_state();
- perform pg_temp.range_check((r#>>'{session,xp_awarded}')::int=150 and (r#>>'{stats,xp_earned}')::int=200,'Expired session did not settle original Advanced reward');
+ perform pg_temp.range_check((r#>>'{session,xp_awarded}')::int=50 and (r#>>'{stats,xp_earned}')::int=77,'Expired session did not settle original Advanced reward: '||r::text);
  -- Early exit and an idle full session both yield zero XP, with the same recovery.
  update public.game_range_sessions set cooldown_until=clock_timestamp()-interval '1 second' where player_id=u;
  r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary','difficulty','beginner'));perform pg_temp.range_check(not r?'error','Early session start: '||r::text);
@@ -68,11 +68,11 @@ begin
  select * into v from public.game_range_sessions where player_id=u and status='active';elapsed:=floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int;
  r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id,'elapsed_ms',elapsed,'x',50,'y',45));perform pg_temp.range_check(not r?'error','Season boundary shot: '||r::text);perform pg_sleep(2.05);
  update public.game_seasons set status='locked' where id=s;
- perform pg_temp.range_check((select xp_awarded=50 and status='finished' from public.game_range_sessions where id=v.id),'Season lock lost completed XP');
- perform pg_temp.range_check((select xp from public.game_season_players where season_id=s and player_id=u)=xp_before+250,'Season totals do not include final range XP');
+ perform pg_temp.range_check((select xp_awarded=16 and status='finished' from public.game_range_sessions where id=v.id),'Season lock lost completed XP');
+ perform pg_temp.range_check((select xp from public.game_season_players where season_id=s and player_id=u)=xp_before+93,'Season totals do not include final range XP');
  perform pg_temp.range_check(not has_table_privilege('authenticated','game_private.range_xp_ledger','select') and not has_function_privilege('authenticated','game_private.range_mode_config(text)','execute'),'Private reward internals exposed');
  denied:=false;begin update game_private.range_xp_ledger set delta=1 where player_id=u;exception when raise_exception then denied:=true;end;perform pg_temp.range_check(denied,'XP ledger mutable');
- perform pg_temp.range_check((select sum(delta)=250 and bool_and(l.xp_after=l.xp_before+l.delta) from game_private.range_xp_ledger l where player_id=u),'XP ledger cannot reconcile');
+ perform pg_temp.range_check((select sum(delta)=93 and bool_and(l.xp_after=l.xp_before+l.delta) from game_private.range_xp_ledger l where player_id=u),'XP ledger cannot reconcile');
  -- New season has no old cooldown or range XP while historical rewards remain.
  insert into public.game_seasons(name,status,starting_cash,starting_crates) values('Range difficulty next season','draft',10000,5) returning id into old_season;
  update game_private.season_runtime set season_id=old_season where singleton;

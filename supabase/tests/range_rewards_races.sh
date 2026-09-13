@@ -51,7 +51,7 @@ wait
 psql -v ON_ERROR_STOP=1 <<'SQL'
 do $$declare u uuid:='eeeeeeee-7800-4000-8000-000000000001';begin
  if (select count(*) from public.game_range_sessions where player_id=u)<>1 then raise exception 'Concurrent mode changes bypassed recovery';end if;
- if (select count(*) from game_private.range_xp_ledger where player_id=u)<>1 or (select xp from public.game_players where id=u)<>50 or (select xp_awarded from public.game_range_sessions where player_id=u)<>50 then raise exception 'Concurrent finish did not award exactly one completion';end if;
+ if (select count(*) from game_private.range_xp_ledger where player_id=u)<>1 or (select xp from public.game_players where id=u)<>16 or (select xp_awarded from public.game_range_sessions where player_id=u)<>16 then raise exception 'Concurrent finish did not award exactly one completion';end if;
 end$$;
 select set_config('game.reason','Restore range defaults after CI reward race',false);
 update public.game_settings set value=10 where key='range_rounds';

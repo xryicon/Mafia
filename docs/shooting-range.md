@@ -45,10 +45,21 @@ The original SQL alias x collided with the numeric x column, so to_jsonb(x) retu
 
 ## Difficulty, precision and recovery
 
-Players choose Beginner or Advanced before starting. Beginner defaults to the existing target size/speed and **50 completion XP**. Advanced uses **65% target size**, **250% movement speed** and **150 completion XP**. The same geometry drives server hit tests, client movement and persistent bullet holes. Owner controls expose target size/speed, both rewards, required round participation and cooldown, with audited edits. Active sessions keep their original settings; legacy sessions retain their earlier scoring without retrospective rewards.
+Players choose Beginner or Advanced before starting. Beginner defaults to the existing target size/speed and **up to 50 score XP**. Advanced uses **65% target size**, **250% movement speed** and **up to 150 score XP**. The same geometry drives server hit tests, client movement and persistent bullet holes. Owner controls expose target size/speed, both rewards, required round participation and cooldown, with audited edits. Active sessions keep their original settings; legacy sessions retain their earlier scoring without retrospective rewards.
 
 New sessions score each eligible target from 50 points at the edge to 100 at the exact centre, interpolated by normalized radial distance and rounded to whole points. Both endpoints are configurable; each target still scores once per round.
 
 To earn completion XP, stay until the session ends and fire in the required number of distinct rounds (default: every round). Merely starting and waiting, or ending early, earns no XP. The server records each award once in an immutable private XP ledger, updates the existing player XP and season projection atomically, and adds a personal activity event. Replayed completion requests and concurrent refresh/finish calls cannot pay twice. Expiry on refresh also settles eligible sessions. Season locking settles completed sessions before rankings freeze and stops unfinished attempts; historical awards remain retained.
 
 A shared **600-second cooldown** starts when the session finishes or is ended early. It survives reloads, equipment changes and difficulty changes, and resets with seasonal gameplay. The UI shows the server deadline and automatically re-enables entry when it expires. Database tests include the real scoring RPC, participation, early/idle sessions, reward ledger reconciliation, snapshots, season boundaries, concurrent starts/finishes and cooldown enforcement. Browser tests cover both difficulty choices, smaller targets, completion rewards and mobile recovery displays.
+
+
+## Score XP and bullseye accuracy
+
+For new sessions, XP is `floor(maximum XP × score / maximum possible score)`, capped at the snapshotted maximum. The maximum possible score is rounds × targets per round × bullseye points. Default Beginner and Advanced maxima remain 50 and 150 XP; a half-score session earns 25 or 75. Finishing the session and meeting the round-participation requirement remain necessary. Zero score grants no XP, and creates no reward ledger entry. Existing paid awards and active session reward snapshots remain unchanged.
+
+Accuracy now measures physical precision: each accepted shot gets 100% at the nearest target's centre, decreasing linearly by normalized elliptical distance to 0% at its edge; misses are 0%. Repeated hits keep their physical accuracy but cannot score the same target twice. An immutable private precision row is stored with each shot in the same transaction. Historical precision is reconstructed from retained shot coordinates, aim timing and session geometry without modifying original shot evidence or awarded XP.
+
+The live scoreboard and last-shot readout show server precision; session history and best accuracy use saved precision, not binary hit rate. Advanced average accuracy is the shot-weighted mean across recorded Advanced attempts in the current season, including misses and early exits. Sessions with no shots show no accuracy, and Beginner attempts are excluded. Both raw shots and saved precision survive season archiving.
+
+The current-score XP preview comes from the server. Actual awards refresh the shared power/rank HUD through the existing game update event. Cloud tests exercise partial-score rewards, caps and rounding, zero-score expiry, radial and diagonal precision, retries, weighted averages, early exits, history and live HUD updates alongside the existing reload, sound, wear, bullet-hole and cooldown regressions.
