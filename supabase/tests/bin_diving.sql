@@ -11,7 +11,7 @@ begin
  perform set_config('request.jwt.claim.sub',owner::text,true);
  r:=public.bin_diving_state();
  perform pg_temp.check_bin(jsonb_array_length(r->'districts')=(select count(*) from public.game_districts where archived_at is null),'Dynamic catalog missing districts');
- rules:=(r->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed reward verification','cash_chance',100,'pickaxe_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0,'cash_min',77,'cash_max',77);
+ rules:=(r->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed reward verification','cash_chance',100,'pickaxe_chance',0,'lockpick_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0,'cash_min',77,'cash_max',77);
  r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Owner cannot configure: '||r::text);
  perform pg_temp.check_bin(exists(select 1 from public.game_audit where action='game_bin_rules.update' and actor_id=owner and reason like '%guaranteed reward%'),'Rules change was not audited');
  r:=public.bin_diving_action('configure',rules||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Stale owner edit accepted');
@@ -51,9 +51,9 @@ begin
  insert into public.game_districts(slug,name) values('test-new-bin-district','Newly Opened District') returning id into new_d;
  perform pg_temp.check_bin(exists(select 1 from jsonb_array_elements(public.bin_diving_state()->'districts') x where x->>'id'=new_d::text),'New district requires code edits');
  r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',new_d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(not r?'error','Cannot dive in newly opened district: '||r::text);
- foreach item in array array['pickaxe','pistol_blueprint','bullet_blueprint','nothing'] loop
+ foreach item in array array['pickaxe','lockpick','pistol_blueprint','bullet_blueprint','nothing'] loop
   perform set_config('request.jwt.claim.sub',owner::text,true);
-  rules:=(public.bin_diving_state()->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed item verification','cash_chance',0,'pickaxe_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0);
+  rules:=(public.bin_diving_state()->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed item verification','cash_chance',0,'pickaxe_chance',0,'lockpick_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0);
   if item<>'nothing' then rules:=rules||jsonb_build_object(item||'_chance',100);end if;
   r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Item configuration failed: '||r::text);
   target:=gen_random_uuid();insert into auth.users(id) values(target);perform set_config('request.jwt.claim.sub',target::text,true);perform public.game_state();
