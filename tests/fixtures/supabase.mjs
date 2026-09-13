@@ -18,7 +18,7 @@ import { playerId, token, user } from "./identity.mjs";
 const season={id:"55555555-5555-4555-8555-555555555555",name:"Founding Season",status:"open",starting_cash:10000,starting_crates:5,starts_at:null,ends_at:null,locked_at:null,opened_at:new Date().toISOString(),archived_at:null,reset_at:null,hall_of_fame_places:3};
 const state = {season,
  jobs:[{"id":"docks","name":"Dock errand","district":"THE DOCKS","description":"Build connections.","reward":250,"xp":10,"cooldown":60},{"id":"warehouse","name":"Warehouse shift","district":"INDUSTRIAL QUARTER","description":"Keep goods moving.","reward":600,"xp":20,"cooldown":180},{"id":"courier","name":"Night courier","district":"OLD TOWN","description":"Work the night shift.","reward":1100,"xp":40,"cooldown":360}],
- settings:{market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
+ settings:{closed_beta_starts_at_unix:1790877600,market_fee_percent:5,listing_limit:20,max_listing_quantity:1000,max_unit_price:1000000,offline_batches:24,rank_soldier:250,rank_caporegime:800,rank_underboss:2000},
  permissions:['assets.spawn','economy.manage','roles.manage','players.rename','tickets.manage','chat.delete','audit.view','evidence.view','seasons.manage','seasons.reset'],ledger:[],
  player:{id:playerId,handle:"HarborBoss",cash:10000,xp:0,job_ready_at:"2026-09-10T00:00:00Z",created_at:user.created_at},
  goods:[
@@ -51,7 +51,7 @@ const initialState=structuredClone(state);
 const resetWorld=()=>{Object.assign(state,structuredClone(initialState));prisonSentence=null;prisonInmates=[];prisonAttempt=null;prisonBreakouts=0;prisonReward=50;delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));properties=propertyWorld(districts,state,inventory);skills=skillsWorld(state);crafting=craftingWorld(state,districts,inventory,skills.award,skills.rate);range=rangeWorld(state,inventory,skills.award);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
- settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
+ settings:[{key:"closed_beta_starts_at_unix",value:state.settings.closed_beta_starts_at_unix,minimum:0,maximum:2147483647},{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
  moderator_permissions:["players.warn"],permission_catalog:[{id:"players.warn",owner_only:false}],audit:[]});
 let confirmationUsed=false;
 const server = http.createServer(async(req,res) => {
@@ -63,6 +63,7 @@ const server = http.createServer(async(req,res) => {
  const url=new URL(req.url,"http://127.0.0.1:54329");
  const send=(status,data)=>{res.writeHead(status);res.end(JSON.stringify(data));};
  if(url.pathname==="/health"){send(200,{ok:true});return;}
+ if(url.pathname==="/rest/v1/rpc/closed_beta_state"){send(200,{starts_at:new Date(state.settings.closed_beta_starts_at_unix*1000).toISOString(),server_time:new Date().toISOString()});return;}
  if(url.pathname==="/auth/v1/token"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");if(process.env.GAME_TEST_FIXTURE==="1"&&["fixture-reset","fixture-signup"].includes(p.auth_code)){send(200,{access_token:token,refresh_token:"test-refresh",expires_in:3600,token_type:"bearer",user});return;}send(400,{error:"invalid_grant",error_description:"Invalid test code"});return;}
  if(url.pathname==="/auth/v1/verify"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");if(p.type!=="email"||p.token_hash!=="a".repeat(64)||confirmationUsed){send(403,{code:"otp_expired",message:"Email link is invalid or has expired"});return;}confirmationUsed=true;send(200,{access_token:token,refresh_token:"test-refresh",expires_in:3600,token_type:"bearer",user});return;}
  if(url.pathname==="/auth/v1/resend"&&process.env.GAME_TEST_FIXTURE==="1"){send(200,{});return;}

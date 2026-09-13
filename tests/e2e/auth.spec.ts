@@ -3,7 +3,9 @@ import { test, expect } from "@playwright/test";
 test("public landing page and sign-up are accessible", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Every fortune");
-  await page.getByRole("link", { name: "Enter Blackwater", exact: true }).click();
+  await expect(page.getByText("Closed beta starting on", { exact: true })).toBeVisible();
+  await expect(page.locator(".beta-clock")).toContainText("DAYS");
+  await page.locator(".bw-hero-actions").getByRole("link", { name: "Sign up for closed beta", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Make your name.");
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Confirm password")).toBeVisible();
@@ -36,7 +38,7 @@ test("sign-up catches mismatched passwords before submitting", async ({ page }) 
   await page.getByLabel("Email address").fill("example@example.com");
   await page.getByLabel("New password", { exact: true }).fill("a long passphrase one");
   await page.getByLabel("Confirm password").fill("a long passphrase two");
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Sign up for closed beta" }).click();
   await expect(page.locator("form").getByRole("alert")).toContainText("both passwords match");
 });
 test("mobile layout stays within the viewport", async ({ page }) => {
