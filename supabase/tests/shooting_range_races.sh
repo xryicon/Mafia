@@ -54,3 +54,32 @@ update public.game_settings set value=500 where key='range_fire_interval_ms';
 update public.game_settings set value=1000 where key='range_lag_tolerance_ms';
 select 'PASS: concurrent shots and retries preserve ammunition, condition and shot evidence';
 SQL
+
+# Reload races reuse this test's real equipped weapon and ammunition.
+psql -v ON_ERROR_STOP=1 <<'SQL'
+select set_config('request.jwt.claim.sub','eeeeeeee-7700-4000-8000-000000000001',false);
+select set_config('game.reason','CI reload race supplies',false);
+update public.game_inventory_gear set quantity=quantity+5 where player_id=auth.uid() and equipment_slot='ammo';
+SQL
+for nonce in 4 5; do
+ psql -At -v ON_ERROR_STOP=1 -v "nonce=eeeeeeee-7700-4000-8000-00000000000$nonce" >"/tmp/range-reload-$nonce.txt" <<'SQL' &
+begin;
+select set_config('request.jwt.claim.sub','eeeeeeee-7700-4000-8000-000000000001',true);
+select set_config('range.test_season',game_private.current_season()::text,true);
+select set_config('range.test_session',id::text,true) from public.game_range_sessions where player_id=auth.uid();
+set local role authenticated;
+select public.range_action('reload',jsonb_build_object('season_id',current_setting('range.test_season'),'session_id',current_setting('range.test_session'),'request_id',:'nonce'));
+commit;
+SQL
+done
+wait
+psql -v ON_ERROR_STOP=1 <<'SQL'
+select pg_sleep(1.85);
+select set_config('request.jwt.claim.sub','eeeeeeee-7700-4000-8000-000000000001',false);
+select public.range_state() is not null as ready;
+do $$declare u uuid:=auth.uid();begin
+ if (select count(*) from game_private.range_requests where player_id=u and action='reload')<>1 then raise exception 'Concurrent reloads restarted timer';end if;
+ if (select loaded from game_private.range_magazines where player_id=u)<>7 or (select quantity from public.game_inventory_gear where player_id=u and equipment_slot='ammo')<>7 or (select condition from public.game_inventory_gear where player_id=u and equipment_slot='secondary')<>99 then raise exception 'Reload race changed ammo or weapon condition';end if;
+end$$;
+select 'PASS: concurrent reloads preserve ammunition and start exactly one timer';
+SQL

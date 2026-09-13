@@ -38,3 +38,33 @@ test("Owner weapon wear applies at the range and broken weapons stop mobile shot
  for(const width of [360,390,768,1024,1536]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"range width "+width).toBe(true);}
  await page.getByRole("button",{name:"End session",exact:true}).click();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();const d=await rpc(request,"range_state");expect(d.stats.shots).toBe(1);expect(d.ammo.quantity).toBe(4);
 });
+
+test("ten shots require reload, R works, and a refresh cannot refill the magazine",async({page,request})=>{
+ await equip(request,14);await page.setViewportSize({width:1536,height:1150});await start(page);await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');
+ for(let i=0;i<10;i++){await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-magazine-counter b')).toHaveText(`${9-i} / 10`);}
+ await expect(page.locator('.range-lane')).toHaveAttribute('aria-disabled','true');await expect(page.locator('.range-firebar strong')).toHaveText('4');await page.reload();await expect(page.locator('.range-magazine-counter b')).toHaveText('0 / 10');
+ await page.locator('.range-lane').focus();await page.keyboard.press('r');await expect(page.locator('.range-reload-progress')).toBeVisible();await expect(page.locator('.range-lane')).toHaveAttribute('aria-disabled','true');await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await capture(page,'range-reloading');
+ await expect(page.locator('.range-magazine-counter b')).toHaveText('4 / 10');await expect(page.locator('.range-firebar strong')).toHaveText('4');await expect(page.locator('.range-condition strong')).toHaveText('90 / 100');await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');
+ const r=await rpc(request,'range_state');expect(r.session.shots).toBe(10);expect(r.ammo.quantity).toBe(4);
+ await page.setViewportSize({width:390,height:844});await page.locator('.range-firebar').scrollIntoViewIfNeeded();await capture(page,'range-reload-mobile');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("sounds play on accepted shots and reloads; mute persists and leaving closes audio",async({page,request})=>{
+ await equip(request,14);let closed=0;await page.exposeFunction('__closedAudio',()=>closed++);
+ await page.addInitScript(()=>{const w=window as any;w.__rangeSounds=[];const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args:any[]){w.__rangeAudioContext=this.context;w.__rangeSounds.push({duration:this.buffer?.duration,rate:this.playbackRate.value});return (start as any).apply(this,args);};const close=AudioContext.prototype.close;AudioContext.prototype.close=function(){void w.__closedAudio();return close.call(this);};});
+ await start(page);await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(1);
+ await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>Math.abs(s.duration-.85)<.001&&s.rate===1).length)).toBe(1);
+ await page.getByRole('button',{name:'Reload R',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===1.8).length)).toBe(1);await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');
+ await page.getByRole('button',{name:'Mute range sound',exact:true}).click();await expect(page.getByRole('button',{name:'Enable range sound',exact:true})).toHaveAttribute('aria-pressed','false');
+ await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-firebar strong')).toHaveText('12');expect(await page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>Math.abs(s.duration-.85)<.001&&s.rate===1).length)).toBe(1);
+ await page.locator('.range-heading a').click();await expect.poll(()=>closed).toBe(1);await page.locator('.command-quick').getByRole('link',{name:/Shooting Range/i}).click();await expect(page.getByRole('button',{name:'Enable range sound',exact:true})).toHaveAttribute('aria-pressed','false');
+ await page.getByRole('button',{name:'Enable range sound',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(2);
+ await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeAudioContext.state)).toBe('suspended');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(3);
+});
+
+test("an interrupted reload reply keeps the original timer and bullets",async({page,request})=>{
+ await equip(request,14);await start(page);await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-magazine-counter b')).toHaveText('9 / 10');
+ let first='';await page.route('**/rest/v1/rpc/range_action',async route=>{if(!first){first=route.request().postData()!;await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(first);await route.continue();}});
+ await page.getByRole('button',{name:'Reload R',exact:true}).click();await expect(page.getByRole('button',{name:'Retry safely'})).toBeVisible();const before=await rpc(request,'range_state');await page.getByRole('button',{name:'Retry safely'}).click();const after=await rpc(request,'range_state');expect(after.weapons[0].magazine.ready_at).toBe(before.weapons[0].magazine.ready_at);
+ await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');await expect(page.locator('.range-firebar strong')).toHaveText('13');
+});

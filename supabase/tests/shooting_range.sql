@@ -38,6 +38,7 @@ begin
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int);
  res:=public.range_action('fire',q);perform pg_temp.check_range(res?'error' and (select quantity from public.game_inventory_gear where id=a)=1,'Fired an unequipped weapon');
  res:=public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g,'equipment_slot','secondary'));perform pg_temp.check_range(not res?'error','Worn weapon re-equip failed');
+ res:=public.range_action('reload',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id));perform pg_temp.check_range(not res?'error','Reload after re-equipping failed');perform pg_sleep(1.85);
  update public.game_inventory_gear set condition=1 where id=g;
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int,'x',20,'y',45);
  res:=public.range_action('fire',q);perform pg_temp.check_range(not res?'error' and (res->>'points')::int=0,'An already scored target paid points again');

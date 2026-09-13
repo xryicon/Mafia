@@ -1,0 +1,42 @@
+begin;
+create function pg_temp.mag_check(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+select set_config('game.reason','CI ten-round magazines and reload conservation',true);
+update public.game_settings set value=200 where key='range_fire_interval_ms';
+do $$declare u uuid:=gen_random_uuid();other uuid:=gen_random_uuid();s uuid:=game_private.current_season();sid uuid;gun uuid;ammo uuid;started timestamptz;ready timestamptz;p jsonb;r jsonb;elapsed int;begin
+ insert into auth.users(id) values(u),(other);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
+ update public.game_inventory set quantity=0 where player_id=u;
+ insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,u,'homemade-pistol',1),(s,u,'homemade-bullets',12);
+ perform public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:homemade-pistol','equipment_slot','secondary'));
+ perform public.inventory_action('equip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','good:homemade-bullets','equipment_slot','ammo','quantity',12));
+ r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary'));perform pg_temp.mag_check(not r?'error','Session failed');sid:=(r->>'session_id')::uuid;
+ select weapon_id,started_at into gun,started from public.game_range_sessions where id=sid;select id into ammo from public.game_inventory_gear where player_id=u and equipment_slot='ammo';
+ perform pg_temp.mag_check((select loaded=10 from game_private.range_magazines where weapon_id=gun),'First magazine is not ten rounds');
+ for i in 1..10 loop
+  elapsed:=floor(extract(epoch from(clock_timestamp()-started))*1000)::int;r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',elapsed,'x',0,'y',0));perform pg_temp.mag_check(not r?'error','Shot failed: '||r::text);perform pg_sleep(.22);
+ end loop;
+ p:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',floor(extract(epoch from(clock_timestamp()-started))*1000)::int,'x',0,'y',0,'loaded',999,'ammo',999);
+ r:=public.range_action('fire',p);perform pg_temp.mag_check(r->>'error' like '%Magazine empty%','Eleventh shot did not require reload');
+ perform pg_temp.mag_check((select loaded=0 from game_private.range_magazines where weapon_id=gun) and (select quantity=2 from public.game_inventory_gear where id=ammo) and (select condition=90 from public.game_inventory_gear where id=gun),'Magazine exhaustion changed bullets or wear incorrectly');
+ perform public.range_action('finish',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid));r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary'));sid:=(r->>'session_id')::uuid;select started_at into started from public.game_range_sessions where id=sid;
+ r:=public.range_state();perform pg_temp.mag_check((r->'weapons'->0->'magazine'->>'loaded')::int=0,'Starting another session refilled magazine');
+ p:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'reload_ms',0,'magazine_capacity',9999);
+ r:=public.range_action('reload',p);perform pg_temp.mag_check(not r?'error','Reload failed: '||r::text);ready:=(r->>'reload_ready_at')::timestamptz;
+ r:=public.range_action('reload',p);perform pg_temp.mag_check((r->>'reload_ready_at')::timestamptz=ready,'Reload retry restarted timer');
+ r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(r?'error','Overlapping reload accepted');
+ r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',floor(extract(epoch from(clock_timestamp()-started))*1000)::int,'x',0,'y',0));perform pg_temp.mag_check(r?'error','Fired during reload');
+ perform pg_temp.mag_check(ready>=started+interval '1.8 seconds' and (select quantity=2 from public.game_inventory_gear where id=ammo),'Client bypassed reload time or reload consumed bullets');
+ perform pg_sleep(1.85);r:=public.range_state();perform pg_temp.mag_check((r->'weapons'->0->'magazine'->>'loaded')::int=2 and not(r->'weapons'->0->'magazine'->>'reloading')::boolean,'Partial magazine did not load actual remaining bullets');
+ r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',floor(extract(epoch from(ready-started))*1000)::int-100,'x',0,'y',0));perform pg_temp.mag_check(r->>'error' like '%before reloading finished%','Backdated reload shot accepted');
+ for i in 1..2 loop
+  r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',floor(extract(epoch from(clock_timestamp()-started))*1000)::int,'x',0,'y',0));perform pg_temp.mag_check(not r?'error','Shot after reload failed');perform pg_sleep(.22);
+ end loop;
+ perform pg_temp.mag_check((select quantity=0 from public.game_inventory_gear where id=ammo) and (select loaded=0 from game_private.range_magazines where weapon_id=gun) and (select condition=88 from public.game_inventory_gear where id=gun),'Reload generated bullets or lost condition');
+ perform pg_temp.mag_check((select sum(delta) from public.game_inventory_ledger where gear_id=ammo)=0,'Consumed ammo ledger does not reconcile');
+ r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(r?'error','Reload succeeded without bullets');
+ perform set_config('request.jwt.claim.sub',other::text,true);perform public.game_state();r:=public.range_action('reload',p||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.mag_check(r?'error','Foreign player reloaded weapon');
+ perform pg_temp.mag_check(not has_function_privilege('authenticated','game_private.range_magazine_state(uuid,jsonb)','execute') and not has_table_privilege('authenticated','game_private.range_magazines','update'),'Magazine internals exposed');
+ update public.game_user_roles set role_id='owner' where player_id=other;
+ r:=public.range_manage('weapon','{"good_id":"homemade-pistol","ammo_good_id":"homemade-bullets","condition_max":100,"wear_per_shot":1,"enabled":true,"version":1,"magazine_capacity":10,"reload_ms":2500,"reason":"CI verify reload tuning"}');perform pg_temp.mag_check(not r?'error' and (select reload_ms=2500 from public.game_range_weapons where good_id='homemade-pistol'),'Owner cannot configure reload timing');
+end$$;
+select 'PASS: ten-round magazine, reload timing, persistence, partial loads, replay, no extra ammunition and private controls';
+rollback;

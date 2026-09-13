@@ -1,5 +1,7 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    volume: "M11 4L5 9H2v6h3l6 5V4 M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14",
+    "volume-off": "M11 4L5 9H2v6h3l6 5V4 M16 9l6 6 M22 9l-6 6",
     target: "M12 1v5 M12 18v5 M1 12h5 M18 12h5 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
     heart: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z",
     weight: "M6 8h12l3 13H3L6 8 M9 8V5a3 3 0 0 1 6 0v3",
