@@ -137,4 +137,6 @@ jobs:
           bash supabase/tests/property_lease_races.sh
 
       - name: Blueprint learning and property crafting
-        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/crafting.sql
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/crafting.sql
+          bash supabase/tests/crafting_races.sh

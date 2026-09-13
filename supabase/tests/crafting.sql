@@ -15,6 +15,7 @@ begin
  update public.game_players set cash=10000 where id=a;
  perform set_config('request.jwt.claim.sub',a::text,true);
  select p.id,b.id into pid,bid from public.game_district_plots p join public.game_district_buildings b on b.plot_id=p.id where p.season_id=s and p.code='W25';
+ update public.game_property_leases set released_at=clock_timestamp() where building_id=bid and released_at is null;
  res:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',pid,'rent',300,'version',1,'request_id',gen_random_uuid()));
  perform pg_temp.verify(not res?'error','Lease fixture failed '||res);
  insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'pistol_blueprint',2),(s,a,'bullet_blueprint',1),(s,a,'iron-ingot',12),(s,a,'copper-ingot',8);

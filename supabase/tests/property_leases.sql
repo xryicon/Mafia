@@ -104,7 +104,7 @@ begin
  res:=public.property_action('remove_station',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Owned station could not be removed');
  -- Historical financial and installation records cannot be destroyed.
  denied:=false;begin delete from public.game_property_leases where building_id=bid;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Lease history deleted');
- denied:=false;begin truncate public.game_property_stations;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Installation history truncated');
+ denied:=false;begin truncate public.game_property_stations cascade;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Installation history truncated');
  raise notice 'City lease, station, expiry, inventory, authorization and ledger checks passed';
 end$$;
 rollback;

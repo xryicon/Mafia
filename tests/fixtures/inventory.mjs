@@ -1,7 +1,7 @@
 export function inventoryWorld(state,bin,setTool=()=>{}){
  const stores=[],entries=[],gear=[],deliveries=[],positions=new Map(),requests=new Map(),metadata={},rules=[{building_type:"warehouse",capacity:2000,enabled:true,version:1},{building_type:"garage",capacity:200,enabled:true,version:1}];
  let version=1,nextGear=1;
- const goods=()=>state.goods.map(g=>({id:g.id,name:g.name,category:g.id==="pickaxe"?"tools":g.id.endsWith("_blueprint")?"blueprints":["whiskey","silk","steel"].includes(g.id)?"commodities":"materials",description:"Goods from the Blackwater player economy.",weight_grams:g.id==="pickaxe"?2500:g.id.endsWith("_blueprint")?50:["whiskey","steel"].includes(g.id)?2000:1000,equipment_slots:g.id==="pickaxe"?["utility"]:[],...metadata[g.id]}));
+ const goods=()=>state.goods.map(g=>({id:g.id,name:g.name,category:g.id==="pickaxe"?"tools":g.id.endsWith("_blueprint")?"blueprints":["whiskey","silk","steel"].includes(g.id)?"commodities":"materials",description:"Goods from the Blackwater player economy.",weight_grams:g.id==="pickaxe"?2500:g.id.endsWith("_blueprint")?50:["whiskey","steel"].includes(g.id)?2000:1000,equipment_slots:g.id==="pickaxe"?["utility"]:[],...g.inventory_meta,...metadata[g.id]}));
  const weight=id=>goods().find(g=>g.id===id)?.weight_grams??1000;
  const load=()=>({slots:20,weight_grams:100000,used_slots:state.inventory.filter(x=>x.quantity>0).length+gear.filter(x=>x.location==="carried").length,used_grams:state.inventory.reduce((n,x)=>n+x.quantity*weight(x.good_id),0)+gear.filter(x=>x.location!=="storage").reduce((n,x)=>n+x.quantity*weight(x.good_id),0)});
  const fits=(id,n)=>{const c=load();return c.used_grams+n*weight(id)<=c.weight_grams&&(state.inventory.some(x=>x.good_id===id&&x.quantity>0)||c.used_slots<c.slots);};
@@ -63,5 +63,5 @@ export function inventoryWorld(state,bin,setTool=()=>{}){
  };
  const cityLease=(id,p,b,ends_at)=>{const old=stores.find(s=>s.id===id);if(old){old.lease={ends_at,active:true};return;}stores.push({id,plot_id:p.id,building_type:b.building_type,name:b.building_type==="garage"?"Small garage":"Warehouse",code:p.code,district:"The Waterfront",district_slug:"the-waterfront",construction_status:"ready",ready_at:new Date().toISOString(),condition:100,listed:false,locked:false,contents:[],lease:{ends_at,active:true}});};
  const station=(id,space)=>{const s=stores.find(s=>s.id===id);if(s)s.station_space=space;};
- return {read,action,manage,setup,cityLease,station};
+ const delivery=(good_id,quantity,reason)=>deliveries.push({id:"craft-delivery-"+(deliveries.length+1),good_id,quantity,reason,created_at:new Date().toISOString()}); return {read,action,manage,setup,cityLease,station,delivery};
 }
