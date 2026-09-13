@@ -143,3 +143,8 @@ jobs:
 
       - name: Personal health and armour
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/vitals.sql
+
+      - name: Equipment stacking and ammunition quantities
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/equipment_stacking.sql
+          bash supabase/tests/equipment_stacking_races.sh

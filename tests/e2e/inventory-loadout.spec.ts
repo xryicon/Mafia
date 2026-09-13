@@ -31,3 +31,25 @@ test("full carried weight blocks delivery collection until room is freed",async(
  await page.getByLabel("Search inventory").fill("Whiskey");await page.getByRole("button",{name:"Store",exact:true}).click();await page.getByLabel("Quantity",{exact:true}).fill("20");await page.getByRole("button",{name:"Confirm storage"}).click();await expect(page.getByRole("dialog")).toHaveCount(0);
  await page.locator(".inv-deliveries").getByRole("button",{name:"Collect",exact:true}).click();await page.getByLabel("Quantity",{exact:true}).fill("10");await page.getByRole("button",{name:"Collect goods",exact:true}).click();await expect(page.getByRole("dialog")).toHaveCount(0);await expect(page.locator(".inv-deliveries")).toHaveCount(0);
 });
+
+
+test("unequipped pristine equipment rejoins its carried stack",async({page,request})=>{
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true}});await page.setViewportSize({width:1672,height:1600});await page.goto("/inventory");
+ const stack=()=>page.locator(".inv-slot .inv-item").filter({hasText:"Pickaxe"});
+ await stack().dragTo(page.getByRole("button",{name:"Utility, empty",exact:true}));await expect(stack()).toContainText("×2");
+ await page.getByRole("button",{name:"Utility: Pickaxe",exact:true}).dragTo(stack());
+ await expect(page.getByRole("button",{name:"Utility, empty",exact:true})).toBeVisible();await expect(stack()).toHaveCount(1);await expect(stack()).toContainText("×3");
+ await page.reload();await expect(stack()).toHaveCount(1);await expect(stack()).toContainText("×3");
+});
+test("choose ammunition quantity, top up by drag, and restack on mobile",async({page,request})=>{
+ await request.post("http://127.0.0.1:54329/__crafting_setup",{headers,data:{grant:{"homemade-bullets":100}}});await page.setViewportSize({width:1672,height:1600});await page.goto("/inventory");
+ const rounds=()=>page.locator(".inv-slot .inv-item").filter({hasText:"Homemade bullets"});
+ await rounds().click();await page.getByRole("button",{name:"Equip Ammo",exact:false}).click();await page.getByLabel("Amount to equip").fill("30");await page.getByRole("button",{name:"Confirm equipment",exact:true}).click();
+ const ammo=page.getByRole("button",{name:"Ammo: Homemade bullets",exact:true});await expect(ammo).toContainText("×30 equipped");await expect(rounds()).toContainText("×70");
+ await rounds().dragTo(ammo);await expect(page.getByRole("dialog")).toBeVisible();await page.getByLabel("Amount to equip").fill("71");await expect(page.getByRole("button",{name:"Confirm equipment",exact:true})).toBeDisabled();
+ await page.getByLabel("Amount to equip").fill("20");await page.getByRole("button",{name:"Confirm equipment",exact:true}).click();await expect(ammo).toContainText("×50 equipped");await expect(rounds()).toContainText("×50");
+ await page.reload();await expect(ammo).toContainText("×50 equipped");await page.setViewportSize({width:390,height:844});await ammo.click();await page.getByRole("button",{name:"Unequip",exact:true}).click();
+ await expect(page.getByRole("button",{name:"Ammo, empty",exact:true})).toBeVisible();await expect(rounds()).toHaveCount(1);await expect(rounds()).toContainText("×100");
+ await rounds().click();await page.getByRole("button",{name:"Move",exact:true}).click();await page.getByRole("button",{name:"Ammo, empty",exact:true}).click();await page.getByRole("button",{name:"Use maximum",exact:true}).click();await expect(page.getByLabel("Amount to equip")).toHaveValue("100");await page.getByRole("button",{name:"Confirm equipment",exact:true}).click();await expect(ammo).toContainText("×100 equipped");await expect(rounds()).toHaveCount(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
