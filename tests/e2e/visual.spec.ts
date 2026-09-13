@@ -65,7 +65,7 @@ test("readability across every game workspace at desktop and phone widths",async
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
  await page.emulateMedia({reducedMotion:"reduce"});
- const routes=["/dashboard","/market","/inventory","/bank","/gangs","/telegrams","/bin-diving","/refineries","/districts","/districts/mines-and-quarries","/districts/the-waterfront","/districts/manage","/players","/profile","/seasons","/ledger","/support","/account","/owner","/staff"];
+ const routes=["/skills","/dashboard","/market","/inventory","/bank","/gangs","/telegrams","/bin-diving","/refineries","/districts","/districts/mines-and-quarries","/districts/the-waterfront","/districts/manage","/players","/profile","/seasons","/ledger","/support","/account","/owner","/staff"];
  for(const width of [1320,390]){
   await page.setViewportSize({width,height:940});
   for(const path of routes){

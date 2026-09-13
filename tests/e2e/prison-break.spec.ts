@@ -20,6 +20,7 @@ test("dashboard-styled lock minigame frees an inmate and updates the leaderboard
  await expect(page.locator(".prison-outcome p:not(.eyebrow)")).toContainText("earned +50 power");
  await expect(page.locator(".prison-leaderboard")).toContainText("HarborBoss");
  await expect(page.locator(".prison-leaderboard")).toContainText("1");
+ const skills=await(await request.post(fixture+"/rest/v1/rpc/skills_state",{headers:{Authorization:"Bearer "+token},data:{}})).json();expect(skills.skills.find((s:any)=>s.id==="lockpicking").xp).toBe(50);
  await page.screenshot({path:"test-results/prison-break-success.png",fullPage:true});
 });
 

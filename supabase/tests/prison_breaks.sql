@@ -41,6 +41,7 @@ begin
  perform pg_temp.verify(v->>'outcome'='success','Idempotent success retry changed its result');
  reset role;
  perform pg_temp.verify((select xp from public.game_players where id=rescuer)=before_xp+77,'Successful breakout did not award configured power exactly once');
+ perform pg_temp.verify((select count(*)=1 and sum(delta)=77 from game_private.skill_xp_ledger where skill_id='lockpicking' and source_id=attempt_id),'Successful lock did not award skill XP exactly once');
  perform pg_temp.verify((select value from public.game_season_stats where season_id=s and player_id=rescuer and metric='breakouts')=1,'Breakout metric was not recorded');
  perform pg_temp.verify((select released_at is not null from public.game_prison_sentences where id=sentence_id),'Successful breakout did not release the inmate');
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
