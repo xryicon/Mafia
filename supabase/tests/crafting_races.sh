@@ -6,6 +6,7 @@ do $$declare u uuid:='ffffffff-9000-4000-8000-000000000001';s uuid;pid uuid;q js
  insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();s:=game_private.current_season();
  perform set_config('game.reason','CI crafting concurrency fixtures',true);update public.game_players set cash=10000 where id=u;
  update public.game_settings set value=300 where key='actions_per_minute';
+ update public.game_storage_rules set capacity=2000,enabled=true where building_type='warehouse';
  select id into pid from public.game_district_plots where season_id=s and code='W26';
  q:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',pid,'version',1,'rent',1500,'request_id',gen_random_uuid()));if q?'error' then raise exception 'Rent: %',q;end if;
  q:=public.property_action('install_station',jsonb_build_object('season_id',s,'plot_id',pid,'cost',500,'space',20,'request_id',gen_random_uuid()));if q?'error' then raise exception 'Station: %',q;end if;
