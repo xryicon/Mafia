@@ -24,7 +24,7 @@ for action in learn start collect; do
 begin;
 select set_config('request.jwt.claim.sub','ffffffff-9000-4000-8000-000000000001',true);
 select set_config('craft.test.payload',jsonb_build_object('season_id',p.season_id,'recipe_id','homemade-pistol','version',1,'source','carried','batches',1,'building_id',b.id,'destination','carried',
-'job_id',(select id from public.game_season_jobs where player_id='ffffffff-9000-4000-8000-000000000001' and kind='crafting' order by ready_at limit 1),
+'job_id',case when :'action'='collect' then (select id from public.game_season_jobs where player_id='ffffffff-9000-4000-8000-000000000001' and kind='crafting' order by ready_at limit 1) else null end,
 'request_id',md5(:'nonce'||:'action')::uuid)::text,true)
 from public.game_district_plots p join public.game_district_buildings b on b.plot_id=p.id where p.season_id=game_private.current_season() and p.code='W26';
 set local role authenticated;

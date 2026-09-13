@@ -81,7 +81,10 @@ declare available integer;take integer:=0;
 begin
  if source not in ('carried','storage','both') or source is null or n<1 or u is distinct from auth.uid() then raise exception 'Invalid material source.';end if;
  if source in ('storage','both') then
-  if bid is null or not game_private.property_access(s,u,bid,true) then raise exception 'An active property is required to use its materials.';end if;
+  if bid is null or not game_private.property_access(s,u,bid,true) or not exists(
+   select 1 from public.game_district_buildings b where b.id=bid and
+   (b.owner_type='player' and b.owner_id=u or exists(select 1 from public.game_property_leases l where l.building_id=bid and l.player_id=u and l.season_id=s and l.released_at is null and l.ends_at>clock_timestamp())))
+   then raise exception 'An active property is required to use its materials.';end if;
   select quantity into available from public.game_storage_inventory where season_id=s and player_id=u and building_id=bid and good_id=g for update;
   take:=least(n,coalesce(available,0));
   if take>0 then update public.game_storage_inventory set quantity=quantity-take where season_id=s and player_id=u and building_id=bid and good_id=g;end if;
