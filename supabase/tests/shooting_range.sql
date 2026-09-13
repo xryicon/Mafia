@@ -28,7 +28,7 @@ begin
   res#>'{state,session,last_shot}'=(select jsonb_build_object('id',shot_row.id,'hit',shot_row.hit,'points',shot_row.points,'round',shot_row.round,'lane',shot_row.lane,'x',shot_row.x,'y',shot_row.y,'elapsed_ms',shot_row.elapsed_ms,'created_at',shot_row.created_at) from public.game_range_shots shot_row where shot_row.session_id=v.id),
   'Rendered shot fields differ from the accepted database record');
  perform pg_temp.check_range((res#>>'{state,session,last_shot,elapsed_ms}')::int=(q->>'elapsed_ms')::int and res#>'{state,session,last_shot,x}'='20'::jsonb and res#>'{state,session,last_shot,y}'='45'::jsonb,'Impact coordinates or timestamp missing from RPC');
- again:=public.range_action('fire',q);perform pg_temp.check_range(again->>'points'=res->>'points' and (select count(*) from public.game_range_shots where session_id=v.id)=1,'Shot retry duplicated a shot');
+ again:=public.range_action('fire',q);perform pg_temp.check_range(again#>'{state,session,last_shot}'=res#>'{state,session,last_shot}','Retry changed the rendered shot identity');perform pg_temp.check_range(again->>'points'=res->>'points' and (select count(*) from public.game_range_shots where session_id=v.id)=1,'Shot retry duplicated a shot');
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=99 and (select quantity from public.game_inventory_gear where id=a)=2,'Shot did not consume exactly one bullet and one condition');
  res:=public.range_action('fire',q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',999999));perform pg_temp.check_range(res?'error','Future shot accepted');
  res:=public.range_action('fire',q||jsonb_build_object('x',50));perform pg_temp.check_range(res?'error','Same reference accepted changed coordinates');
