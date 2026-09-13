@@ -18,7 +18,7 @@
 .command-city .estate-dropdown { font-size:15px; }
 .command-city .estate-dropdown a { min-height:42px; display:flex; align-items:center; }
 .command-nav-badge { font-size:12px; min-width:18px; height:18px; top:12px; }
-.command-header-stock,.command-header-bell { min-height:46px; }
+.command-header-bell { min-height:46px; }
 .command-city .estate-footer nav a,.command-city .estate-footer>small { font-size:12px; line-height:1.6; }
 .command-city #main :is(input,select,textarea) { font-size:16px; }
 .command-city #main :is(input,select):not([type=checkbox]):not([type=radio]):not([type=range]) { min-height:44px; }
@@ -151,7 +151,7 @@
 
 /* Switch layouts before larger type crowds the data. */
 @media (max-width:1600px) {
- .command-header-stock,.command-header-bell { display:none; }
+ .command-header-bell { display:none; }
  .command-dashboard { grid-template-columns:245px minmax(0,1fr) 290px; }
  .market-columns { grid-template-columns:220px minmax(0,1fr) 290px; }
  .market-lot { grid-template-columns:minmax(175px,1.4fr) 1fr 105px; }
@@ -269,3 +269,17 @@
 @media(max-width:600px) {
  .inv-slot-grid .inv-item-art { height:158px; }
 }
+
+/* Personal health and armour remain visible at every dashboard breakpoint. */
+.command-dashboard .command-player-stats>.command-vital{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 12px;padding:10px 0}
+.command-player-stats>.command-vital dd{display:contents}
+.command-vital-number{grid-column:2;grid-row:1;justify-self:end;white-space:nowrap;font-size:14px;color:#e6ddc8}
+.command-vital-number small{font-size:12px;color:#aab9b2}
+.command-vital-number b{font-size:12px;color:#e0b87c;margin-left:7px}
+.command-vital-track{display:block;grid-column:1/-1;grid-row:2;position:relative;width:100%;height:10px;overflow:hidden;background:#40525455;border:1px solid #87937d35}
+.command-vital-track>i{display:block;height:100%;background:linear-gradient(90deg,#48745b,#82b58a);transition:width .35s ease}
+.command-vital-armour .command-vital-track>i{background:linear-gradient(90deg,#496675,#8aaebd)}
+.command-vital-health dt svg{color:#93b991}
+.command-vital-armour dt svg{color:#a1bac8}
+.command-vital-track>em{position:absolute;right:0;bottom:0;height:4px;background:#d6ae71}
+@media(prefers-reduced-motion:reduce){.command-vital-track>i{transition:none}}

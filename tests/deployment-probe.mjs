@@ -154,3 +154,5 @@ if(craftingDeployed){
  }
  console.log(JSON.stringify({craftingProtectedRoute:r.status}));
 }
+
+console.log(JSON.stringify({playerVitalsDeployed:styles.includes(".command-vital-health")&&styles.includes(".command-vital-armour"),stockCounterRemoved:!styles.includes(".command-header-stock")}));
