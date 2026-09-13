@@ -1,4 +1,4 @@
-export function craftingWorld(state,world,inventory){
+export function craftingWorld(state,world,inventory,awardSkill=()=>{},skillRate=()=>10){
  const recipes=[
  {id:"homemade-pistol",name:"Homemade pistol",description:"A crafted Blackwater sidearm.",blueprint_good_id:"pistol_blueprint",output_good_id:"homemade-pistol",output_units:1,seconds:150,materials:{"iron-ingot":4,"copper-ingot":2},enabled:true,version:1},
  {id:"homemade-bullets",name:"Homemade bullets",description:"Ammunition for the player economy.",blueprint_good_id:"bullet_blueprint",output_good_id:"homemade-bullets",output_units:12,seconds:60,materials:{"iron-ingot":1,"copper-ingot":1},enabled:true,version:1}];
@@ -19,14 +19,14 @@ export function craftingWorld(state,world,inventory){
  if(Object.entries(r.materials).some(([g,n])=>stock(g,p.building_id,p.source)<n*p.batches))return {error:"Not enough materials."};
  const inputs=Object.fromEntries(Object.entries(r.materials).map(([g,n])=>[g,n*p.batches]));for(const [g,n] of Object.entries(inputs))consume(g,n,p.building_id,p.source);
  const start=Math.max(Date.now(),...jobs.filter(j=>j.station_id===station.id&&j.status==="queued").map(j=>Date.parse(j.ready_at)));
- jobs.push({id:"craft-job-"+(jobs.length+1),status:"queued",ready_at:new Date(start+r.seconds*p.batches*1000).toISOString(),starts_at:new Date(start).toISOString(),created_at:new Date().toISOString(),recipe_id:r.id,recipe_name:r.name,output_good_id:r.output_good_id,output_units:r.output_units*p.batches,inputs,station_id:station.id,building_id:station.building_id,code:station.code});
+ jobs.push({skill_xp:Math.max(1,Math.floor(r.seconds*p.batches*skillRate()/60)),id:"craft-job-"+(jobs.length+1),status:"queued",ready_at:new Date(start+r.seconds*p.batches*1000).toISOString(),starts_at:new Date(start).toISOString(),created_at:new Date().toISOString(),recipe_id:r.id,recipe_name:r.name,output_good_id:r.output_good_id,output_units:r.output_units*p.batches,inputs,station_id:station.id,building_id:station.building_id,code:station.code});
  message="Materials reserved. Crafting job added to this station.";}
  }else{const job=jobs.find(j=>j.id===p.job_id&&j.status==="queued");if(!job)return {error:"Job no longer waiting."};
  if(kind==="cancel"){for(const [g,n] of Object.entries(job.inputs))inventory.delivery(g,n,"Returned crafting materials");job.status="cancelled";message="Job cancelled. Materials are waiting in Inventory deliveries for collection.";}
  else if(kind==="collect"){if(Date.parse(job.ready_at)>Date.now())return {error:"This crafting job is still running."};const d=inventory.read(),good=d.goods.find(g=>g.id===job.output_good_id);
  if(p.destination==="storage"){const st=d.stores.find(s=>s.id===job.building_id);if(!st||st.capacity-st.used<job.output_units)return {error:"Free up storage space."};credit(good.id,job.output_units,st.id);}
  else{if(d.capacity.used_grams+good.weight_grams*job.output_units>d.capacity.weight_grams)return {error:"Free up carried slots or weight."};credit(good.id,job.output_units);}
- job.status="completed";message="Crafted items collected. Ready to store, trade or equip.";}else return {error:"Unsupported action."};}
+ job.status="completed";awardSkill("crafting",job.id,job.skill_xp,"Collected "+job.recipe_name);message="Crafted items collected. Ready to store, trade or equip.";}else return {error:"Unsupported action."};}
  const result={message};requests.set(p.request_id,{key,result});return result;};
  const manage=p=>{if(!state.permissions.includes("roles.manage"))return {error:"Crafting management permission required."};const r=recipes.find(r=>r.id===p.id);if(!r||r.version!==p.version)return {error:"Recipe changed."};Object.assign(r,p,{version:r.version+1});return {message:"Recipe saved. Already queued jobs keep their original materials and output."};};
  const setup=p=>{ensure();if(p.grant)for(const [g,n] of Object.entries(p.grant))credit(g,n);if(p.ready)for(const j of jobs)j.ready_at=new Date(Date.now()-1000).toISOString();if(p.empty)state.inventory=[];};

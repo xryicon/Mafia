@@ -19,6 +19,7 @@ import "./readability.css";
 import "./properties.css";
 import "./crafting.css";
 import "./range.css";
+import "./skills.css";
 import "./prison.css";
 export const metadata:Metadata={
  metadataBase:new URL("https://mafia.xryicon.workers.dev"),

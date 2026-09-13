@@ -1,0 +1,8 @@
+import type {Season} from "./seasons";
+export type SkillId="crafting"|"sharpshooting"|"lockpicking";
+export type Skill={id:SkillId;name:string;description:string;xp_to_20:number;version:number;display_order:number;xp:number;level:number;level_xp:number;next_level_xp:number|null;thresholds:{level:number;xp:number}[]};
+export type SkillsState={season:Season;player_id:string;server_time:string;max_level:20;can_manage:boolean;crafting_xp_per_minute:number;skills:Skill[];recent:{id:string;skill_id:SkillId;delta:number;description:string;created_at:string}[]};
+export const skillTheme:Record<SkillId,{icon:string;image:string;caption:string;href:string;action:string}>={crafting:{icon:"tools",image:"/art/crafting/homemade-pistol.webp",caption:"THE WORKSHOP",href:"/crafting",action:"Open crafting stations"},sharpshooting:{icon:"target",image:"/art/shooting-range.png",caption:"THE FIRING LINE",href:"/shooting-range",action:"Enter shooting range"},lockpicking:{icon:"lock",image:"/art/command-city.jpg",caption:"BLACKWATER ISLAND",href:"/districts/blackwater-island",action:"Visit Blackwater Island"}};
+// Owner preview only. Player levels and actual thresholds come from the database.
+export function skillThreshold(level:number,total:number){const step=level-1;return step+Math.floor((total-19)*step*step/361);}
+export function skillProgress(skill:Skill){return skill.next_level_xp===null?100:Math.max(0,Math.min(100,(skill.xp-skill.level_xp)/(skill.next_level_xp-skill.level_xp)*100));}
