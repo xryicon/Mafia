@@ -11,6 +11,7 @@ import "./operations.css";
 import "./bank.css";
 import "./inventory.css";
 import "./player-profile.css";
+import "./gangs.css";
 import "./market.css";
 import "./commodities.css";
 import "./mining.css";

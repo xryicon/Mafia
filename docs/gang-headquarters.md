@@ -1,0 +1,13 @@
+# Gang headquarters
+
+Gangs uses the shared Blackwater HUD and artwork with a searchable register, headquarters, member roster, join requests, shared bank and activity log. Existing gang ownership and memberships are preserved. All existing members start as Associates; the founding owner remains the Don independently of the member rank.
+
+Players request membership. One pending request per gang/player is allowed. A server-generated, fixed-text Telegram notifies the gang owner with a link to the review panel. These recruitment notices are free, use existing private inboxes/unread signals, honor player blocks, and cannot carry arbitrary user-written messages. Ordinary Telegram prices and office income remain unchanged. Reapplying after cancelling/declining waits for the configurable cooldown. Accepting one application supersedes the applicant's other pending requests. Legacy district Join buttons now request approval.
+
+The Don can edit recruitment and the gang description, review applicants, assign ranks, remove members, and withdraw funds. Underbosses can review requests and manage lower ranks. Players cannot promote themselves, assign an equal/higher rank, edit another gang, or remove the leader. Membership and ownership are checked from database rows on every action; app-wide Moderator roles grant no gang economic powers. Rank names and hierarchy are stored in the private database catalog.
+
+Every member can deposit wallet cash; only the Don can withdraw to their own wallet. Deposits belong to the gang, are not refundable on leaving, and do not inflate gang contribution rankings. Both wallet and bank have immutable transaction entries. Server actions serialize membership and transfers with the existing district/Telegram coordinator, preserve idempotent receipts, reject stale versions/seasons and overdrafts, and roll back both sides on failure. Bank statements are visible only to current gang members and paginate in groups of ten. Old seasonal accounts and history are retained; new seasons start without old memberships or funds. No funds are moved by this migration.
+
+Limits are Owner-editable game settings: gang_member_limit, gang_bank_max_transfer, gang_bank_deposits_enabled, gang_request_cooldown_hours, and existing district_gang_creation_cost. Changes to ranks/membership/settings and recruitment decisions are recorded in the audit history; bank and gang event records cannot be destructively deleted.
+
+Validation runs in GitHub Actions: ownership/permissions, approval and Telegram privacy, rank hierarchy, stale edits, duplicate requests, conserved money, ledger immutability, rollback, concurrent spending/approvals, season resets, browser behavior and desktop/mobile screenshots. No local app run.

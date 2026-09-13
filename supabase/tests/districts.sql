@@ -148,7 +148,10 @@ begin
  perform set_config('request.jwt.claim.sub',b::text,true);
  r:=public.district_action('gang_join',jsonb_build_object('season_id',s,'district_id',d,'gang_id',gang));
  if r?'error' then raise exception 'Gang recruitment failed %',r;end if;
- if not exists(select 1 from public.game_season_gang_members where season_id=s and player_id=b and gang_id=gang) then raise exception 'Gang join not saved';end if;
+ if exists(select 1 from public.game_season_gang_members where season_id=s and player_id=b) then raise exception 'Gang request bypassed leader approval';end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ r:=public.gang_action('accept',jsonb_build_object('season_id',s,'gang_id',gang,'request_id',gen_random_uuid(),'application_id',(select id from game_private.gang_join_requests where gang_id=gang and player_id=b and status='pending')));
+ if r?'error' or not exists(select 1 from public.game_season_gang_members where season_id=s and player_id=b and gang_id=gang) then raise exception 'Approved gang join not saved %',r;end if;
 end $$;
 select 'PASS: funded buy order creation, escrow, supplier payment, server price, self fill, duplicate fill, refunds, gang founding, recruitment and influence cooldown' as result;
 select 'PASS: district seed, RLS, forged quotes, duplicate purchases, zoning, construction, escrow offers, competing bids, attached title transfer, ledger, permissions, audit, multi-gang control, immutable events and season lock' as result;
