@@ -20,7 +20,7 @@ test("street properties, prepaid city lease and installed workspace",async({page
  await expect(page.locator(".header-cash")).toContainText("$9,700");
  await sheet.getByRole("button",{name:"Install crafting station",exact:true}).click();
  await sheet.getByRole("button",{name:"Confirm installation",exact:true}).click();
- await expect(sheet).toContainText("No crafting recipes are available yet.");
+ await expect(sheet.getByRole("link",{name:/Open crafting menu/})).toBeVisible();
  await expect(page.locator(".header-cash")).toContainText("$9,200");
  await capture(page,"district-property-workspace");
  await sheet.getByRole("link",{name:/Open secure storage/}).click();

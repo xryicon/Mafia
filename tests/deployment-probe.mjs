@@ -142,3 +142,15 @@ console.log(JSON.stringify({gameReadabilityDeployed:styles.includes('--bw-readin
 console.log(JSON.stringify({districtPropertiesDeployed:styles.includes('.dp-streets')&&styles.includes('.dp-property-sheet')}));
 
 console.log(JSON.stringify({propertyStorageControlsDeployed:styles.includes('.dp-property-views')&&styles.includes('.dp-stock-items')}));
+const craftingDeployed=styles.includes(".cf-bench");
+console.log(JSON.stringify({craftingDeployed}));
+if(craftingDeployed){
+ const r=await fetch(origin+"/crafting",{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Crafting must require login");
+ for(const id of ["homemade-pistol","homemade-bullets"])for(const size of ["","-256","-96"]){
+  const a=await fetch(origin+"/art/crafting/"+id+size+".webp",{signal:AbortSignal.timeout(20000)}),bytes=(await a.arrayBuffer()).byteLength;
+  if(!a.ok||bytes<500||!a.headers.get("content-type")?.includes("image/webp"))throw new Error("Crafted item artwork unavailable");
+  console.log(JSON.stringify({craftedItemArtwork:id+size,status:a.status,bytes}));
+ }
+ console.log(JSON.stringify({craftingProtectedRoute:r.status}));
+}
