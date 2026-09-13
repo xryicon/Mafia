@@ -47,8 +47,9 @@ $$;
 create function game_private.range_complete_session() returns trigger language plpgsql security definer set search_path='' as $$
 declare before_xp bigint;award int;
 begin
- if old.status<>'active' or new.status='active' or old.difficulty='legacy' then return new;end if;
+ if old.status<>'active' or new.status='active' then return new;end if;
  new.finished_at:=case when new.status='finished' then old.ends_at else least(clock_timestamp(),old.ends_at) end;
+ if old.difficulty='legacy' then return new;end if;
  new.cooldown_until:=new.finished_at+make_interval(secs=>(old.config->>'cooldown_seconds')::int);
  if new.status='finished' and clock_timestamp()>=old.ends_at
  and exists(select 1 from public.game_seasons where id=old.season_id and status='open' and (ends_at is null or old.ends_at<=ends_at))

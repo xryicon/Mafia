@@ -15,3 +15,5 @@
 @media(max-width:1100px){.range-difficulties{grid-template-columns:1fr}.range-difficulties button{min-height:90px}}
 @media(max-width:780px){.range-difficulties{grid-template-columns:1fr 1fr}.range-difficulties button{flex-wrap:wrap;padding:16px}.range-difficulties b{margin-left:0}.range-entry{padding:18px}}
 @media(max-width:540px){.range-entry header{align-items:flex-start;flex-direction:column;gap:10px}.range-entry h2{font-size:25px}.range-difficulties{grid-template-columns:1fr}.range-difficulties button{flex-wrap:nowrap}.range-difficulties svg{width:24px}.range-difficulties b{margin-left:auto;font-size:15px}.range-difficulties strong{font-size:21px}.range-difficulties small{font-size:12px}.range-cooldown{font-size:13px;padding:9px 12px}.range-cooldown strong{font-size:21px}}
+
+.range-entry.training{padding:14px 20px}.range-entry.training .range-difficulties,.range-entry.training .range-kicker{display:none}.range-entry.training header{margin-bottom:8px}.range-entry.training h2{font-size:21px}.range-entry.training>p{margin-top:0}
