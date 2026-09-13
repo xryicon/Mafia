@@ -4,7 +4,7 @@ const headers={Authorization:"Bearer "+token};
 async function capture(page:Page,name:string){const s=await page.screenshot({path:"test-results/"+name+".jpg",type:"jpeg",quality:70});if(process.env.VISUAL_REVIEW==="1"){const b=s.toString("base64");for(let i=0;i<b.length;i+=12000)console.log("VISUAL_REVIEW_"+name+"_"+Math.floor(i/12000)+":"+b.slice(i,i+12000));}}
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture");await request.post("http://127.0.0.1:54329/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("Inventory replaces Properties and does not grant starter storage or screenshot items",async({page})=>{
- await page.goto("/dashboard");await page.getByRole("navigation",{name:"Game navigation"}).getByRole("link",{name:"Inventory",exact:true}).click();await expect(page.getByRole("heading",{name:"Inventory",level:1})).toBeVisible();await expect(page.locator(".inv-no-storage")).toContainText("don’t own a storage building");
+ await page.goto("/dashboard");await page.getByRole("navigation",{name:"Game navigation"}).getByRole("link",{name:"Inventory",exact:true}).click();await expect(page.getByRole("heading",{name:"Inventory",level:1})).toBeVisible();await expect(page.locator(".inv-no-storage")).toContainText("don’t have a storage building");
  await expect(page.locator(".inv-items")).not.toContainText("Tommy Gun");await page.goto("/properties");await expect(page).toHaveURL(/\/inventory$/);await expect(page.locator(".inv-page")).toBeVisible();await capture(page,"inventory-new-player");
 });
 test("move existing stock into an owned warehouse and retrieve it for trading",async({page,request})=>{

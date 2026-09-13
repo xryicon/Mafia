@@ -4,7 +4,7 @@ test "${CI:-}" = "true" && test "${PGHOST:-}" = "localhost" && test "${PGDATABAS
 psql -v ON_ERROR_STOP=1 <<'SQL'
 do $$declare u uuid;begin
  for u in select x::uuid from unnest(array['eeeeeeee-8000-4000-8000-000000000001','eeeeeeee-8000-4000-8000-000000000002'])x loop
- insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
+ insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();perform set_config('game.reason','CI concurrent city rental funding',true);update public.game_players set cash=10000 where id=u;
  end loop;
  perform public.district_state('the-waterfront');
  update public.game_storage_rules set capacity=200,enabled=true where building_type='garage';

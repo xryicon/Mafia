@@ -10,6 +10,7 @@ begin
  update public.game_user_roles set role_id='owner' where player_id=o;
  perform set_config('game.reason','CI city property fixture',true);
  update public.game_settings set value=300 where key='actions_per_minute';
+ update public.game_storage_rules set capacity=case when building_type='garage' then 200 else 2000 end,enabled=true where building_type in ('garage','warehouse');
  update public.game_players set cash=100000 where id in(a,b);
  perform set_config('request.jwt.claim.sub',a::text,true);res:=public.district_state('the-waterfront');
  perform pg_temp.verify(jsonb_array_length(res->'streets')=4,'Street catalog missing');
@@ -84,6 +85,15 @@ begin
  q:=jsonb_build_object('season_id',s,'plot_id',(select plot_id from public.game_district_buildings where id=wh),'request_id',gen_random_uuid(),'version',1,'rent',1500);
  res:=public.property_action('rent',q);perform pg_temp.verify(res?'error','Empty wallet acquired lease');
  perform pg_temp.verify(not exists(select 1 from public.game_property_leases where building_id=wh),'Failed payment left a lease');
+
+ -- Owned garages support station fittings; player property cannot be rented out.
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ update public.game_district_plots set owner_type='player',owner_id=a where id=p.id;
+ update public.game_district_buildings set owner_type='player',owner_id=a where id=bid;
+ res:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',2,'rent',450));perform pg_temp.verify(res?'error','Player-owned property accepted a city lease');
+ res:=public.property_action('install_station',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'cost',500,'space',20));perform pg_temp.verify(not res?'error','Owner could not fit garage station: '||res::text);
+ denied:=false;begin update public.game_district_plots set asking_price=5000 where id=p.id;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Property with an installed station listed for transfer');
+ res:=public.property_action('remove_station',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Owned station could not be removed');
  -- Historical financial and installation records cannot be destroyed.
  denied:=false;begin delete from public.game_property_leases where building_id=bid;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Lease history deleted');
  denied:=false;begin truncate public.game_property_stations;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Installation history truncated');

@@ -138,3 +138,5 @@ if(styles.includes('.pp-hero')){const r=await fetch(origin+'/players/11111111-11
 console.log(JSON.stringify({gangHeadquartersDeployed:styles.includes(".gh-hero")}));
 
 console.log(JSON.stringify({gameReadabilityDeployed:styles.includes('--bw-reading-scale:1')}));
+
+console.log(JSON.stringify({districtPropertiesDeployed:styles.includes('.dp-registry')&&styles.includes('.dp-property-sheet')}));
