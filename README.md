@@ -105,6 +105,10 @@ See [foundation and operations](docs/foundation.md) for deployment, immutable fi
 Separate development and staging infrastructure remains deferred. GitHub Actions runs all app and database tests remotely.
 
 
+## Blackwater Island Prison
+
+See [prison custody and release](docs/prison.md) for the prison district, persistent sentences, automatic release and Owner controls.
+
 ## Seasons
 
 See [seasons and leaderboards](docs/seasons.md) for the Owner lifecycle, reset guarantees, ranking formulas, archived profiles and Hall of Fame. Existing gameplay starts in the founding season; deployment does not reset it.
