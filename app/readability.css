@@ -248,3 +248,24 @@
  .command-dashboard .command-player-stats { grid-column:2; grid-row:1/5; }
  .command-dashboard .command-quick { grid-column:1/-1; }
 }
+
+/* Keep the wallet inside the mobile header, including multi-line ranks. */
+@media(max-width:600px) {
+ .command-city { --estate-header-height:192px; }
+ .command-city .estate-header { height:192px; min-height:192px; grid-template-rows:100px 92px; }
+ .command-city .estate-dropdown { top:100px; max-height:calc(100dvh - 112px); }
+}
+.command-city .role-badge,.command-city .stats-grid article>div>span { font-size:12px; }
+.command-dashboard .command-quick { display:grid; grid-template-columns:minmax(0,1fr); }
+@media(min-width:601px) and (max-width:950px) {
+ .command-dashboard .command-quick { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+.inv-slot-grid .inv-item-art { height:165px; aspect-ratio:auto; }
+.inv-slot-grid .inv-item-art .commodity-art { max-width:calc(100% - 16px); }
+.inv-item img,.inv-gear-slot img { pointer-events:none; user-select:none; }
+@media(min-width:1450px) {
+ .inv-slot-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+ .inv-slot-grid .inv-item-art { height:158px; }
+}

@@ -46,7 +46,7 @@ test("game navigation and inventory stay responsive",async({page,context,request
  for(const path of ["/inventory","/bank","/dashboard","/market","/properties","/districts","/gangs","/telegrams","/ledger","/owner","/staff","/support","/players","/profile","/seasons","/account","/districts/the-waterfront","/districts/manage"]){
   await page.goto(path);await noOverflow(page);
   await expect(page.locator(".command-city")).toHaveCount(1);
-  await expect(page.locator(".estate-header")).toHaveCSS("height","176px");
+  await expect(page.locator(".estate-header")).toHaveCSS("height","192px");
   await expect(page.locator(".estate-header img.don-portrait")).toHaveAttribute("src","/art/command-portrait.jpg");
   const header=await page.locator(".estate-header").boundingBox(),wallet=await page.locator(".header-wallet").boundingBox();
   console.log("HEADER_BOUNDS "+JSON.stringify({path,header,wallet}));
@@ -85,6 +85,7 @@ test("readability across every game workspace at desktop and phone widths",async
     return found;
    });
    console.log("READABILITY_AUDIT "+JSON.stringify({width,path,small}));
+   expect(small,"Undersized text at "+path+" / "+width).toEqual({});
    if(["/dashboard","/market","/owner","/support","/seasons","/account","/players"].includes(path)){
     await capture(page,"readability-"+path.slice(1)+"-"+width);
    }
