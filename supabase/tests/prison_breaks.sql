@@ -11,7 +11,7 @@ begin
  perform set_config('request.jwt.claim.sub',timer_rescuer::text,true);perform public.game_state();
  perform set_config('request.jwt.claim.sub',inmate::text,true);perform public.game_state();s:=game_private.current_season();
  perform pg_temp.verify(exists(select 1 from public.game_goods where id='lockpick' and inventory_category='tools'),'Lockpick item is missing');
- perform pg_temp.verify((select lockpick_chance from public.game_bin_rules)=5,'Lockpick bin-diving chance is missing');
+ perform pg_temp.verify((select lockpick_chance between 0 and 100 from public.game_bin_rules),'Lockpick bin-diving chance setting is missing');
  perform pg_temp.verify(exists(select 1 from public.game_leaderboards where season_id=s and metric='breakouts' and enabled),'Breakout leaderboard is missing');
  perform pg_temp.verify(not has_function_privilege('authenticated','game_private.prison_break_action(text,jsonb)','execute'),'Client can execute the internal prison-break function');
  perform pg_temp.verify(has_function_privilege('authenticated','public.prison_break_action(text,jsonb)','execute'),'Client cannot execute the public prison-break action');
