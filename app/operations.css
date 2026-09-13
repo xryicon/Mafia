@@ -3,11 +3,11 @@
 .operation-workspace :is(.bin-breadcrumb,.ref-breadcrumb){margin:0 3px 10px;font-size:12px;letter-spacing:1.3px;gap:10px}
 .operation-workspace a{text-decoration:none}
 .operation-header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:132px;padding:21px 25px;border:1px solid var(--ops-line);background:linear-gradient(90deg,#081319f7 5%,#081319cf 52%,#0813196b),url('/art/harbor.webp') center 51%/cover}
-.operation-header .eyebrow{font:11px Arial,sans-serif;letter-spacing:2.2px;color:#bb9f6d;margin:0 0 10px}
+.operation-header .eyebrow{font:12px Arial,sans-serif;letter-spacing:2.2px;color:#bb9f6d;margin:0 0 10px}
 .operation-header h1{font:44px/1.1 Georgia,serif;letter-spacing:1.5px;color:#edcf99;margin:0 0 10px}
 .operation-header .operation-motto{font:italic 15px/1.5 Georgia,serif;color:#babeb2;margin:0}
 .operation-header-status{display:flex;gap:17px;align-items:center;border-left:1px solid #b394575c;padding-left:24px;min-width:240px}
-.operation-header-status>svg{color:#c0a06a;flex-shrink:0}.operation-header-status span{font-size:11px;letter-spacing:1.7px;color:#b49c71}
+.operation-header-status>svg{color:#c0a06a;flex-shrink:0}.operation-header-status span{font-size:12px;letter-spacing:1.7px;color:#b49c71}
 .operation-header-status strong{display:block;font:20px/1.35 Georgia,serif;color:#e4c797;margin:5px 0}
 .operation-header-status small{font-size:12px;color:#9daaa4}
 .operation-workspace :is(.bin-strip,.ref-summary){grid-template-columns:repeat(4,minmax(0,1fr));background:#0a1418;border-color:var(--ops-line);margin-bottom:11px}
@@ -42,7 +42,7 @@ a.operation-stock-row:hover{background:#b5975420}
 .bin-command .bin-district-list button svg{width:17px}
 .bin-command .bin-district-list button[aria-pressed=true]{background:linear-gradient(90deg,#b2935129,transparent);border-color:#b99a4c40}
 .bin-district-intel{border-top:1px solid var(--ops-line);margin-top:18px;padding-top:14px}
-.bin-district-intel .eyebrow{font-size:11px;letter-spacing:1.7px;color:#baa273;margin:0 0 10px}
+.bin-district-intel .eyebrow{font-size:12px;letter-spacing:1.7px;color:#baa273;margin:0 0 10px}
 .bin-district-intel>img{width:100%;height:150px;object-fit:cover;border:1px solid #a18a4f40;display:block}
 .bin-district-intel dl{margin:10px 0}
 .bin-district-intel dl>div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #ad92592c;font-size:12px}
@@ -52,16 +52,16 @@ a.operation-stock-row:hover{background:#b5975420}
 .bin-command .bin-search{min-height:0;padding:13px 13px 0}
 .bin-command .bin-search>header{margin-bottom:11px}
 .bin-command .bin-search-scene{position:relative;display:flex;align-items:flex-end;min-height:300px;padding:25px 23px;text-align:left;border:1px solid #ad925930;background:linear-gradient(0deg,#061015eb 0%,#06101521 85%),linear-gradient(90deg,#0610159c,transparent 75%),url('/art/bin-diving.png') center 63%/cover}
-.bin-command .bin-search-scene .eyebrow{font:11px Arial,sans-serif;letter-spacing:2px;color:#c4a678;margin:0 0 10px}
+.bin-command .bin-search-scene .eyebrow{font:12px Arial,sans-serif;letter-spacing:2px;color:#c4a678;margin:0 0 10px}
 .bin-command .bin-search-scene h2{font:36px/1.15 Georgia,serif;color:#efe1c5;margin:0 0 9px}
 .bin-command .bin-search-scene p:last-child{font-size:14px;line-height:1.6;color:#b8c4bf;max-width:350px;margin:0}
-.bin-scene-stamp{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:8px;padding:7px 9px;background:#061217bc;border:1px solid #a68a5140;color:#c2a577;font-size:11px;letter-spacing:1.5px}
+.bin-scene-stamp{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:8px;padding:7px 9px;background:#061217bc;border:1px solid #a68a5140;color:#c2a577;font-size:12px;letter-spacing:1.5px}
 .bin-command .bin-action-area{padding:13px 0 11px;border-top:0}
 .bin-command .bin-action-area>p{font-size:12px;margin:9px 0 0}
 .bin-command .bin-result{padding:13px 15px;gap:13px}
 .bin-command .bin-result .bin-loot-art{width:72px;height:72px}
 .bin-command .bin-result h2{font-size:24px;margin:4px 0}
-.bin-command .bin-result .eyebrow{font-size:11px;letter-spacing:1.1px}
+.bin-command .bin-result .eyebrow{font-size:12px;letter-spacing:1.1px}
 .bin-command .bin-result p{font-size:12px}
 .bin-command .bin-loot-grid{gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}
 .bin-command .bin-loot-grid article{padding:0 9px 0 0;min-width:0}
@@ -69,7 +69,7 @@ a.operation-stock-row:hover{background:#b5975420}
 .bin-command .bin-loot-grid strong{font-size:14px;min-height:34px}
 .bin-command .bin-loot-grid p{font-size:12px;line-height:1.6;margin:6px 0}
 .bin-command .bin-chance{font:24px Georgia,serif;margin-top:7px}
-.bin-command .bin-odds>header>span{font-size:11px;letter-spacing:.5px}
+.bin-command .bin-odds>header>span{font-size:12px;letter-spacing:.5px}
 .bin-command .bin-odds>.bin-muted{font-size:12px;margin-top:12px;padding-top:10px}
 .bin-command .bin-stash{display:block;grid-column:auto}
 .bin-command .bin-stash>.bin-muted{font-size:12px}
@@ -80,7 +80,7 @@ a.operation-stock-row:hover{background:#b5975420}
 .bin-command .bin-stash-row>b{font-size:17px}
 .bin-command .bin-trade-link{font-size:12px;margin-top:0}
 .bin-command .bin-equipment{padding-top:17px}
-.bin-command .bin-equipment .eyebrow{font-size:11px;letter-spacing:1px}
+.bin-command .bin-equipment .eyebrow{font-size:12px;letter-spacing:1px}
 .bin-command .bin-equipment>strong{font-size:18px}
 .bin-command .bin-equipment meter{margin:12px 0;height:5px}
 .bin-command .bin-equipment>p:not(.eyebrow){font-size:12px;margin-top:10px}
@@ -100,7 +100,7 @@ a.operation-stock-row:hover{background:#b5975420}
 .ref-command .ref-registry>span{min-width:0}
 .ref-command .ref-registry strong{font-size:15px;line-height:1.4;overflow-wrap:anywhere}
 .ref-command .ref-registry small{font-size:12px;margin-top:5px}
-.ref-command .ref-registry em{font-size:11px;margin-top:5px}
+.ref-command .ref-registry em{font-size:12px;margin-top:5px}
 .ref-command .ref-refresh{font-size:12px;padding-bottom:10px}
 .ref-command .ref-principle{display:block;padding:17px 14px;margin-top:11px;background:var(--ops-panel);border-color:var(--ops-line)}
 .ref-command .ref-principle h3{font:22px Georgia,serif;margin:9px 0 16px}
@@ -109,12 +109,12 @@ a.operation-stock-row:hover{background:#b5975420}
 .ref-command .ref-principle small{display:block;font-size:12px;color:#8fa09a;margin-top:4px}
 .ref-command .ref-heading{padding:14px 17px}
 .ref-command .ref-heading h2{font:30px/1.3 Georgia,serif;color:#ead9b6;margin:7px 0}
-.ref-command .ref-heading .eyebrow{font-size:11px;letter-spacing:1.6px}
+.ref-command .ref-heading .eyebrow{font-size:12px;letter-spacing:1.6px}
 .ref-command .ref-heading p{font-size:14px}
 .ref-command .ref-heading .ref-outline{font-size:12px;min-height:34px}
 .ref-command .ref-sale{padding:13px 16px;gap:15px;margin-top:10px;border-color:#bb91415c}
 .ref-command .ref-sale strong{font-size:24px;margin:4px 0}
-.ref-command .ref-sale .eyebrow{font-size:11px}
+.ref-command .ref-sale .eyebrow{font-size:12px}
 .ref-command .ref-sale small{font-size:12px}
 .ref-command .ref-sale .ref-gold{min-width:140px;font-size:14px}
 .ref-command .ref-tabs{margin-top:10px}
@@ -123,7 +123,7 @@ a.operation-stock-row:hover{background:#b5975420}
 .ref-command .ref-terms svg{width:15px}
 .ref-command .ref-service{padding:13px 15px}
 .ref-workbench-scene{min-height:190px;margin:0 0 15px;padding:19px 21px;border:1px solid #a18a4f30;background:linear-gradient(90deg,#071318ed,#07131899 45%,#07131816),url('/art/foundry.webp') center 51%/cover}
-.ref-workbench-scene .eyebrow{font:11px Arial,sans-serif;letter-spacing:2px;color:#c1a170;margin:0 0 9px}
+.ref-workbench-scene .eyebrow{font:12px Arial,sans-serif;letter-spacing:2px;color:#c1a170;margin:0 0 9px}
 .ref-workbench-scene h3{font:34px/1.1 Georgia,serif;color:#eedaba;margin:0 0 8px}
 .ref-workbench-scene p{font-size:12px;line-height:1.5;color:#acb9b1;margin:0}
 .ref-command .ref-panel form{gap:12px}
@@ -186,9 +186,9 @@ a.operation-stock-row:hover{background:#b5975420}
 }
 @media(max-width:700px){
  .operation-workspace{padding:8px 8px 20px}
- .operation-workspace :is(.bin-breadcrumb,.ref-breadcrumb){font-size:11px;gap:7px;letter-spacing:.8px;margin:2px 2px 9px}
+ .operation-workspace :is(.bin-breadcrumb,.ref-breadcrumb){font-size:12px;gap:7px;letter-spacing:.8px;margin:2px 2px 9px}
  .operation-header{min-height:116px;padding:17px 15px}
- .operation-header h1{font-size:35px}.operation-header .eyebrow{font-size:11px;letter-spacing:1.5px}.operation-header .operation-motto{font-size:15px}
+ .operation-header h1{font-size:35px}.operation-header .eyebrow{font-size:12px;letter-spacing:1.5px}.operation-header .operation-motto{font-size:15px}
  .operation-workspace :is(.bin-strip,.ref-summary){grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:8px}
  .operation-workspace :is(.bin-strip,.ref-summary)>span{font-size:12px;padding:10px;gap:7px;min-height:42px;flex-wrap:wrap}
  .operation-workspace :is(.bin-strip,.ref-summary) b{font-size:14px}
@@ -206,13 +206,13 @@ a.operation-stock-row:hover{background:#b5975420}
  .bin-command .bin-search-scene{min-height:270px;padding:18px 15px;background-position:66% center}
  .bin-command .bin-search-scene h2{font-size:30px}
  .bin-command .bin-search-scene p:last-child{font-size:14px}
- .bin-scene-stamp{top:10px;right:10px;font-size:11px}
+ .bin-scene-stamp{top:10px;right:10px;font-size:12px}
  .bin-command .bin-action-area>p{font-size:14px;line-height:1.6}
  .bin-command .bin-result{padding:13px 12px}
  .bin-command .bin-result h2{font-size:22px}
  .bin-command .bin-result p{font-size:14px}
  .bin-command .bin-odds>header{gap:6px}
- .bin-command .bin-odds>header>span{font-size:11px}
+ .bin-command .bin-odds>header>span{font-size:12px}
  .bin-command .bin-loot-grid strong{font-size:15px}
  .bin-command .bin-loot-grid p{font-size:14px}
  .bin-command .bin-odds .bin-loot-art{width:96px;height:96px}

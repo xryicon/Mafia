@@ -10,7 +10,7 @@ test("market trading remains usable alongside the city dashboard",async({page,co
  const gameNav=page.getByRole("navigation",{name:"Game navigation"});
  await gameNav.getByRole("link",{name:"Market",exact:true}).click();
  await expect(page).toHaveURL(/\/market$/);
- await expect(page.locator(".estate-header")).toHaveCSS("height","62px");
+ await expect(page.locator(".estate-header")).toHaveCSS("height","76px");
  await expect(page.locator(".estate-header img.don-portrait")).toHaveAttribute("src","/art/command-portrait.jpg");
  await page.reload();
  await expect(page.locator(".command-city")).toHaveCount(1);

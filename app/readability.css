@@ -1,0 +1,271 @@
+/* Blackwater's shared reading scale. Keep information readable before adding columns. */
+.command-city { --bw-reading-scale: 1; --estate-header-height: 76px; font-size: 15px; }
+.command-city .estate-header { height:76px; min-height:76px; grid-template-columns:auto minmax(0,1fr) auto; grid-template-rows:76px; gap:14px; padding:0 16px; }
+.command-city .command-header-tagline { display:none; }
+.command-city .estate-brand { grid-column:1; grid-row:1; }
+.command-city .estate-brand>span { font-size:23px; }
+.command-city .estate-brand small { font-size:9px; }
+.command-city .brand-online { font-size:12px; letter-spacing:.3px; margin-top:4px; }
+.command-city .estate-nav { grid-column:2; grid-row:1; height:75px; }
+.command-city .estate-nav>a { height:75px; font-size:13px; letter-spacing:.6px; padding:0 14px; }
+.command-city .estate-player-tools { grid-column:3; grid-row:1; }
+.command-city .header-wallet { min-height:46px; min-width:116px; }
+.command-city .header-cash { font-size:18px; }
+.command-city .don-portrait { width:44px; height:44px; }
+.command-city .estate-player-name { font-size:15px; }
+.command-city .estate-player-numbers>span { font-size:12px; }
+.command-city .estate-account-menu>summary { min-width:170px; }
+.command-city .estate-dropdown { font-size:15px; }
+.command-city .estate-dropdown a { min-height:42px; display:flex; align-items:center; }
+.command-nav-badge { font-size:12px; min-width:18px; height:18px; top:12px; }
+.command-header-stock,.command-header-bell { min-height:46px; }
+.command-city .estate-footer nav a,.command-city .estate-footer>small { font-size:12px; line-height:1.6; }
+.command-city #main :is(input,select,textarea) { font-size:16px; }
+.command-city #main :is(input,select):not([type=checkbox]):not([type=radio]):not([type=range]) { min-height:44px; }
+.command-city #main :is(p,dd,td,label) { overflow-wrap:anywhere; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) { font-size:16px; line-height:1.6; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) :is(p,td,dd,label,button,.button) { font-size:15px; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) :is(small,th,time,.muted,.eyebrow) { font-size:13px; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) :is(button,.button) { min-height:44px; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) h2 { font-size:24px; }
+.command-city :is(.control-layout,.owner-workspace,.staff-layout) h3 { font-size:19px; }
+
+/* Dashboard: preserve the atlas, give its working panels room to breathe. */
+.command-dashboard { grid-template-columns:260px minmax(0,1fr) 310px; gap:14px; font-size:15px; padding:14px; }
+.command-dashboard .command-panel { padding:15px; }
+.command-summary-grid,.command-economy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.command-dashboard .command-panel-head { flex-wrap:wrap; align-items:center; margin-bottom:13px; }
+.command-dashboard .command-panel-head h2,.market-workspace .command-panel-head h2 { font-size:16px; line-height:1.4; letter-spacing:.8px; }
+.command-dashboard .command-more,.market-workspace .command-more { font-size:13px; }
+.command-dashboard .command-button { font-size:15px!important; min-height:44px; padding:9px 12px; }
+.command-dashboard .command-subtitle,.command-dashboard .command-empty { font-size:14px; line-height:1.6; }
+.command-player-stats>div { min-height:44px; }
+.command-player-stats dt,.command-player-stats dd { font-size:15px; }
+.command-player-stats dd>small,.command-level small,.command-location small { font-size:12px; }
+.command-location>span { font-size:13px; max-width:none; }
+.command-location strong { font-size:15px; }
+.command-player-rank { font-size:15px; }
+.command-quick h3 { font-size:13px; }
+.command-player-art img { height:160px; }
+.command-control-key { flex-wrap:wrap; font-size:13px; gap:8px; }
+.command-dashboard .command-land img { height:110px; }
+.command-dashboard .command-land p { font-size:14px; }
+.command-dashboard .command-strategic a { padding:10px 0; font-size:14px; }
+.command-dashboard .command-strategic small { font-size:12px; }
+.command-dashboard .command-activity li { min-height:48px; height:auto; padding:9px 0; font-size:14px; line-height:1.5; flex-wrap:wrap; }
+.command-dashboard .command-activity time { font-size:12px; }
+.command-dashboard .command-activity strong { font-size:13px; }
+.command-dashboard .command-prices>a { font-size:14px; min-height:58px; gap:10px; padding:8px 0; }
+.command-dashboard .command-prices strong { font-size:16px; }
+.command-dashboard .command-prices small { font-size:12px; }
+.command-dashboard .command-prices .commodity-art { width:46px!important; height:46px!important; }
+.command-dashboard .command-production>div { min-height:66px; padding:10px; }
+.command-dashboard .command-production span { font-size:14px; }
+.command-dashboard .command-production small { font-size:12px; line-height:1.5; }
+.command-dashboard .command-production .commodity-art { width:44px!important; height:44px!important; }
+.command-dashboard .command-queue-button { min-height:44px; font-size:14px; padding:10px; }
+.command-dashboard .command-upcoming a { font-size:14px; min-height:60px; padding:9px 0; }
+.command-dashboard .command-upcoming small { font-size:12px; line-height:1.5; }
+.command-dashboard .command-dossier>img { height:150px; }
+.command-dashboard .command-telegram>img { height:115px; }
+.command-dashboard .command-dossier p,.command-dashboard .command-telegram p { font-size:14px; line-height:1.6; -webkit-line-clamp:unset; }
+.command-dashboard .command-district-facts>div { font-size:14px; min-height:36px; }
+.command-dashboard .command-gangs li { font-size:14px; min-height:36px; height:auto; }
+.command-dashboard .command-gangs strong { font-size:13px; }
+.command-dashboard .command-season-end { font-size:12px; }
+.command-dashboard .command-price-pagination { flex-wrap:wrap; }
+.command-price-pagination button { min-height:44px; font-size:13px; padding:8px 10px; }
+.command-price-pagination>span { font-size:12px; }
+.command-atlas-motto { display:none; }
+.command-atlas .map-zoom button { width:40px; min-height:38px; height:38px; }
+.command-atlas .map-zoom button:last-child { font-size:12px; min-height:32px; }
+.command-atlas .map-instruction { font-size:12px; }
+.command-zone-label strong { font-size:19px; letter-spacing:.7px; }
+.command-zone-label span { font-size:16px; }
+
+/* Exchange: recognizable goods, legible prices and complete offer details. */
+.market-workspace { font-size:15px; }
+.market-columns { grid-template-columns:245px minmax(0,1fr) 320px; }
+.market-workspace :is(.market-section-note,.market-help,.market-empty p,.market-result,.market-location,.market-stock-note,.market-ticket label,.market-rules li,.market-rules a,.market-receipt>div) { font-size:14px; line-height:1.6; }
+.market-workspace :is(.market-sections button,.market-commodities>button,.market-sale-choice button) { font-size:14px; min-height:46px; }
+.market-commodities .commodity-art { width:48px!important; height:48px!important; }
+.market-commodity .commodity-art { width:80px!important; height:80px!important; }
+.market-commodity strong { font-size:18px; line-height:1.4; }
+.market-commodity a,.market-commodity small { font-size:13px; }
+.market-lot { grid-template-columns:minmax(205px,1.6fr) .65fr .65fr .8fr 105px; gap:12px; }
+.market-lot>div>small { font-size:12px; letter-spacing:.4px; }
+.market-lot>div>strong { font-size:17px; white-space:normal; }
+.market-outline,.market-gold { font-size:15px!important; min-height:44px; }
+.market-auction-heading { flex-wrap:wrap; }
+.market-auction-heading p,.market-bid-price>span { font-size:14px; }
+.market-history>div:not(.command-panel-head) { font-size:14px; flex-wrap:wrap; line-height:1.6; }
+.market-history strong { font-size:14px; }
+.market-wallet-stats :is(small,span),.market-masthead span { font-size:12px; }
+.market-wallet-stats strong { font-size:26px; }
+.market-masthead p { font-size:17px; line-height:1.5; }
+.market-inventory .commodity-art { width:140px!important; height:140px!important; }
+.market-inventory strong { font-size:18px; }
+.market-stock-preview .commodity-art { width:96px!important; height:96px!important; }
+.market-supply img { height:150px; }
+
+/* Correspondence: messages and players deserve more than caption-sized text. */
+.tg-command { font-size:15px; }
+.tg-command .tg-message p { font-size:16px; line-height:1.75; }
+.tg-command :is(.tg-message small,.tg-message time,.tg-message-meta,.tg-date,.tg-breadcrumb,.tg-hint,.tg-note,.tg-members p) { font-size:13px; line-height:1.6; }
+.tg-command .tg-message .tg-avatar { width:42px; height:42px; flex-shrink:0; }
+.tg-command .tg-message header { font-size:14px; }
+.tg-command .tg-conversations>button { min-height:92px; }
+.tg-command .tg-conversations strong { font-size:16px; }
+.tg-command .tg-conversations :is(small,time) { font-size:12px; }
+.tg-command .tg-conversations .tg-avatar { width:44px; height:44px; }
+.tg-command :is(.tg-folders button,.tg-office-stats,.tg-office-description,.tg-office-actions button,.tg-office-actions a,.tg-privacy,.tg-fee-note,.tg-composer label) { font-size:14px; line-height:1.6; }
+.tg-command :is(.tg-folders button,.tg-office-actions button,.tg-office-actions a) { min-height:44px; }
+
+/* Inventory, industry and districts. Artwork stays square and uncropped in cards. */
+.inv-page :is(.inv-item-copy small,.inv-gear-slot>span,.inv-gear-slot small,.inv-delivery span,.inv-panel-head>span,.inv-capacity span) { font-size:13px; line-height:1.5; }
+.inv-page :is(.inv-sidebar nav button,.inv-scope,.inv-move-help,.inv-pagination,.inv-inspect dd,.inv-inspect dt) { font-size:14px; }
+.inv-page .inv-item-copy h3,.inv-page .inv-gear-slot strong { font-size:17px; line-height:1.4; }
+.inv-slot-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.inv-slot-grid .inv-item-art { height:auto; aspect-ratio:1.12; }
+.inv-gear-slot { min-height:175px; }
+.inv-page .inv-delivery .commodity-art { width:64px!important; height:64px!important; }
+.operation-workspace :is(.operation-eyebrow,.operation-stock-row small,.bin-history time,.ref-status,.bin-status) { font-size:12px; }
+.operation-workspace :is(.bin-history li,.bin-history li div>span,.ref-receipts,.ref-facts,.ref-help,.bin-help) { font-size:14px; line-height:1.6; }
+.operation-stock-row .commodity-art { width:72px!important; height:72px!important; }
+.bin-history .bin-loot-art { width:64px; height:64px; }
+.mining-refined { font-size:15px; }
+.mining-refined :is(.mine-card-body p,.mine-card-body small,.mine-detail p,.mine-help,.mine-haul-heading p,.mine-equipment p,.mine-legend,.mine-map-note) { font-size:14px; line-height:1.6; }
+.mining-refined :is(.mine-card h3,.mine-panel h2) { font-size:20px; }
+.mining-refined .mine-card-art { height:180px; }
+.mining-refined .mine-resource-strip .commodity-art { width:80px!important; height:80px!important; }
+.mining-refined :is(.mine-tabs button,.mine-tabs a,.mine-outline,.mine-gold) { font-size:15px; min-height:44px; }
+.district-page :is(.district-hero p,.district-card p,.district-event,.district-activity,.district-facts,.district-tabs button,.district-tabs a,.plot-detail label) { font-size:14px; line-height:1.6; }
+.district-page :is(.district-tabs button,.district-tabs a) { min-height:44px; }
+.bank-page :is(.bank-tabs button,.bank-ledger td,.bank-facts,.bank-help,.bank-actions button) { font-size:15px; line-height:1.6; }
+.bank-page :is(.bank-panel h2,.bank-panel-head h2) { font-size:18px; }
+.pp-page :is(.pp-facts dt,.pp-business small,.pp-season-card small,.pp-detail-row,.pp-rank-label) { font-size:13px; }
+.pp-page :is(.pp-panel-head h2,.pp-business h3) { font-size:18px; }
+.gh-page :is(.gh-member-role,.gh-kicker,.gh-stat small,.gh-bank-ledger time,.gh-roster small) { font-size:13px; }
+.auth-world :is(label,.auth-note,.auth-alternate) { font-size:15px; }
+.auth-world :is(input,select,textarea) { font-size:16px; }
+
+/* Switch layouts before larger type crowds the data. */
+@media (max-width:1600px) {
+ .command-header-stock,.command-header-bell { display:none; }
+ .command-dashboard { grid-template-columns:245px minmax(0,1fr) 290px; }
+ .market-columns { grid-template-columns:220px minmax(0,1fr) 290px; }
+ .market-lot { grid-template-columns:minmax(175px,1.4fr) 1fr 105px; }
+ .market-lot>div:nth-child(2),.market-lot>div:nth-child(3) { display:none; }
+}
+@media (max-width:1250px) {
+ .command-city { --estate-header-height:130px; }
+ .command-city .estate-header { height:130px; min-height:130px; grid-template-columns:auto minmax(0,1fr); grid-template-rows:76px 54px; gap:0 14px; }
+ .command-city .estate-player-tools { grid-column:2; grid-row:1; justify-self:end; }
+ .command-city .estate-nav { grid-column:1/-1; grid-row:2; height:54px; width:100%; }
+ .command-city .estate-nav>a { height:54px; flex:1; justify-content:center; padding:0 12px; }
+ .command-dashboard { grid-template-columns:240px minmax(0,1fr); }
+ .command-dashboard .command-player { grid-column:1; grid-row:1; display:flex; flex-direction:column; }
+ .command-dashboard .command-center { grid-column:2; grid-row:1; }
+ .command-dashboard .command-right { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+ .market-columns { grid-template-columns:minmax(0,1fr) 290px; }
+ .market-left { grid-column:1/-1; }
+ .market-left .market-commodities,.market-left .market-rules { display:none; }
+ .market-sections { flex-direction:row; flex-wrap:wrap; }
+ .market-sections button { width:auto; flex:1; }
+}
+@media (max-width:950px) {
+ .command-dashboard { display:flex; flex-direction:column; }
+ .command-dashboard .command-center { order:0; }
+ .command-dashboard .command-player { order:1; display:grid; grid-template-columns:1fr 1fr; min-height:0; gap:12px; }
+ .command-dashboard .command-right { order:2; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .command-dashboard .command-portrait { height:170px; width:100%; object-fit:cover; }
+ .command-dashboard .command-player-art { display:none; }
+ .market-columns { display:flex; flex-direction:column; }
+ .market-left,.market-main,.market-right { width:100%; }
+ .market-right { position:static; }
+ .market-lot { grid-template-columns:minmax(200px,1.6fr) 1fr 110px; }
+ .inv-slot-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:600px) {
+ .command-city { --estate-header-height:176px; }
+ .command-city .estate-header { height:176px; min-height:176px; grid-template-rows:84px 92px; padding:0 10px; gap:0 6px; }
+ .command-city .estate-brand { gap:6px; }
+ .command-city .estate-brand>svg { width:29px; height:38px; }
+ .command-city .estate-brand>span { font-size:17px; letter-spacing:.7px; }
+ .command-city .estate-brand small { font-size:8px; letter-spacing:4px; margin-top:4px; }
+ .command-city .brand-online { font-size:12px; }
+ .command-city .estate-player-tools { gap:4px; flex-direction:column; align-items:flex-end; }
+ .command-city .header-wallet { min-width:106px; min-height:27px; padding:4px 8px; }
+ .command-city .header-cash { font-size:16px; }
+ .command-city .estate-account-menu>summary { min-width:0; gap:6px; padding:3px 5px; }
+ .command-city .don-portrait { width:28px; height:28px; }
+ .command-city .estate-player-name { font-size:13px; margin-bottom:3px; max-width:130px; }
+ .command-city .estate-player-numbers>span { font-size:12px; }
+ .command-city .estate-player-numbers { gap:4px; }
+ .command-city .estate-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:46px 46px; height:92px; margin:0; overflow:visible; }
+ .command-city .estate-nav>a { width:100%; height:46px; min-height:46px; font-size:13px; padding:0 5px; }
+ .command-nav-badge { top:3px; right:8px; }
+ .command-city .estate-dropdown { top:82px; max-height:calc(100dvh - 94px); overflow-y:auto; }
+ .command-dashboard { padding:10px; }
+ .command-summary-grid,.command-economy-grid,.command-dashboard .command-right { grid-template-columns:1fr; }
+ .command-dashboard .command-panel { padding:16px; }
+ .command-dashboard .command-dossier>img { height:185px; }
+ .command-dashboard .command-player { display:flex; flex-direction:column; }
+ .command-dashboard .command-portrait { height:auto; max-height:290px; aspect-ratio:1.5; }
+ .command-atlas-title { top:13px; left:12px; }
+ .command-atlas-title h1 { font-size:23px; letter-spacing:2px; }
+ .command-atlas-title p { font-size:12px; letter-spacing:1px; }
+ .command-atlas .map-zoom { top:64px; right:10px; }
+ .command-atlas .map-instruction { max-width:65%; }
+ .market-masthead { flex-direction:column; align-items:stretch; }
+ .market-masthead-right { max-width:none; text-align:left; }
+ .market-masthead-right p { font-size:14px; }
+ .market-workspace .market-lot { grid-template-columns:1fr 1fr; }
+ .market-lot .market-commodity { grid-column:1/-1; }
+ .market-commodity .commodity-art { width:88px!important; height:88px!important; }
+ .market-inventory .commodity-art { width:108px!important; height:108px!important; }
+ .market-wallet-stats strong { font-size:23px; }
+ .market-ticket form { display:block; }
+ .inv-slot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .inv-gear-slot { min-height:185px; }
+ .mining-refined .mine-card-art { height:170px; }
+}
+
+/* Correspondence selectors shared by direct, group and gang conversations. */
+.tg-command .tg-message .tg-seal { width:42px; height:42px; flex-shrink:0; }
+.tg-command .tg-conversations .tg-seal { width:44px; height:44px; }
+.tg-command .tg-sidebar nav button { font-size:14px; min-height:44px; }
+.tg-command .tg-office-body>p,.tg-command .tg-facts { font-size:14px; line-height:1.6; }
+.tg-command .tg-thread-header>div>p,.tg-command .tg-send-terms { font-size:14px; }
+.tg-command .tg-excerpt,.tg-command .tg-conversations small { font-size:13px; }
+.tg-command .tg-panel-title,.tg-command .tg-sidebar-title { font-size:16px; }
+.command-dashboard .command-site { font-size:14px; padding:10px 0; }
+.command-dashboard .command-site small { font-size:12px; -webkit-line-clamp:unset; }
+.mining-refined .mine-search { height:auto; min-height:46px; }
+.command-dashboard .command-production>div>span { min-width:0; overflow-wrap:anywhere; }
+@media(min-width:601px) and (max-width:950px) {
+ .command-dashboard .command-player>* { grid-column:auto; grid-row:auto; }
+ .command-dashboard .command-player-stats { grid-column:2; grid-row:1/5; }
+ .command-dashboard .command-quick { grid-column:1/-1; }
+}
+
+/* Keep the wallet inside the mobile header, including multi-line ranks. */
+@media(max-width:600px) {
+ .command-city { --estate-header-height:192px; }
+ .command-city .estate-header { height:192px; min-height:192px; grid-template-rows:100px 92px; }
+ .command-city .estate-dropdown { top:100px; max-height:calc(100dvh - 112px); }
+}
+.command-city .role-badge,.command-city .stats-grid article>div>span { font-size:12px; }
+.command-dashboard .command-quick { display:grid; grid-template-columns:minmax(0,1fr); }
+@media(min-width:601px) and (max-width:950px) {
+ .command-dashboard .command-quick { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+.inv-slot-grid .inv-item-art { height:165px; aspect-ratio:auto; }
+.inv-slot-grid .inv-item-art .commodity-art { max-width:calc(100% - 16px); }
+.inv-item img,.inv-gear-slot img { pointer-events:none; user-select:none; }
+@media(min-width:1450px) {
+ .inv-slot-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+ .inv-slot-grid .inv-item-art { height:158px; }
+}
