@@ -4,7 +4,7 @@ async function capture(page:Page,name:string){const data=(await page.screenshot(
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated test world");await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
 test("city atlas, district tabs and linked property purchase",async({page})=>{
  await page.setViewportSize({width:1448,height:1086});await page.goto("/districts");await expect(page.getByRole("heading",{name:"Control the city."})).toBeVisible();await capture(page,"district-city-desktop");
- await page.getByRole("link",{name:"View District"}).click();await expect(page).toHaveURL(/the-waterfront/);await expect(page.getByRole("tab")).toHaveCount(7);await capture(page,"district-overview-desktop");
+ await page.getByRole("link",{name:"View District"}).click();await expect(page).toHaveURL(/the-waterfront/);await capture(page,"district-overview-desktop");await page.getByText("District records & services",{exact:true}).click();await expect(page.getByRole("tab")).toHaveCount(7);
  await page.getByRole("tab",{name:"Businesses",exact:true}).click();await page.getByLabel("Search",{exact:true}).fill("Telegram");await expect(page.locator(".district-business-card")).toHaveCount(1);await page.locator(".district-business-card").click();await expect(page.getByRole("button",{name:"Plot W06",exact:false})).toHaveAttribute("aria-pressed","true");
  await page.getByRole("button",{name:"Close plot details",exact:true}).click();
  await page.getByRole("button",{name:"Plot W07 · available",exact:true}).click();await capture(page,"district-plot-desktop");

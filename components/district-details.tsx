@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {PropertyFacilities} from "./district-properties";
 import {useState,type FormEvent} from "react";
 import {money} from "@/lib/game";
 import {eligibleBuildings,type DistrictState,type Plot} from "@/lib/districts";
@@ -14,7 +15,7 @@ export function PlotDetails({p,state,act,busy,onClose,initialSection="plot"}:{p:
  const disabled=busy||state.season.status!=="open";
  return <div className="plot-details"><header><div><p className="eyebrow">{state.district.name.toUpperCase()} / LAND REGISTRY</p><h2>Plot {p.code}</h2></div><button onClick={onClose} aria-label="Close plot details">×</button></header>
  <nav className="detail-breadcrumb" aria-label="Property hierarchy"><button onClick={()=>setSection("plot")}>Plot</button>{b&&<><span>›</span><button onClick={()=>setSection("building")}>Building</button></>}{biz&&<><span>›</span><button onClick={()=>setSection("business")}>Business</button></>}</nav>
- <div className="detail-scroll">
+ <div className="detail-scroll"><PropertyFacilities key={p.id} p={p} state={state} act={action} busy={disabled}/>
  {section==="plot"&&<><div className="plot-title-line"><span className={"district-badge "+p.status}>{own?"Your property":p.status}</span><button disabled={busy} className="watch-button" onClick={()=>action("watch")}>{p.watched?"★ Watching":"☆ Watch plot"}</button></div>
  <dl className="district-facts">{[["Zoning",p.zoning],["Size",p.size.toLocaleString()+" m²"],["Owner",p.owner_name],["Base land value",money(p.base_price)],["Tax rate",p.tax+"%"],["Utility level",p.utility_level+" / 100"],["Infrastructure",p.infrastructure_level+" / 100"],["Build capacity",p.build_capacity+" units"],["Designation",p.strategic_type||"Standard plot"]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
  <h3>Permitted development</h3><div className="permit-list">{allowed.map(t=><span key={t.id}>{t.name}</span>)}{!allowed.length&&<p>No building currently meets this plot’s zoning and infrastructure rules.</p>}</div>

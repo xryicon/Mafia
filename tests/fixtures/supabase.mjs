@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {propertyWorld} from "./property-leases.mjs";
 import {readProfile,saveDescription} from "./profiles.mjs";
 import {inventoryWorld} from "./inventory.mjs";
 import {gangWorld} from "./gangs.mjs";
@@ -35,8 +36,9 @@ let refineries=refineryWorld(state,playerId);
 let bank=bankWorld(state);
 let gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));
 let inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));
+let properties=propertyWorld(districts,state,inventory);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));properties=propertyWorld(districts,state,inventory);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -60,6 +62,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
 
 
+ if(url.pathname.startsWith("/rest/v1/rpc/property_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("property_manage")?properties.manage(p.p_action,p.p_payload):properties.action(p.p_action,p.p_payload));return;}
  if(url.pathname.startsWith("/rest/v1/rpc/inventory_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("inventory_state")?inventory.read(p.p_offset):url.pathname.endsWith("inventory_manage")?inventory.manage(p.p_action,p.p_payload):inventory.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/__inventory_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;const setup=JSON.parse(raw||"{}");if(setup.full){mining.activate();for(const g of refineries.read().goods)if(!state.goods.some(x=>x.id===g.id))state.goods.push(g);}inventory.setup(setup);send(200,{ok:true});return;}
  if(url.pathname==="/rest/v1/rpc/gang_workspace"||url.pathname==="/rest/v1/rpc/gang_action"){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("gang_workspace")?gangs.read(p.p_gang,p.p_offset):gangs.action(p.p_action,p.p_payload));return;}

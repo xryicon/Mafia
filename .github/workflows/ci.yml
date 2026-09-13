@@ -130,3 +130,8 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/gangs.sql
           bash supabase/tests/gang_races.sh
+
+      - name: City leases, crafting stations and tenant isolation
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/property_leases.sql
+          bash supabase/tests/property_lease_races.sh

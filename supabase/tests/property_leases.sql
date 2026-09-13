@@ -1,0 +1,110 @@
+begin;
+create function pg_temp.verify(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+do $$
+declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();o uuid:=gen_random_uuid();s uuid:=game_private.current_season();p public.game_district_plots;bid uuid;res jsonb;q jsonb;first jsonb;cash0 bigint;denied boolean;store jsonb;expiry timestamptz;ledger0 bigint;wh uuid;
+begin
+ insert into auth.users(id) values(a),(b),(o);
+ perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',b::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',o::text,true);perform public.game_state();
+ update public.game_user_roles set role_id='owner' where player_id=o;
+ perform set_config('game.reason','CI city property fixture',true);
+ update public.game_settings set value=300 where key='actions_per_minute';
+ update public.game_storage_rules set capacity=case when building_type='garage' then 200 else 2000 end,enabled=true where building_type in ('garage','warehouse');
+ update public.game_players set cash=100000 where id in(a,b);
+ perform set_config('request.jwt.claim.sub',a::text,true);res:=public.district_state('the-waterfront');
+ perform pg_temp.verify(jsonb_array_length(res->'streets')=4,'Street catalog missing');
+ select * into p from public.game_district_plots where season_id=s and code='W25';
+ select id into bid from public.game_district_buildings where plot_id=p.id and archived_at is null;
+ perform pg_temp.verify(bid is not null and p.owner_type='city','City garage not seeded');
+ select id into wh from public.game_district_buildings where plot_id in(select id from public.game_district_plots where season_id=s and code='W26');
+ perform pg_temp.verify((select capacity from public.game_storage_rules where building_type='warehouse')>(select capacity from public.game_storage_rules where building_type='garage'),'Warehouse should be larger');
+ q:=jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',1,'rent',300);
+ set local role authenticated;
+ res:=public.property_action('rent',q||'{"rent":1}');perform pg_temp.verify(res?'error','Browser changed rent');
+ first:=public.property_action('rent',q);perform pg_temp.verify(not first?'error','City lease failed: '||first::text);
+ res:=public.property_action('rent',q);perform pg_temp.verify(res=first,'Lease retry changed result');
+ res:=public.property_action('rent',q||'{"rent":600}');perform pg_temp.verify(res?'error','Nonce accepted different payment');
+ denied:=false;begin update public.game_property_leases set player_id=b;exception when insufficient_privilege then denied:=true;end;perform pg_temp.verify(denied,'Direct ownership write allowed');
+ denied:=false;begin perform 1 from public.game_property_leases;exception when insufficient_privilege then denied:=true;end;perform pg_temp.verify(denied,'Lease table exposed');
+ reset role;
+ perform pg_temp.verify((select cash from public.game_players where id=a)=99700,'Lease charged more than once');
+ perform pg_temp.verify((select owner_type from public.game_district_plots where id=p.id)='city','Rent transferred ownership');
+ perform pg_temp.verify(exists(select 1 from public.game_ledger where player_id=a and delta=-300),'Rent omitted financial ledger');
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ res:=public.property_action('rent',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Second tenant acquired occupied garage');
+ res:=public.inventory_state();perform pg_temp.verify(jsonb_array_length(res->'stores')=0,'Stranger sees tenant storage');
+ res:=public.property_action('install_station',q||jsonb_build_object('request_id',gen_random_uuid(),'cost',500,'space',20));perform pg_temp.verify(res?'error','Stranger installed a fitting');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ res:=public.inventory_action('store',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',3,'request_id',gen_random_uuid()));
+ perform pg_temp.verify(not res?'error','Lease storage failed: '||res::text);
+ q:=jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'cost',500,'space',20);
+ first:=public.property_action('install_station',q);perform pg_temp.verify(not first?'error','Station install failed: '||first::text);
+ res:=public.property_action('install_station',q);perform pg_temp.verify(res=first,'Station retry was not idempotent');
+ perform pg_temp.verify((select cash from public.game_players where id=a)=99200,'Installation charged more than once');
+ res:=public.inventory_state();select x into store from jsonb_array_elements(res->'stores')x where x->>'id'=bid::text;
+ perform pg_temp.verify((store->>'capacity')::int=180 and (store->>'used')::int=3,'Station footprint not reserved in storage');
+ -- Commodity and equipment capacity share the station floor space.
+ update public.game_storage_rules set capacity=23 where building_type='garage';
+ res:=public.inventory_action('store',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',1,'request_id',gen_random_uuid()));
+ perform pg_temp.verify(res?'error','Deposit exceeded space left by station');
+ update public.game_storage_rules set capacity=200 where building_type='garage';
+ insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'pickaxe',1) on conflict(season_id,player_id,good_id) do update set quantity=1;
+ res:=public.inventory_action('equip',jsonb_build_object('season_id',s,'item_key','good:pickaxe','equipment_slot','utility','request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Equip fixture failed: '||res::text);
+ res:=public.inventory_action('gear_store',jsonb_build_object('season_id',s,'item_key',(select 'gear:'||id from public.game_inventory_gear where season_id=s and player_id=a and good_id='pickaxe'),'building_id',bid,'request_id',gen_random_uuid()));
+ perform pg_temp.verify(not res?'error','Leased equipment storage failed: '||res::text);
+ denied:=false;begin update public.game_district_plots set owner_type='player',owner_id=b where id=p.id;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'City property transferred with tenant');
+ res:=public.property_action('vacate',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Vacated with stock inside');
+ -- A disabled or repriced listing preserves the current tenancy.
+ perform set_config('request.jwt.claim.sub',o::text,true);
+ select ends_at into expiry from public.game_property_leases where building_id=bid and released_at is null;
+ res:=public.property_manage('property',jsonb_build_object('template_id',p.template_id,'street_id',(select street_id from public.game_plot_templates where id=p.template_id),'rent',450,'term_hours',168,'lease_enabled',true,'image_url','/art/harbor.webp','reason','Adjust city garage rent for new contracts'));
+ perform pg_temp.verify(not res?'error','Owner lease edit failed: '||res::text);
+ perform pg_temp.verify((select ends_at from public.game_property_leases where building_id=bid and released_at is null)=expiry,'Changing rent rewrote paid contract');
+ perform pg_temp.verify(exists(select 1 from public.game_audit where actor_id=o and reason like 'Property planning:%'),'Owner edits not audited');
+
+ res:=public.property_manage('property',jsonb_build_object('template_id',(select template_id from public.game_district_plots where season_id=s and code='W07'),'street_id',null,'image_url','/art/foundry-small.webp','rent',null,'term_hours',null,'lease_enabled',false,'reason','Change ordinary property artwork without rental terms'));
+ perform pg_temp.verify(not res?'error','Non-rental property required rent settings: '||res::text);
+ update public.game_user_roles set role_id='moderator' where player_id=b;
+ perform set_config('request.jwt.claim.sub',b::text,true);denied:=false;begin perform public.property_manage('street',jsonb_build_object('district_id',p.district_id,'name','Unauthorized street','reason','Unauthorized property edit'));exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Moderator changed city economy');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ res:=public.property_action('renew',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',1,'rent',300));perform pg_temp.verify(res?'error','Stale rent quote was accepted');
+ res:=public.property_action('renew',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',2,'rent',450));perform pg_temp.verify(not res?'error','Current lease renewal failed');
+
+ select ends_at into expiry from public.game_property_leases where building_id=bid and released_at is null;
+ update public.game_seasons set status='locked',locked_at=clock_timestamp()-interval '30 minutes' where id=s;
+ update public.game_seasons set status='open' where id=s;
+ perform pg_temp.verify((select ends_at from public.game_property_leases where building_id=bid and released_at is null)>=expiry+interval '30 minutes','Locked season consumed paid lease time');
+ -- Expired contents remain private and can be retrieved after a new tenant moves in.
+ update public.game_property_leases set starts_at=now()-interval '2 days',ends_at=now()-interval '1 day' where building_id=bid and released_at is null;
+ res:=public.inventory_action('store',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',1,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Expired lease accepted deposits');
+ res:=public.inventory_state();select x into store from jsonb_array_elements(res->'stores')x where x->>'id'=bid::text;perform pg_temp.verify(not (store->>'enabled')::boolean and (store->>'used')::int=4,'Collection locker missing after expiry');
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ res:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',2,'rent',450));perform pg_temp.verify(not res?'error','Expired property cannot be rented again');
+ res:=public.inventory_state();select x into store from jsonb_array_elements(res->'stores')x where x->>'id'=bid::text;perform pg_temp.verify((store->>'used')::int=0 and (store->>'station_space')::int=0,'New tenant sees old stock or station');
+ res:=public.inventory_action('retrieve',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',1,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','New tenant took previous tenant goods');
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ res:=public.inventory_action('retrieve',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',3,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Previous tenant could not collect own goods: '||res::text);
+ res:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'item_key',(select 'gear:'||id from public.game_inventory_gear where season_id=s and player_id=a and good_id='pickaxe'),'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Previous tenant could not collect equipment: '||res::text);
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ res:=public.property_action('vacate',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Empty tenant could not return keys');
+ -- Failed payment leaves no tenancy or funds movement.
+ select cash into cash0 from public.game_players where id=b;update public.game_players set cash=0 where id=b;
+ q:=jsonb_build_object('season_id',s,'plot_id',(select plot_id from public.game_district_buildings where id=wh),'request_id',gen_random_uuid(),'version',1,'rent',1500);
+ res:=public.property_action('rent',q);perform pg_temp.verify(res?'error','Empty wallet acquired lease');
+ perform pg_temp.verify(not exists(select 1 from public.game_property_leases where building_id=wh),'Failed payment left a lease');
+
+ -- Owned garages support station fittings; player property cannot be rented out.
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ update public.game_district_plots set owner_type='player',owner_id=a where id=p.id;
+ update public.game_district_buildings set owner_type='player',owner_id=a where id=bid;
+ res:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'version',2,'rent',450));perform pg_temp.verify(res?'error','Player-owned property accepted a city lease');
+ res:=public.property_action('install_station',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid(),'cost',500,'space',20));perform pg_temp.verify(not res?'error','Owner could not fit garage station: '||res::text);
+ denied:=false;begin update public.game_district_plots set asking_price=5000 where id=p.id;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Property with an installed station listed for transfer');
+ res:=public.property_action('remove_station',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Owned station could not be removed');
+ -- Historical financial and installation records cannot be destroyed.
+ denied:=false;begin delete from public.game_property_leases where building_id=bid;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Lease history deleted');
+ denied:=false;begin truncate public.game_property_stations;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Installation history truncated');
+ raise notice 'City lease, station, expiry, inventory, authorization and ledger checks passed';
+end$$;
+rollback;
