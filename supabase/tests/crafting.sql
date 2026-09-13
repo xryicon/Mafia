@@ -17,11 +17,11 @@ begin
  select p.id,b.id into pid,bid from public.game_district_plots p join public.game_district_buildings b on b.plot_id=p.id where p.season_id=s and p.code='W25';
  update public.game_property_leases set released_at=clock_timestamp() where building_id=bid and released_at is null;
  res:=public.property_action('rent',jsonb_build_object('season_id',s,'plot_id',pid,'rent',300,'version',1,'request_id',gen_random_uuid()));
- perform pg_temp.verify(not res?'error','Lease fixture failed '||res);
+ perform pg_temp.verify(not res?'error','Lease fixture failed '||res::text);
  insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'pistol_blueprint',2),(s,a,'bullet_blueprint',1),(s,a,'iron-ingot',12),(s,a,'copper-ingot',8);
  q:=jsonb_build_object('season_id',s,'building_id',bid,'recipe_id','homemade-pistol','version',1,'source','carried','request_id',gen_random_uuid());
  res:=public.crafting_action('start',q||'{"batches":1}');perform pg_temp.verify(res?'error','Unlearned recipe crafted');
- first:=public.crafting_action('learn',q);perform pg_temp.verify(not first?'error','Learning failed: '||first);
+ first:=public.crafting_action('learn',q);perform pg_temp.verify(not first?'error','Learning failed: '||first::text);
  res:=public.crafting_action('learn',q);perform pg_temp.verify(res=first,'Learning retry changed result');
  perform pg_temp.verify((select quantity from public.game_inventory where season_id=s and player_id=a and good_id='pistol_blueprint')=1,'Learning consumed wrong quantity');
  res:=public.crafting_action('learn',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Duplicate learning consumed a spare');
@@ -33,7 +33,7 @@ begin
  res:=public.inventory_action('store',jsonb_build_object('season_id',s,'building_id',bid,'good_id','iron-ingot','quantity',2,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Store fixture failed');
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'source','both','batches',1,'output_units',9999);
  set local role authenticated;
- first:=public.crafting_action('start',q);perform pg_temp.verify(not first?'error','Combined source failed: '||first);
+ first:=public.crafting_action('start',q);perform pg_temp.verify(not first?'error','Combined source failed: '||first::text);
  res:=public.crafting_action('start',q);perform pg_temp.verify(res=first,'Queue retry changed result');
  jobid:=(first->>'job_id')::uuid;
  denied:=false;begin update public.game_learned_blueprints set recipe_id='homemade-bullets';exception when insufficient_privilege then denied:=true;end;perform pg_temp.verify(denied,'Direct knowledge update allowed');
@@ -42,6 +42,13 @@ begin
  perform pg_temp.verify((select quantity from public.game_inventory where season_id=s and player_id=a and good_id='iron-ingot')=8,'Wrong combined carried deduction');
  perform pg_temp.verify((select quantity from public.game_storage_inventory where season_id=s and player_id=a and building_id=bid and good_id='iron-ingot')=0,'Property materials not consumed first');
  perform pg_temp.verify((select output_units from public.game_crafting_batches where job_id=jobid)=1,'Browser overrode output');
+
+ -- Missing a later input rolls back earlier material reservations.
+ select sum(quantity) into ledger0 from public.game_inventory where season_id=s and player_id=a and good_id in('iron-ingot','copper-ingot');
+ res:=public.crafting_action('start',q||jsonb_build_object('request_id',gen_random_uuid(),'batches',3,'source','carried'));
+ perform pg_temp.verify(res?'error','Crafted without all required inputs');
+ perform pg_temp.verify((select sum(quantity) from public.game_inventory where season_id=s and player_id=a and good_id in('iron-ingot','copper-ingot'))=ledger0,'Failed craft partially consumed materials');
+
  res:=public.crafting_action('collect',jsonb_build_object('season_id',s,'job_id',jobid,'destination','carried','request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Collected before ready');
  res:=public.property_action('remove_station',jsonb_build_object('season_id',s,'plot_id',pid,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Removed an occupied crafting table');
  res:=public.property_action('vacate',jsonb_build_object('season_id',s,'plot_id',pid,'request_id',gen_random_uuid()));perform pg_temp.verify(res?'error','Returned keys with a pending job');
@@ -51,7 +58,7 @@ begin
  denied:=false;begin perform public.crafting_manage('{}');exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Moderator edited crafting economy');
  perform set_config('request.jwt.claim.sub',o::text,true);
  res:=public.crafting_manage('{"id":"homemade-pistol","version":1,"name":"Homemade pistol","description":"Rebalanced recipe","seconds":30,"output_units":2,"materials":{"iron-ingot":5,"copper-ingot":3},"enabled":true,"reason":"Balance the test crafting recipe"}');
- perform pg_temp.verify(not res?'error','Owner recipe edit failed '||res);
+ perform pg_temp.verify(not res?'error','Owner recipe edit failed '||res::text);
  perform pg_temp.verify((select output_units from public.game_crafting_batches where job_id=jobid)=1,'Owner edited queued output');
  perform pg_temp.verify(exists(select 1 from public.game_audit where actor_id=o and reason like 'Crafting recipe:%'),'Recipe edits not audited');
  perform set_config('request.jwt.claim.sub',a::text,true);
@@ -69,7 +76,7 @@ begin
  update public.game_storage_rules set capacity=20 where building_type='garage';
  res:=public.crafting_action('collect',q||'{"destination":"storage"}');perform pg_temp.verify(res?'error','Overfull storage collection allowed');
  update public.game_storage_rules set capacity=200 where building_type='garage';
- first:=public.crafting_action('collect',q);perform pg_temp.verify(not first?'error','Collection failed '||first);
+ first:=public.crafting_action('collect',q);perform pg_temp.verify(not first?'error','Collection failed '||first::text);
  res:=public.crafting_action('collect',q);perform pg_temp.verify(res=first,'Collection retry duplicated output');
  perform pg_temp.verify((select quantity from public.game_inventory where season_id=s and player_id=a and good_id='homemade-pistol')=1,'Incorrect crafted quantity');
  perform pg_temp.verify((select value from public.game_season_stats where season_id=s and player_id=a and metric='crafting')=1,'Crafting metric not recorded');
