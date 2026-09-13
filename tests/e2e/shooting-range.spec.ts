@@ -107,7 +107,7 @@ test("Beginner and Advanced selection controls target distance, speed and XP on 
  const width=Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'));
  await advanced.click();await expect(advanced).toHaveAttribute('aria-checked','true');expect(Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'))).toBeCloseTo(width*.65);
  await capture(page,'range-difficulty-desktop');await page.getByRole('button',{name:/Start session/}).click();
- let d=await rpc(request,'range_state');expect(d.session.difficulty).toBe('advanced');expect(d.session.config.move_speed).toBe(d.config.move_speed*2.5);expect(d.session.config.completion_xp).toBe(150);await expect(beginner).toBeDisabled();
+ let d=await rpc(request,'range_state');expect(d.session.difficulty).toBe('advanced');expect(d.session.config.move_speed).toBe(d.config.move_speed*2.5);expect(d.session.config.completion_xp).toBe(150);await expect(page.locator('.range-difficulties')).toBeHidden();
  await page.getByRole('button',{name:'End session',exact:true}).click();await expect(page.locator('.range-session-result')).toContainText('+0 XP');
  await expect(page.getByRole('timer',{name:'Range cooldown'})).toContainText(/09:5|10:00/);await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
  await beginner.click();await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();await page.reload();await expect(page.getByRole('timer',{name:'Range cooldown'})).toBeVisible();
