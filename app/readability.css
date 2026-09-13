@@ -279,7 +279,5 @@
 .command-vital-track{display:block;grid-column:1/-1;grid-row:2;position:relative;width:100%;height:10px;overflow:hidden;background:#40525455;border:1px solid #87937d35}
 .command-vital-track>i{display:block;height:100%;background:linear-gradient(90deg,#48745b,#82b58a);transition:width .35s ease}
 .command-vital-armour .command-vital-track>i{background:linear-gradient(90deg,#496675,#8aaebd)}
-.command-vital-health dt svg{color:#93b991}
-.command-vital-armour dt svg{color:#a1bac8}
 .command-vital-track>em{position:absolute;right:0;bottom:0;height:4px;background:#d6ae71}
 @media(prefers-reduced-motion:reduce){.command-vital-track>i{transition:none}}
