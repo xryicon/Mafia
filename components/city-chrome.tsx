@@ -1,7 +1,8 @@
 "use client";
 import {useCallback,useEffect,useLayoutEffect,useRef,useState} from "react";
 import Link from "next/link";
-import {usePathname} from "next/navigation";
+import {PRISON_PATH,prisonAllowsPath,type PrisonState} from "@/lib/prison";
+import {usePathname,useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
 import {money} from "@/lib/game";
 import type {CityState} from "@/lib/city";
@@ -16,6 +17,8 @@ function UsernameGate(){
  return <dialog className="username-gate" ref={dialog} onCancel={e=>e.preventDefault()} aria-labelledby="username-title"><p className="eyebrow">YOUR BLACKWATER IDENTITY</p><h2 id="username-title">Choose your username.</h2><p>Give your empire a name the city will remember.</p><UsernameForm onSaved={()=>window.location.reload()}/><LogoutButton/></dialog>;
 }
 export function CityChrome({children}:{children:React.ReactNode}){
+ const router=useRouter();
+ const [custody,setCustody]=useState<PrisonState|null>(null);
  const path=usePathname(),[data,setData]=useState<CityState|null>(null),[stale,setStale]=useState(false);
  const [summary,setSummary]=useState<{unread:number|null}|null>(null);
  const alive=useRef(false),reading=useRef(false),account=useRef<HTMLDetailsElement>(null);
@@ -23,8 +26,9 @@ export function CityChrome({children}:{children:React.ReactNode}){
   if(reading.current||document.hidden)return;reading.current=true;
   try{
    const client=createClient();
-   const [city,mail]=await Promise.allSettled([client.rpc("city_status"),client.rpc("telegram_state")]);
+   const [city,mail,prison]=await Promise.allSettled([client.rpc("city_status"),client.rpc("telegram_state"),client.rpc("prison_state")]);
    if(!alive.current)return;
+   if(prison.status==="fulfilled"&&!prison.value.error&&prison.value.data)setCustody(prison.value.data);
    if(city.status==="fulfilled"&&!city.value.error&&city.value.data){setData(city.value.data);setStale(false);}else setStale(true);
 
    const unread=mail.status==="fulfilled"&&!mail.value.error?mail.value.data?.unread:null;
@@ -45,6 +49,8 @@ export function CityChrome({children}:{children:React.ReactNode}){
   const escape=(e:KeyboardEvent)=>{if(e.key==="Escape"){if(account.current?.open){account.current.open=false;account.current.querySelector("summary")?.focus();}}};
   document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape);};
  },[]);
+ useEffect(()=>{if(custody?.jailed&&!prisonAllowsPath(path))router.replace(PRISON_PATH);},[custody,path,router]);
+ useEffect(()=>{const updated=(event:Event)=>setCustody((event as CustomEvent<PrisonState>).detail);window.addEventListener("blackwater:custody",updated);return()=>window.removeEventListener("blackwater:custody",updated);},[]);
  const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/inventory","Inventory","inventory"],["/bank","Bank","bank"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"]];
  const blank=["/properties"].includes(path);
  useEffect(()=>{const update=(event:Event)=>setSummary((event as CustomEvent).detail);window.addEventListener("blackwater:dashboard",update);return()=>window.removeEventListener("blackwater:dashboard",update);},[]);
@@ -58,7 +64,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
    <div className="estate-dropdown"><p className="eyebrow">YOUR BLACKWATER</p><p className="account-identity">{data?.username||"Your account"}<small>Power {data?.player.power?.toLocaleString("en-US")??"—"} · {data?.player.rank||"—"}</small></p><Link href="/players">Players & respect</Link><Link href="/seasons?view=rankings">Leaderboards</Link><Link href="/seasons">Seasons</Link><Link href="/support">Support</Link>{!!data?.permissions.length&&<Link className="owner-menu-link" href={data.permissions.includes("roles.manage")?"/owner":"/staff"}>{data.permissions.includes("roles.manage")?"Owner panel":"Staff panel"}</Link>}<Link href="/districts">City map & districts</Link><Link href="/shooting-range">Shooting range</Link><Link href="/ledger">Financial history</Link><Link href="/account">Account & security</Link><LogoutButton/></div>
   </details></div></header>
   {stale&&<div className="estate-connection" role="status">Connection paused. <button onClick={()=>void refresh()}>Refresh city status</button></div>}
-  <main id="main">{children}</main>
+  <main id="main">{custody?.jailed&&!prisonAllowsPath(path)?<p className="control-layout">Transferring you to Blackwater Island Prison…</p>:children}</main>
   {!blank&&<footer className="estate-footer"><Brand href="/dashboard"/><p>A PLAYER-DRIVEN CRIME ECONOMY <span>│</span> AMBITION LIVES HERE.</p><nav aria-label="Game information"><Link href="/seasons">Seasons</Link><Link href="/players">Players</Link><Link href="/support">Help</Link></nav><small>SAME PLAYERS.<br/>A DIFFERENT TOMORROW.</small></footer>}
   {data&&!data.username_claimed&&<UsernameGate/>}
  </div>;
