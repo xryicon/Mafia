@@ -51,7 +51,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
  },[]);
  useEffect(()=>{if(custody?.jailed&&!prisonAllowsPath(path))router.replace(PRISON_PATH);},[custody,path,router]);
  useEffect(()=>{const updated=(event:Event)=>setCustody((event as CustomEvent<PrisonState>).detail);window.addEventListener("blackwater:custody",updated);return()=>window.removeEventListener("blackwater:custody",updated);},[]);
- const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/inventory","Inventory","inventory"],["/bank","Bank","bank"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"]];
+ const links=[["/dashboard","Dashboard","home"],["/market","Market","trade"],["/inventory","Inventory","inventory"],["/bank","Bank","bank"],["/gangs","Gangs","people"],["/telegrams","Telegrams","mail"],["/skills","Skills","respect"]];
  const blank=["/properties"].includes(path);
  useEffect(()=>{const update=(event:Event)=>setSummary((event as CustomEvent).detail);window.addEventListener("blackwater:dashboard",update);return()=>window.removeEventListener("blackwater:dashboard",update);},[]);
  const active=(href:string)=>path===href||path.startsWith(href+"/");

@@ -202,8 +202,9 @@
  .command-city .estate-player-name { font-size:13px; margin-bottom:3px; max-width:130px; }
  .command-city .estate-player-numbers>span { font-size:12px; }
  .command-city .estate-player-numbers { gap:4px; }
- .command-city .estate-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:46px 46px; height:92px; margin:0; overflow:visible; }
- .command-city .estate-nav>a { width:100%; height:46px; min-height:46px; font-size:13px; padding:0 5px; }
+ .command-city .estate-nav { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-rows:46px 46px; height:92px; margin:0; overflow:visible; }
+ .command-city .estate-nav>a { grid-column:span 4; width:100%; height:46px; min-height:46px; font-size:13px; padding:0 5px; }
+ .command-city .estate-nav>a:nth-child(n+4) { grid-column:span 3; }
  .command-nav-badge { top:3px; right:8px; }
  .command-city .estate-dropdown { top:82px; max-height:calc(100dvh - 94px); overflow-y:auto; }
  .command-dashboard { padding:10px; }

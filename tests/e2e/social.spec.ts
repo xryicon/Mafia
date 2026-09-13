@@ -16,7 +16,7 @@ test("reference navigation removes chat and retains account destinations",async(
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
  await page.setViewportSize({width:1448,height:1086});await page.goto("/dashboard");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Inventory","Bank","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Inventory","Bank","Gangs","Telegrams","Skills"]);
  await expect(page.getByRole("complementary",{name:"City chat"})).toHaveCount(0);await expect(page.getByRole("button",{name:/City chat/})).toHaveCount(0);
  await expect(page.locator(".estate-brand .brand-online")).toContainText("2 online");
  await page.getByLabel("Player menu",{exact:true}).click();
@@ -24,7 +24,7 @@ test("reference navigation removes chat and retains account destinations",async(
  for(const name of ["Players & respect","Leaderboards","Seasons","Support","Owner panel"])await expect(menu.getByRole("link",{name,exact:true})).toBeVisible();
  await menu.getByRole("link",{name:"Owner panel",exact:true}).click();await expect(page.getByRole("heading",{name:"Owner panel",exact:true})).toBeVisible();
  await page.setViewportSize({width:375,height:812});await page.goto("/support");await expect(page.getByLabel("Message the city")).toHaveCount(0);
- await expect(nav.getByRole("link")).toHaveCount(6);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await expect(nav.getByRole("link")).toHaveCount(7);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 test("respect directory keeps global ranks while searching and filtering online",async({page,context})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");

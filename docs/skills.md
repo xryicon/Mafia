@@ -1,6 +1,6 @@
 # Blackwater skills
 
-The protected `/skills` page shares the game HUD, noir artwork and copper/iron styling. Dashboard quick actions and the player menu link to it. Crafting, Sharpshooting and Lockpicking each begin at level 1 and stop at level 20. Cards show saved XP, progress to the next level and the level-20 target. The interactive level grid shows every threshold; the latest 20 skill rewards show their activity and date.
+The protected `/skills` page shares the game HUD, noir artwork and copper/iron styling. The top navigation next to Telegrams and the player menu link to it. Crafting, Sharpshooting and Lockpicking each begin at level 1 and stop at level 20. Cards show saved XP, progress to the next level and the level-20 target. The interactive level grid shows every threshold; the latest 20 skill rewards show their activity and date.
 
 Each skill initially requires 10,000 cumulative XP to reach level 20. Owner → Skills & progression controls each target independently (19–1,000,000,000 XP). For level L the cumulative threshold is `(L-1) + floor((target-19) * (L-1)^2 / 361)`. This guarantees strictly increasing thresholds, a zero-XP first level and an exact target at level 20. Definition changes recalculate levels without modifying earned XP. Extra XP remains recorded after level 20. Player-facing levels and thresholds come from the server; the browser formula only previews an Owner edit.
 
