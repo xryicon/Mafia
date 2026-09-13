@@ -280,7 +280,7 @@ begin
  end if;
  return jsonb_build_object('season',directory->'season','playable',(select status='open' and (ends_at is null or ends_at>clock_timestamp()) from public.game_seasons where id=s),
  'player',(select jsonb_build_object('id',id,'name',handle,'cash',cash) from public.game_players where id=uid),
- 'directory',(select coalesce(jsonb_agg(x||jsonb_build_object('description',g.description,'recruiting',g.data->>'recruitment'='open') order by (x->>'rank')::int,g.id),'[]') from jsonb_array_elements(directory->'gangs') x join public.game_season_gangs g on g.id=(x->>'id')::uuid),
+ 'directory',(select coalesce(jsonb_agg(x||jsonb_build_object('description',listed.description,'recruiting',listed.data->>'recruitment'='open') order by (x->>'rank')::int,listed.id),'[]') from jsonb_array_elements(directory->'gangs') x join public.game_season_gangs listed on listed.id=(x->>'id')::uuid),
  'total',directory->'total','my_gang_id',mine,'selected',selected,
  'ranks',(select jsonb_agg(to_jsonb(x)||jsonb_build_object('assignable',boss or manage and x.priority<r.priority) order by x.priority desc) from game_private.gang_ranks x),
  'settings',(select jsonb_object_agg(key,value) from public.game_settings where key like 'gang_%' or key='district_gang_creation_cost'),
