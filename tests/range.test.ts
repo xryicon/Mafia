@@ -1,6 +1,6 @@
 import {strict as assert} from "node:assert";
 import {test} from "node:test";
-import {rangeTarget,rangeImpact,accuracy,type RangeShot,type RangeConfig} from "../lib/range";
+import {rangeTarget,rangeImpact,formatRangeAccuracy,type RangeShot,type RangeConfig} from "../lib/range";
 import {isProtectedPage} from "../lib/auth-paths";
 const c={targets_per_round:3,round_seconds:5,move_speed:300,move_amplitude:12,move_vertical:15,radius_x:7,radius_y:12} as RangeConfig;
 test("moving target hit areas stay inside the lane at allowed extremes",()=>{
@@ -8,7 +8,7 @@ test("moving target hit areas stay inside the lane at allowed extremes",()=>{
 });
 test("range geometry remains deterministic across refresh and timestamps",()=>{
  assert.deepEqual(rangeTarget(37,0,1,1250,c),rangeTarget(37,0,1,1250,c));assert.notDeepEqual(rangeTarget(37,0,1,1250,c),rangeTarget(37,0,1,1500,c));
- const p=rangeTarget(37,0,0,1250,{...c,move_amplitude:0,move_vertical:0});assert.equal(p.x,20);assert.equal(p.y,45);assert.equal(accuracy(0,0),0);assert.equal(accuracy(1,3),33);assert.ok(isProtectedPage("/shooting-range"));
+ const p=rangeTarget(37,0,0,1250,{...c,move_amplitude:0,move_vertical:0});assert.equal(p.x,20);assert.equal(p.y,45);assert.equal(formatRangeAccuracy(null),"—");assert.equal(formatRangeAccuracy(0),"0");assert.equal(formatRangeAccuracy(100),"100");assert.equal(formatRangeAccuracy(33.333),"33.3");assert.ok(isProtectedPage("/shooting-range"));
 });
 
 test("paper holes use shot-time geometry, including repeated hits and non-scoring paper edges",()=>{

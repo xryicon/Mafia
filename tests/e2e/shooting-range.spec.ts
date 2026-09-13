@@ -13,7 +13,7 @@ test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTU
 
 test("range shares game HUD, requires equipment and is reachable from dashboard",async({page})=>{
  await page.goto("/dashboard");await page.locator(".command-quick").getByRole("link",{name:/Shooting Range/i}).click();await expect(page).toHaveURL(/shooting-range/);
- await expect(page.getByRole("navigation",{name:"Game navigation"})).toBeVisible();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();await expect(page.locator(".range-loadout")).toContainText("No weapon equipped");await expect(page.locator(".range-best strong")).toHaveText("0");
+ await expect(page.getByRole("navigation",{name:"Game navigation"})).toBeVisible();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();await expect(page.locator(".range-loadout")).toContainText("No weapon equipped");await expect(page.locator(".range-best:not(.range-advanced-average) strong")).toHaveText("0");
 });
 
 test("moving targets, verified hits and misses consume actual equipped ammunition and condition",async({page,request})=>{
@@ -103,7 +103,7 @@ test("a delayed range recording respects mute, and missing audio cannot block sh
 test("Beginner and Advanced selection controls target distance, speed and XP on desktop and mobile",async({page,request})=>{
  await equip(request,12);await page.setViewportSize({width:1536,height:1180});await page.goto('/shooting-range');
  const beginner=page.getByRole('radio',{name:/Beginner/}),advanced=page.getByRole('radio',{name:/Advanced/});
- await expect(beginner).toHaveAttribute('aria-checked','true');await expect(beginner).toContainText('+50 XP');await expect(advanced).toContainText('+150 XP');
+ await expect(beginner).toHaveAttribute('aria-checked','true');await expect(beginner).toContainText('Up to 50 XP');await expect(advanced).toContainText('Up to 150 XP');
  const width=Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'));
  await advanced.click();await expect(advanced).toHaveAttribute('aria-checked','true');expect(Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'))).toBeCloseTo(width*.65);
  await capture(page,'range-difficulty-desktop');await page.getByRole('button',{name:/Start session/}).click();
@@ -118,10 +118,34 @@ test("completed sessions show earned XP once and recovery expiry enables the nex
  await equip(request,8);await request.post(base+'/__range_setup',{headers,data:{config:{rounds:1,round_seconds:4,move_amplitude:0,move_vertical:0,cooldown_seconds:3}}});
  await start(page);await aim(page,1);await expect(page.locator('.range-entry')).toContainText('1 / 1 rounds practised');
  await expect(page.getByRole('button',{name:/Record session/})).toBeVisible();await page.getByRole('button',{name:/Record session/}).click();
- await expect(page.locator('.range-session-result')).toContainText('+50 XP');await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
- let d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(50);expect(d.session.xp_awarded).toBe(50);
- await page.reload();d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(50);
+ await expect(page.locator('.range-session-result')).toContainText('+16 XP');await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
+ let d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(16);expect(d.session.xp_awarded).toBe(16);
+ await page.reload();d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(16);
  await expect(page.getByRole('button',{name:/Start session/})).toBeEnabled({timeout:7000});await page.getByRole('radio',{name:/Advanced/}).click();await page.getByRole('button',{name:/Start session/}).click();
  await aim(page,1);await expect(page.getByRole('button',{name:/Record session/})).toBeVisible();await page.getByRole('button',{name:/Record session/}).click();
- await expect(page.locator('.range-session-result')).toContainText('+150 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(200);
+ await expect(page.locator('.range-session-result')).toContainText('+50 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(66);
+});
+
+test("bullseye precision drives live accuracy, saved Advanced averages and score XP",async({page,request})=>{
+ await equip(request,12);await request.post(base+'/__range_setup',{headers,data:{config:{rounds:1,round_seconds:8,move_amplitude:0,move_vertical:0,cooldown_seconds:3}}});
+ const display=(n:number)=>n.toFixed(1).replace(/\.0$/,"")+"%";
+ await page.setViewportSize({width:1536,height:1150});await page.goto('/shooting-range');await expect(page.locator('.range-advanced-average strong')).toHaveText('—');
+ await page.getByRole('radio',{name:/Advanced/}).click();await page.getByRole('button',{name:/Start session/}).click();await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');
+ await aim(page,0);await expect(page.locator('.range-xp-preview')).toContainText('50 XP');
+ await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');
+ const lane=page.locator('.range-lane');await lane.scrollIntoViewIfNeeded();const box=await lane.boundingBox(),transform=await page.locator('[data-lane="1"]').getAttribute('transform'),xy=transform!.match(/[\d.]+/g)!.map(Number),rx=Number(await page.locator('[data-lane="1"] ellipse').first().getAttribute('rx'));
+ await page.mouse.click(box!.x+(xy[0]+rx*.5)/1000*box!.width,box!.y+xy[1]/600*box!.height);
+ await expect(page.locator('.range-condition strong')).toHaveText('98 / 100');let d=await rpc(request,'range_state');
+ expect(d.session.last_shot.accuracy_percent).toBeGreaterThan(47);expect(d.session.last_shot.accuracy_percent).toBeLessThan(53);expect(d.session.accuracy_percent).toBeGreaterThan(72);expect(d.session.accuracy_percent).toBeLessThan(78);
+ await expect(page.locator('.range-scoreboard>div').filter({hasText:'Accuracy'})).toContainText(display(d.session.accuracy_percent));await expect(page.locator('.range-xp-preview')).toContainText('Last shot '+display(d.session.last_shot.accuracy_percent));
+ await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await lane.click({position:{x:8,y:100}});await expect(page.locator('.range-condition strong')).toHaveText('97 / 100');
+ d=await rpc(request,'range_state');expect(d.session.last_shot.accuracy_percent).toBe(0);const average=d.session.accuracy_percent,earned=Math.floor(d.session.score/300*150);expect(average).toBeGreaterThan(48);expect(average).toBeLessThan(52);expect(earned).toBeGreaterThan(85);expect(earned).toBeLessThan(89);
+ await expect(page.locator('.range-scoreboard>div').filter({hasText:'Accuracy'})).toContainText(display(average));await expect(page.locator('.range-xp-preview')).toContainText(earned+' XP');
+ await expect(page.getByRole('button',{name:/Record session/})).toBeVisible({timeout:10000});await page.getByRole('button',{name:/Record session/}).click();
+ await expect(page.locator('.range-session-result')).toContainText('+'+earned+' XP');await expect(page.locator('.range-advanced-average strong')).toHaveText(display(average));await expect(page.locator('.header-power strong')).toHaveText(String(earned));
+ await page.reload();await expect(page.locator('.range-advanced-average strong')).toHaveText(display(average));expect((await rpc(request,'range_state')).stats.xp_earned).toBe(earned);
+ await expect(page.getByRole('button',{name:/Start session/})).toBeEnabled({timeout:7000});await page.getByRole('radio',{name:/Advanced/}).click();await page.getByRole('button',{name:/Start session/}).click();await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await aim(page,1);await expect(page.locator('.range-condition strong')).toHaveText('96 / 100');
+ await page.getByRole('button',{name:'End session',exact:true}).click();await expect(page.locator('.range-session-result')).toContainText('+0 XP');d=await rpc(request,'range_state');expect(d.advanced_stats.average_accuracy).toBeGreaterThan(60);expect(d.advanced_stats.average_accuracy).toBeLessThan(65);await expect(page.locator('.range-advanced-average strong')).toHaveText(display(d.advanced_stats.average_accuracy));
+ await page.locator('.range-advanced-record').scrollIntoViewIfNeeded();await capture(page,'range-advanced-accuracy');
+ expect(d.advanced_stats.sessions).toBe(2);expect(d.advanced_stats.shots).toBe(4);expect(d.advanced_stats.xp_earned).toBe(earned);
 });
