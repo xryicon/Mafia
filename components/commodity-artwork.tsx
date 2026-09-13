@@ -1,6 +1,8 @@
 import {GameIcon} from "@/components/game-icon";
 
 const commodityArt:Record<string,string>={
+ "homemade-pistol":"/art/crafting/homemade-pistol",
+ "homemade-bullets":"/art/crafting/homemade-bullets",
  whiskey:"/art/commodities/whiskey",
  silk:"/art/commodities/silk",
  steel:"/art/commodities/steel",
