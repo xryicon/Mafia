@@ -63,7 +63,7 @@ test("sounds play on accepted shots and reloads; mute persists and leaving close
 });
 
 test("an interrupted reload reply keeps the original timer and bullets",async({page,request})=>{
- await equip(request,14);await start(page);await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-magazine-counter b')).toHaveText('9 / 10');
+ await equip(request,14);await start(page);await page.locator('.range-lane').click({position:{x:8,y:100}});await expect(page.locator('.range-magazine-counter b')).toHaveText('9 / 10');
  let first='';await page.route('**/rest/v1/rpc/range_action',async route=>{if(!first){first=route.request().postData()!;await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(first);await route.continue();}});
  await page.getByRole('button',{name:'Reload weapon',exact:true}).click();await expect(page.getByRole('button',{name:'Retry safely'})).toBeVisible();const before=await rpc(request,'range_state');await page.getByRole('button',{name:'Retry safely'}).click();const after=await rpc(request,'range_state');expect(after.weapons[0].magazine.ready_at).toBe(before.weapons[0].magazine.ready_at);
  await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');await expect(page.locator('.range-firebar strong')).toHaveText('13');
