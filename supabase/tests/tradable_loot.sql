@@ -8,7 +8,7 @@ begin
  foreach who in array array[owner,a,b,m] loop perform set_config('request.jwt.claim.sub',who::text,true);perform public.game_state();end loop;
  update public.game_user_roles set role_id='owner' where player_id=owner;
  update public.game_user_roles set role_id='moderator' where player_id=m;
- foreach item in array array['pickaxe','pistol_blueprint','bullet_blueprint'] loop
+ foreach item in array array['pickaxe','lockpick','pistol_blueprint','bullet_blueprint'] loop
   q:=jsonb_build_object('player_id',a,'good_id',item,'quantity',2,'reason','Test loot grant and trading');
   perform set_config('request.jwt.claim.sub',m::text,true);
   r:=public.staff_action('spawn_asset',q);perform pg_temp.loot_check(r?'error','Moderator granted loot');

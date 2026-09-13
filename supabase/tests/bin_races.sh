@@ -5,7 +5,7 @@ psql -v ON_ERROR_STOP=1 <<'SQL'
 insert into auth.users(id) values('eeeeeeee-3000-4000-8000-000000000001');
 select set_config('request.jwt.claim.sub','eeeeeeee-3000-4000-8000-000000000001',false);
 select public.game_state();
-update public.game_bin_rules set cash_chance=0,pickaxe_chance=100,pistol_blueprint_chance=0,bullet_blueprint_chance=0;
+update public.game_bin_rules set cash_chance=0,pickaxe_chance=100,lockpick_chance=0,pistol_blueprint_chance=0,bullet_blueprint_chance=0;
 SQL
 for attempt in 1 2 3 4; do
  psql -At -v ON_ERROR_STOP=1 -v "attempt=$attempt" >"/tmp/bin-race-$attempt.txt" <<'SQL' &
