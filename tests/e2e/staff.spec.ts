@@ -6,7 +6,13 @@ test("Owner office and private Support tickets work on mobile",async({page,conte
  await page.setViewportSize({width:390,height:844});await page.goto("/staff");
  await expect(page).toHaveURL(/\/owner$/);await expect(page.getByRole("heading",{name:"Owner panel",exact:true})).toBeVisible();
  const ownerNav=page.getByRole("navigation",{name:"Owner navigation"});
- await ownerNav.getByRole("button",{name:"Economy & production"}).click();
+ await ownerNav.getByRole("button",{name:"Closed beta launch"}).click();
+ const launch=page.locator(".beta-owner");await launch.getByLabel("Closed beta date and time").fill("2026-11-15T20:30");await launch.getByRole("button",{name:"Save launch schedule"}).click();
+ await expect(page.getByRole("status")).toContainText("landing-page countdown");
+ await ownerNav.getByRole("button",{name:"Control room"}).click();await ownerNav.getByRole("button",{name:"Closed beta launch"}).click();
+ await expect(launch.getByLabel("Closed beta date and time")).toHaveValue("2026-11-15T20:30");
+ await page.goto("/");await expect(page.locator(".beta-countdown")).toContainText("November 15, 2026");
+ await page.goto("/owner?section=economy");
  const settings=page.locator("form").filter({has:page.getByRole("heading",{name:"market fee percent",exact:true})});
  await settings.getByLabel("Value",{exact:true}).fill("7");await settings.getByLabel("Reason",{exact:true}).fill("Browser settings test");await settings.getByRole("button").click();
  await expect(page.getByRole("status")).toContainText("Saved.");

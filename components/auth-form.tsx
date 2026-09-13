@@ -10,7 +10,7 @@ import { safeNext } from "@/lib/auth-paths";
 export type AuthMode = "login" | "signup" | "forgot-password" | "update-password";
 const labels = {
   login: ["Welcome back, boss.", "Blackwater is still moving. Log in and pick up where you left off.", "Log in"],
-  signup: ["Make your name.", "Your first deal is waiting. Create an account and enter a city whose economy is built by its players.", "Create account"],
+  signup: ["Make your name.", "Sign up for Blackwater's closed beta and reserve your name in a city whose economy is built by its players.", "Sign up for closed beta"],
   "forgot-password": ["Let's get you back.", "Enter your email and we'll send a password reset link.", "Send reset link"],
   "update-password": ["A fresh start.", "Choose a new password for your account.", "Save new password"],
 };
@@ -87,7 +87,7 @@ export function AuthForm({ mode, next = "/dashboard", initialMessage = "" }: { m
   return <section className="auth-shell">
     <div className="auth-intro"><Artwork name="exchange" priority/><div className="auth-art-shade"/><div className="auth-intro-copy"><p className="eyebrow">BLACKWATER / PLAYER ACCESS</p><h1>{title}</h1><p>{subtitle}</p><div className="auth-world-note"><span>PRODUCE.</span><span>TRADE.</span><span>RISE.</span></div></div></div>
     <div className="auth-panel"><form onSubmit={submit} aria-busy={busy}>
-      <p className="eyebrow">YOUR SEAT AT THE TABLE</p><h2>{mode==="signup"?"Join Blackwater":mode==="login"?"Enter Blackwater":"Account access"}</h2>
+      <p className="eyebrow">YOUR SEAT AT THE TABLE</p><h2>{mode==="signup"?"Closed beta signup":mode==="login"?"Enter Blackwater":"Account access"}</h2>
       {mode === "signup" && <><label htmlFor="username">Username<input id="username" name="username" autoComplete="nickname" required minLength={3} maxLength={24} pattern={USERNAME_PATTERN} placeholder="Your name in Blackwater" aria-describedby="username-hint"/></label><span id="username-hint" className="hint">3–24 characters. This is the name other players will see.</span></>}
       {mode !== "update-password" && <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} /></label>}
       {hasPassword && <label htmlFor="password">{newPassword ? "New password" : "Password"}<input id="password" name="password" type="password" autoComplete={newPassword ? "new-password" : "current-password"} required minLength={newPassword ? 12 : 1} maxLength={128} aria-describedby={newPassword ? "password-hint" : undefined} /></label>}
@@ -95,7 +95,7 @@ export function AuthForm({ mode, next = "/dashboard", initialMessage = "" }: { m
       {mode === "login" && <Link className="forgot" href="/forgot-password">Forgot password?</Link>}
       {message && <p className={failed ? "notice error" : "notice"} role={failed ? "alert" : "status"}>{message}</p>}
       <button className="button full" type="submit" disabled={busy}>{busy ? "Please wait…" : button}<span aria-hidden="true">↗</span></button>
-      <p className="form-bottom">{mode === "login" ? <>New to Blackwater? <Link href="/signup">Create an account</Link></> : <Link href="/login">Back to log in</Link>}</p>
+      <p className="form-bottom">{mode === "login" ? <>New to Blackwater? <Link href="/signup">Sign up for closed beta</Link></> : <Link href="/login">Back to log in</Link>}</p>
     </form></div>
   </section>;
 }

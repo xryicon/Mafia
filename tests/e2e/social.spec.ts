@@ -5,10 +5,10 @@ test("signup reserves a public username and passes it to Auth",async({page})=>{
  await page.goto("/signup");await expect(page.getByLabel("Username",{exact:true})).toHaveAttribute("required","");
  await page.getByLabel("Username",{exact:true}).fill("HarborBoss");await page.getByLabel("Email address").fill("new@example.com");
  await page.getByLabel("New password",{exact:true}).fill("a very long passphrase");await page.getByLabel("Confirm password").fill("a very long passphrase");
- await page.getByRole("button",{name:"Create account"}).click();await expect(page.locator(".auth-panel").getByRole("alert")).toContainText("taken or reserved");
+ await page.getByRole("button",{name:"Sign up for closed beta"}).click();await expect(page.locator(".auth-panel").getByRole("alert")).toContainText("taken or reserved");
  let submitted:Record<string,any>|undefined;
  await page.route("**/auth/v1/signup*",async route=>{submitted=route.request().postDataJSON();await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({id:"99999999-9999-4999-8999-999999999999",email:"new@example.com",identities:[],user_metadata:{username:"NewHarborName"}})});});
- await page.getByLabel("Username",{exact:true}).fill("NewHarborName");await page.getByRole("button",{name:"Create account"}).click();
+ await page.getByLabel("Username",{exact:true}).fill("NewHarborName");await page.getByRole("button",{name:"Sign up for closed beta"}).click();
  await expect(page.getByRole("status")).toContainText("Check your email");expect(submitted?.data.username).toBe("NewHarborName");
 });
 test("reference navigation removes chat and retains account destinations",async({page,context})=>{
