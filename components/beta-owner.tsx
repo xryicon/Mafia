@@ -7,7 +7,7 @@ function localInput(unix:number){
  const date=new Date(unix*1000);return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
 }
 function displayDate(value:string){
- const date=new Date(value);return Number.isNaN(date.getTime())?"Choose a launch date and time":new Intl.DateTimeFormat(undefined,{dateStyle:"full",timeStyle:"short"}).format(date);
+ const date=new Date(value);return Number.isNaN(date.getTime())?"Choose a launch date and time":new Intl.DateTimeFormat("en-US",{dateStyle:"full",timeStyle:"short"}).format(date);
 }
 
 export function BetaOwner({value,onSaved}:{value:number;onSaved:(value:number)=>void}){
