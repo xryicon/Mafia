@@ -136,3 +136,5 @@ console.log(JSON.stringify({inventoryLoadoutDeployed:styles.includes('.inv-loado
 console.log(JSON.stringify({playerProfilesDeployed:styles.includes('.pp-hero')}));
 if(styles.includes('.pp-hero')){const r=await fetch(origin+'/players/11111111-1111-4111-8111-111111111111',{redirect:'manual',signal:AbortSignal.timeout(20000)});if(![302,303,307,308].includes(r.status)||!r.headers.get('location')?.includes('/login'))throw new Error('Player profiles must require login');console.log(JSON.stringify({playerProfileProtectedRoute:r.status}));}
 console.log(JSON.stringify({gangHeadquartersDeployed:styles.includes(".gh-hero")}));
+
+console.log(JSON.stringify({gameReadabilityDeployed:styles.includes('--bw-reading-scale:1')}));
