@@ -90,7 +90,7 @@ begin
   if not found or b.construction_status<>'ready' or b.condition<=0 then raise exception 'A completed, usable storage building is required.';end if;
   select * into r from public.game_storage_rules where building_type=b.building_type for share;
   if not found then raise exception 'Only storage buildings support this action.';end if;
-  if p.status='locked' or not exists(select 1 from public.game_districts where id=p.district_id and archived_at is null and status<>'lockdown')
+  if p.status in ('locked','reserved') or not exists(select 1 from public.game_districts where id=p.district_id and archived_at is null and status<>'lockdown')
    or exists(select 1 from public.game_district_territory where district_id=p.district_id and season_id=s and status='lockdown') then raise exception 'This property is closed during district lockdown.';end if;
   perform 1 from public.game_players where id=u and season_id=s for update;
   if not found then raise exception 'Open your dashboard to enter this season.';end if;
@@ -201,7 +201,7 @@ declare v jsonb;s uuid;did uuid;u uuid:=auth.uid();
 begin
  v:=game_private.district_state_before_properties(p_slug,p_before);s:=(v->'season'->>'id')::uuid;did:=(v->'district'->>'id')::uuid;
  return v||jsonb_build_object(
- 'streets',(select coalesce(jsonb_agg(x order by x.sort_order,x.name),'[]') from public.game_district_streets x where district_id=did and archived_at is null),
+ 'streets',(select coalesce(jsonb_agg(x order by x.sort_order,x.name),'[]') from public.game_district_streets x where district_id=did and (archived_at is null or game_private.has_permission('property.manage'))),
  'plots',(select coalesce(jsonb_agg(x||jsonb_build_object('street_id',t.street_id,'image_url',t.image_url) order by x->>'code'),'[]') from jsonb_array_elements(v->'plots') x join public.game_plot_templates t on t.id=(x->>'template_id')::uuid),
  'lease_terms',(select coalesce(jsonb_agg(t),'[]') from public.game_property_lease_terms t join public.game_plot_templates p on p.id=t.template_id where p.district_id=did),
  'leases',(select coalesce(jsonb_agg(jsonb_build_object('id',l.id,'plot_id',l.plot_id,'building_id',l.building_id,'player_id',l.player_id,'player_name',game_private.district_owner_name('player',l.player_id),'ends_at',l.ends_at,'active',l.released_at is null and l.ends_at>clock_timestamp())),'[]') from public.game_property_leases l join public.game_district_plots p on p.id=l.plot_id where l.season_id=s and p.district_id=did and ((l.released_at is null and l.ends_at>clock_timestamp()) or l.player_id=u)),
@@ -235,4 +235,7 @@ insert into public.game_plot_templates(district_id,code,polygon,size,zoning,stat
  )x(code,polygon,size,price,kind,name,description,image,rent) where d.slug='the-waterfront';
 insert into public.game_property_lease_terms(template_id,rent,term_hours,enabled)
  select t.id,case when t.building_type='garage' then 300 else 1500 end,168,true from public.game_plot_templates t join public.game_districts d on d.id=t.district_id where d.slug='the-waterfront' and t.code in ('W25','W26');
+select game_private.ensure_districts(game_private.current_season());
+create index property_lease_building on public.game_property_leases(building_id);
+create index property_station_building on public.game_property_stations(building_id);
 notify pgrst,'reload schema';
