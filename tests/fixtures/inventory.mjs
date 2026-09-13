@@ -11,32 +11,48 @@ export function inventoryWorld(state,bin,setTool=()=>{}){
  const read=(offset=0)=>{const b=bin(),g=gear.find(g=>g.location==="equipped"&&g.equipment_slot==="utility");
   if(g?.good_id==="pickaxe")g.condition=b.tool_condition;
   else if(!g&&b.tool_condition>0)gear.push({id:"equipped-"+nextGear++,good_id:"pickaxe",quantity:1,condition:b.tool_condition,location:"equipped",equipment_slot:"utility",building_id:null});
-  sync();return {season:state.season,server_time:new Date().toISOString(),playable:state.season.status==="open",player_id:state.player.id,cash:state.player.cash,goods:goods(),carried:state.inventory.filter(i=>i.quantity>0),stores:stores.map(s=>({...s,...rules.find(r=>r.building_type===s.building_type),capacity:rules.find(r=>r.building_type===s.building_type).capacity-(s.station_space??0),used:s.contents.reduce((a,x)=>a+x.quantity,0)+gear.filter(g=>g.building_id===s.id).reduce((n,g)=>n+g.quantity,0)})),committed:state.my_listings.filter(l=>l.status==="active").map(l=>({good_id:l.good_id,quantity:l.quantity,destination:"market"})),tool:{condition:b.tool_condition,maximum:b.tool_max,working:b.mining_shift},max_transfer:1000000,history:entries.slice(offset,offset+20),history_total:entries.length,offset,capacity:load(),layout:[...positions].map(([position,item_key])=>({position,item_key})),version,gear,deliveries:deliveries.filter(d=>d.quantity>0),management:state.permissions.includes("roles.manage")?{rules,building_types:[{id:"warehouse",name:"Warehouse"},{id:"garage",name:"Garage"}]}:null};};
+  sync();return {season:state.season,server_time:new Date().toISOString(),playable:state.season.status==="open",player_id:state.player.id,cash:state.player.cash,goods:goods(),carried:state.inventory.filter(i=>i.quantity>0),stores:stores.map(s=>({...s,...rules.find(r=>r.building_type===s.building_type),capacity:rules.find(r=>r.building_type===s.building_type).capacity-(s.station_space??0),used:s.contents.reduce((a,x)=>a+x.quantity,0)+gear.filter(g=>g.building_id===s.id).reduce((n,g)=>n+g.quantity,0)})),committed:state.my_listings.filter(l=>l.status==="active").map(l=>({good_id:l.good_id,quantity:l.quantity,destination:"market"})),tool:{condition:b.tool_condition,maximum:b.tool_max,working:b.mining_shift},max_transfer:1000000,history:entries.slice(offset,offset+20),history_total:entries.length,offset,capacity:load(),layout:[...positions].map(([position,item_key])=>({position,item_key})),version,gear:gear.filter(g=>g.quantity>0),deliveries:deliveries.filter(d=>d.quantity>0),management:state.permissions.includes("roles.manage")?{rules,building_types:[{id:"warehouse",name:"Warehouse"},{id:"garage",name:"Garage"}]}:null};};
  const fail=message=>{throw new Error(message);};
  const reorder=(key,p)=>{if(!Number.isInteger(p)||p<1||p>20)fail("Choose a valid inventory slot.");const from=[...positions].find(x=>x[1]===key)?.[0];if(!from)fail("This item is no longer carried.");const target=positions.get(p);positions.delete(from);positions.set(p,key);if(target&&from!==p)positions.set(from,target);version++;};
  const building=(id,n,storing)=>{const s=read().stores.find(s=>s.id===id);if(!s||s.foreign)fail("This is not your property.");if(s.construction_status!=="ready")fail("Storage requires your completed building.");if(s.locked)fail("District locked.");if(storing){if(!s.enabled||s.listed)fail("New storage deposits are paused.");if(s.used+n>s.capacity)fail("This building does not have enough free storage space.");}return s;};
+ const restack=g=>{
+  if(!g||!['carried','storage'].includes(g.location)||g.condition!==null&&!(g.good_id==='pickaxe'&&g.condition===bin().tool_max))return 'gear:'+g.id;
+  const location=g.location,buildingId=g.building_id,quantity=g.quantity,rows=location==='carried'?state.inventory:stores.find(s=>s.id===buildingId).contents;
+  let row=rows.find(x=>x.good_id===g.good_id);if(!row){row={good_id:g.good_id,quantity:0};rows.push(row);}row.quantity+=quantity;
+  entry(g.good_id,-quantity,location,buildingId,0);entry(g.good_id,quantity,location,buildingId,row.quantity);
+  const key='good:'+g.good_id;if(location==='carried'&&![...positions.values()].includes(key)){const pos=[...positions].find(x=>x[1]==='gear:'+g.id)?.[0];if(pos)positions.set(pos,key);}
+  g.quantity=0;g.location='retired';g.equipment_slot=null;g.building_id=null;return key;
+ };
  const action=(kind,p)=>{
   const prior=requests.get(p.request_id),key=JSON.stringify({kind,p});if(prior)return prior.key===key?prior.result:{error:"This transfer reference was already used."};
   const saved=structuredClone({inventory:state.inventory,gear,stores,entries,deliveries,positions:[...positions],version}),before=load();
   try{
    if(p.season_id!==state.season.id)fail("The season changed. Refresh your inventory.");if(state.season.status!=="open")fail("Season is closed.");sync();
-   let g=gear.find(g=>"gear:"+g.id===p.item_key);
+   let g=gear.find(g=>g.quantity>0&&"gear:"+g.id===p.item_key);
    if(kind==="move"){if(p.version!==version)fail("Inventory changed. Review the refreshed slots and try again.");reorder(p.item_key,p.position);}
    else if(kind==="equip"){
-    const id=g?.good_id??p.item_key?.replace(/^good:/,""),good=goods().find(g=>g.id===id);
+    const id=g?.good_id??p.item_key?.replace(/^good:/,""),good=goods().find(g=>g.id===id),n=p.quantity??1;
+    if(!Number.isSafeInteger(n)||n<1||n>1000000||p.equipment_slot!=="ammo"&&n!==1)fail("Choose a whole quantity. Only Ammo can hold multiple units.");
     if(!good?.equipment_slots.includes(p.equipment_slot))fail("This item does not fit that equipment slot.");
     if(g&&!['carried','equipped'].includes(g.location))fail("Retrieve this item first.");if(g?.equipment_slot===p.equipment_slot)fail("This item is already equipped there.");if(g&&g.condition===0)fail("This pickaxe is broken.");
     if(p.equipment_slot==="utility"&&bin().mining_shift)fail("Finish your mining shift before changing Utility equipment.");
-    const old=gear.find(g=>g.location==="equipped"&&g.equipment_slot===p.equipment_slot);if(old){old.location="carried";old.equipment_slot=null;}
-    if(!g){const row=state.inventory.find(x=>x.good_id===id);if(!row?.quantity)fail("This item is no longer carried.");row.quantity--;entry(id,-1,"carried",null,row.quantity);g={id:"equipped-"+nextGear++,good_id:id,quantity:1,condition:id==="pickaxe"?bin().tool_max:null,location:"equipped",equipment_slot:p.equipment_slot,building_id:null};gear.push(g);entry(id,1,"equipped",null,1);}
-    else{g.location="equipped";g.equipment_slot=p.equipment_slot;}
+    const old=gear.find(g=>g.location==="equipped"&&g.equipment_slot===p.equipment_slot);
+    if(!g){const row=state.inventory.find(x=>x.good_id===id);if(!row||row.quantity<n)fail("You do not carry that many items.");row.quantity-=n;entry(id,-n,"carried",null,row.quantity);}else if(g.quantity<n)fail("You do not carry that many items.");
+    if(p.equipment_slot==="ammo"&&old?.good_id===id&&old.condition===(g?.condition??null)){
+     if(g){g.quantity-=n;if(!g.quantity){g.location="retired";g.equipment_slot=null;g.building_id=null;}}old.quantity+=n;
+    }else{
+     if(old){old.location="carried";old.equipment_slot=null;}
+     if(!g||g.quantity>n){if(g)g.quantity-=n;gear.push({id:"equipped-"+nextGear++,good_id:id,quantity:n,condition:g?.condition??(id==="pickaxe"?bin().tool_max:null),location:"equipped",equipment_slot:p.equipment_slot,building_id:null});entry(id,n,"equipped",null,n);}
+     else{g.location="equipped";g.equipment_slot=p.equipment_slot;}
+     if(old)restack(old);
+    }
     syncTool();
    }else if(["unequip","gear_store","gear_retrieve"].includes(kind)){
     if(!g)fail("This equipment is not yours.");if(g.equipment_slot==="utility"&&bin().mining_shift)fail("Finish your mining shift first.");
     if(kind==="unequip"){if(g.location!=="equipped")fail("This item is not equipped.");g.location="carried";g.equipment_slot=null;}
     else if(kind==="gear_store"){building(p.building_id,g.quantity,true);if(g.location==="storage")fail("Already stored.");g.location="storage";g.equipment_slot=null;g.building_id=p.building_id;}
     else{building(g.building_id,g.quantity,false);if(g.location!=="storage")fail("This item is not stored.");g.location="carried";g.building_id=null;}
-    syncTool();sync();if(kind==="unequip"&&p.position)reorder(p.item_key,p.position);
+    const returned=restack(g);syncTool();sync();if(kind==="unequip"&&p.position)reorder(returned,p.position);
    }else if(kind==="claim_delivery"){
     const d=deliveries.find(d=>d.id===p.delivery_id);if(!d||!Number.isSafeInteger(p.quantity)||p.quantity<1||p.quantity>d.quantity)fail("Invalid delivery quantity.");if(!fits(d.good_id,p.quantity))fail("Free a slot or reduce carried weight before collecting these goods.");
     d.quantity-=p.quantity;let row=state.inventory.find(i=>i.good_id===d.good_id);if(!row){row={good_id:d.good_id,quantity:0};state.inventory.push(row);}row.quantity+=p.quantity;

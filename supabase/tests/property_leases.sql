@@ -51,6 +51,8 @@ begin
  update public.game_storage_rules set capacity=200 where building_type='garage';
  insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,a,'pickaxe',1) on conflict(season_id,player_id,good_id) do update set quantity=1;
  res:=public.inventory_action('equip',jsonb_build_object('season_id',s,'item_key','good:pickaxe','equipment_slot','utility','request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Equip fixture failed: '||res::text);
+ -- Used equipment must retain its identity through an expired city lease.
+ update public.game_mining_tools set durability=37 where season_id=s and player_id=a;
  res:=public.inventory_action('gear_store',jsonb_build_object('season_id',s,'item_key',(select 'gear:'||id from public.game_inventory_gear where season_id=s and player_id=a and good_id='pickaxe'),'building_id',bid,'request_id',gen_random_uuid()));
  perform pg_temp.verify(not res?'error','Leased equipment storage failed: '||res::text);
  denied:=false;begin update public.game_district_plots set owner_type='player',owner_id=b where id=p.id;exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'City property transferred with tenant');
@@ -86,6 +88,7 @@ begin
  perform set_config('request.jwt.claim.sub',a::text,true);
  res:=public.inventory_action('retrieve',jsonb_build_object('season_id',s,'building_id',bid,'good_id','whiskey','quantity',3,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Previous tenant could not collect own goods: '||res::text);
  res:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'item_key',(select 'gear:'||id from public.game_inventory_gear where season_id=s and player_id=a and good_id='pickaxe'),'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Previous tenant could not collect equipment: '||res::text);
+ perform pg_temp.verify(exists(select 1 from public.game_inventory_gear where season_id=s and player_id=a and good_id='pickaxe' and location='carried' and condition=37),'Lease retrieval changed equipment wear');
  perform set_config('request.jwt.claim.sub',b::text,true);
  res:=public.property_action('vacate',jsonb_build_object('season_id',s,'plot_id',p.id,'request_id',gen_random_uuid()));perform pg_temp.verify(not res?'error','Empty tenant could not return keys');
  -- Failed payment leaves no tenancy or funds movement.
