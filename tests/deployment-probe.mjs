@@ -165,3 +165,5 @@ if(shootingRangeDeployed){
  if(!a.ok||bytes<50000||!a.headers.get("content-type")?.includes("image/png"))throw new Error("Shooting range artwork unavailable");
  console.log(JSON.stringify({shootingRangeProtected:r.status,rangeArtwork:a.status,bytes}));
 }
+
+console.log(JSON.stringify({rangeReloadAudioDeployed:styles.includes('.range-reload-progress')&&styles.includes('.range-audio-controls')}));
