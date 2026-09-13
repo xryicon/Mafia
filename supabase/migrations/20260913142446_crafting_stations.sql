@@ -183,7 +183,7 @@ begin
     if dest='storage' then
      select building_id into bid from public.game_property_stations where id=batch.station_id;
      if not game_private.crafting_station_ready(s,u,bid) then raise exception 'This property is no longer available. Collect into your inventory instead.';end if;
-     select r.* into rule from public.game_storage_rules r join public.game_district_buildings b on b.building_type=r.building_type where b.id=bid for share of r;
+     select sr.* into rule from public.game_storage_rules sr join public.game_district_buildings b on b.building_type=sr.building_type where b.id=bid for share of sr;
      if game_private.storage_load(s,bid)+out_n>rule.capacity then raise exception 'Free up storage space or collect into your inventory.';end if;
      insert into public.game_storage_inventory(season_id,building_id,player_id,good_id,quantity) values(s,bid,u,batch.output_good_id,out_n)
       on conflict(season_id,building_id,player_id,good_id) do update set quantity=game_storage_inventory.quantity+excluded.quantity;
