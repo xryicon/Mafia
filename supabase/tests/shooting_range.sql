@@ -22,7 +22,13 @@ begin
  -- Client score/hit fields are ignored; a valid bullseye is calculated server-side.
  q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id,'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int,'x',20,'y',45,'score',999999,'hit',false);
  res:=public.range_action('fire',q);perform pg_temp.check_range(not res?'error' and (res->>'points')::int=game_private.setting('range_bullseye_points'),'Valid bullseye failed: '||res::text);
- again:=public.range_action('fire',q);perform pg_temp.check_range(again->>'points'=res->>'points' and (select count(*) from public.game_range_shots where session_id=v.id)=1,'Shot retry duplicated a shot');
+ -- Exercise the real JSON response, not only the score/result fields.
+ perform pg_temp.check_range(jsonb_typeof(res#>'{state,session,last_shot}')='object','last_shot must be a complete object, not the x coordinate');
+ perform pg_temp.check_range(
+  res#>'{state,session,last_shot}'=(select jsonb_build_object('id',shot_row.id,'hit',shot_row.hit,'points',shot_row.points,'round',shot_row.round,'lane',shot_row.lane,'x',shot_row.x,'y',shot_row.y,'elapsed_ms',shot_row.elapsed_ms,'created_at',shot_row.created_at) from public.game_range_shots shot_row where shot_row.session_id=v.id),
+  'Rendered shot fields differ from the accepted database record');
+ perform pg_temp.check_range((res#>>'{state,session,last_shot,elapsed_ms}')::int=(q->>'elapsed_ms')::int and res#>'{state,session,last_shot,x}'='20'::jsonb and res#>'{state,session,last_shot,y}'='45'::jsonb,'Impact coordinates or timestamp missing from RPC');
+ again:=public.range_action('fire',q);perform pg_temp.check_range(again#>'{state,session,last_shot}'=res#>'{state,session,last_shot}','Retry changed the rendered shot identity');perform pg_temp.check_range(again->>'points'=res->>'points' and (select count(*) from public.game_range_shots where session_id=v.id)=1,'Shot retry duplicated a shot');
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=99 and (select quantity from public.game_inventory_gear where id=a)=2,'Shot did not consume exactly one bullet and one condition');
  res:=public.range_action('fire',q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',999999));perform pg_temp.check_range(res?'error','Future shot accepted');
  res:=public.range_action('fire',q||jsonb_build_object('x',50));perform pg_temp.check_range(res?'error','Same reference accepted changed coordinates');
@@ -30,9 +36,11 @@ begin
  perform pg_sleep(.22);
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int,'x',0,'y',0,'hit',true);
  res:=public.range_action('fire',q);perform pg_temp.check_range(not res?'error' and not (res->>'hit')::boolean and (res->>'points')::int=0,'Client claimed an off-target hit');
+ perform pg_temp.check_range(jsonb_typeof(res#>'{state,session,last_shot}')='object' and res#>'{state,session,last_shot,lane}'='null'::jsonb and res#>'{state,session,last_shot,hit}'='false'::jsonb and res#>'{state,session,last_shot,x}'='0'::jsonb,'Miss details are not a real shot object');
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=98 and (select quantity from public.game_inventory_gear where id=a)=1,'A miss did not consume ammunition and wear');
  -- Changing equipment mid-session cannot fire the old weapon or refund its wear.
  res:=public.inventory_action('unequip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_range(not res?'error','Worn weapon unequip failed');
+
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=98 and (select location from public.game_inventory_gear where id=g)='carried','Worn weapon was reset or restacked');
  perform pg_sleep(.22);
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int);
@@ -48,6 +56,7 @@ begin
  perform pg_temp.check_range((select sum(delta) from public.game_inventory_ledger where gear_id=a)=0,'Ammunition ledger does not balance after exhaustion');
  res:=public.range_action('finish',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id));perform pg_temp.check_range(not res?'error','Finish failed');
  res:=public.range_state();perform pg_temp.check_range((res->'stats'->>'shots')::int=3 and (res->'stats'->>'hits')::int=1 and (res->'stats'->>'sessions')::int=1,'Range stats are not real session totals');
+ perform pg_temp.check_range(jsonb_typeof(res#>'{session,last_shot}')='object' and (res#>>'{session,last_shot,elapsed_ms}')::int>=0,'Refresh lost the full shot response');
  -- Foreign sessions and direct writes are forbidden; shot history is immutable.
  perform set_config('request.jwt.claim.sub',other::text,true);perform public.game_state();
  res:=public.range_action('fire',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_range(res?'error','Another player fired a foreign session');
