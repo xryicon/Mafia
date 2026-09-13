@@ -51,7 +51,7 @@ begin
  -- Active session reward remains snapshotted even when Owner edits later.
  update public.game_settings set value=200 where key='range_advanced_completion_xp';
  perform pg_sleep(3.05);r:=public.range_state();
- perform pg_temp.range_check((r#>>'{session,xp_awarded}')::int=50 and (r#>>'{stats,xp_earned}')::int=77,'Expired session did not settle original Advanced reward');
+ perform pg_temp.range_check((r#>>'{session,xp_awarded}')::int=50 and (r#>>'{stats,xp_earned}')::int=77,'Expired session did not settle original Advanced reward: '||r::text);
  -- Early exit and an idle full session both yield zero XP, with the same recovery.
  update public.game_range_sessions set cooldown_until=clock_timestamp()-interval '1 second' where player_id=u;
  r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary','difficulty','beginner'));perform pg_temp.range_check(not r?'error','Early session start: '||r::text);

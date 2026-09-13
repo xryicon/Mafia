@@ -9,7 +9,7 @@ do $$
 declare u uuid:=gen_random_uuid();s uuid:=game_private.current_season();v public.game_range_sessions;r jsonb;q jsonb;c jsonb;elapsed int;i int;denied boolean;
 begin
  c:=game_private.range_mode_config('advanced');
- perform pg_temp.precision_check(game_private.range_score_xp(0,c)=0 and game_private.range_score_xp(150,c)=75 and game_private.range_score_xp(300,c)=150 and game_private.range_score_xp(999999,c)=150,'Score XP must be proportional and capped');
+ perform pg_temp.precision_check(game_private.range_score_xp(0,c)=0 and game_private.range_score_xp(100,c)=50 and game_private.range_score_xp(200,c)=100 and game_private.range_score_xp(150,c)=75 and game_private.range_score_xp(300,c)=150 and game_private.range_score_xp(999999,c)=150,'Score XP must be proportional and capped');
  perform pg_temp.precision_check(game_private.range_score_xp(175,c)=87 and game_private.range_score_xp(-1,c)=0,'Fractional XP must round down and negative scores yield zero');
  perform pg_temp.precision_check(game_private.range_score_xp(0,c-'xp_version')=150,'Existing active reward snapshots changed');
  perform pg_temp.precision_check(game_private.range_shot_accuracy(1,0,0,50,45,c)=100 and game_private.range_shot_accuracy(1,0,0,50+(c->>'radius_x')::numeric*.3,45+(c->>'radius_y')::numeric*.4,c)=50 and game_private.range_shot_accuracy(1,0,0,0,0,c)=0,'Radial precision is not based on normalized bullseye distance');

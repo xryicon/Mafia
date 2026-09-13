@@ -15,9 +15,10 @@ begin
  'required_rounds',ceil((c->>'rounds')::int*game_private.setting('range_completion_round_percent')/100.0)::int);
 end$$;
 
+-- Multiply before dividing so recurring fractions cannot round an exact whole XP down.
 create function game_private.range_score_xp(score_value integer,c jsonb) returns integer language sql immutable set search_path='' as $$
  select case when coalesce((c->>'xp_version')::int,1)<2 then coalesce((c->>'completion_xp')::int,0)
- else floor(coalesce((c->>'completion_xp')::numeric,0)*least(1::numeric,greatest(0,score_value)::numeric/nullif((c->>'maximum_score')::numeric,0)))::int end;
+ else floor(coalesce((c->>'completion_xp')::numeric,0)*least(greatest(0,score_value)::numeric,(c->>'maximum_score')::numeric)/nullif((c->>'maximum_score')::numeric,0))::int end;
 $$;
 -- Precision is radial distance from the nearest target centre: centre 100%, edge/miss 0%.
 -- Repeated hits retain their physical precision, while each target still scores only once.
