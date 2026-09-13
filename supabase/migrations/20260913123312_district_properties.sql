@@ -188,9 +188,10 @@ begin
    update public.game_plot_templates set street_id=sid,image_url=coalesce(p_payload->>'image_url','') where id=t.id;
    if coalesce((p_payload->>'lease_enabled')::boolean,false) and (not exists(select 1 from public.game_district_entities where id=t.entity_id and entity_type='city')
      or not exists(select 1 from public.game_storage_rules where building_type=t.building_type)) then raise exception 'Leases require a city-owned garage or warehouse template.';end if;
+   if coalesce((p_payload->>'lease_enabled')::boolean,false) or p_payload->>'rent' is not null or exists(select 1 from public.game_property_lease_terms where template_id=t.id) then
    insert into public.game_property_lease_terms(template_id,rent,term_hours,enabled)
-    values(t.id,(p_payload->>'rent')::bigint,(p_payload->>'term_hours')::int,coalesce((p_payload->>'lease_enabled')::boolean,false))
-    on conflict(template_id) do update set rent=excluded.rent,term_hours=excluded.term_hours,enabled=excluded.enabled,version=game_property_lease_terms.version+1;
+    values(t.id,coalesce((p_payload->>'rent')::bigint,(select rent from public.game_property_lease_terms where template_id=t.id)),coalesce((p_payload->>'term_hours')::int,(select term_hours from public.game_property_lease_terms where template_id=t.id)),coalesce((p_payload->>'lease_enabled')::boolean,false))
+    on conflict(template_id) do update set rent=excluded.rent,term_hours=excluded.term_hours,enabled=excluded.enabled,version=game_property_lease_terms.version+1;end if;
   else raise exception 'Choose street or property settings.';end if;
   return jsonb_build_object('message','Property registry updated. Existing lease end dates are preserved.');
  exception when check_violation or not_null_violation or numeric_value_out_of_range or invalid_text_representation or unique_violation then return jsonb_build_object('error','Check the property settings and try again.');

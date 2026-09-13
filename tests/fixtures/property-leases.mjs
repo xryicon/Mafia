@@ -24,7 +24,7 @@ export function propertyWorld(world,state,inventory){
   state.player.cash-=cost;const result={message};requests.set(p.request_id,{key,result});return result;
  };
  const manage=(action,p)=>{
-  if(action==="property"){const t=world.lease_terms.find(t=>t.template_id===p.template_id);Object.assign(t,{rent:p.rent,term_hours:p.term_hours,enabled:p.lease_enabled,version:t.version+1});for(const plot of [...world.plots,...world.management.templates])if(plot.template_id===p.template_id)Object.assign(plot,{street_id:p.street_id,image_url:p.image_url});}
+  if(action==="property"){const t=world.lease_terms.find(t=>t.template_id===p.template_id);if(t)Object.assign(t,{rent:p.rent??t.rent,term_hours:p.term_hours??t.term_hours,enabled:p.lease_enabled,version:t.version+1});for(const plot of [...world.plots,...world.management.templates])if(plot.template_id===p.template_id)Object.assign(plot,{street_id:p.street_id,image_url:p.image_url});}
   if(action==="street"){const t=world.streets.find(s=>s.id===p.id);if(t)Object.assign(t,p);else world.streets.push({...p,id:"street-new"});}
   return {message:"Property registry updated. Existing lease end dates are preserved."};
  };

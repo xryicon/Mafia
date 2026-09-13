@@ -42,6 +42,8 @@ test("mobile property drawer and Owner city rental editor",async({page})=>{
  await page.getByLabel("Rent per period ($)",{exact:true}).fill("650");await page.getByLabel("Property audit reason",{exact:true}).fill("Adjust the city garage rental tariff");
  await page.getByRole("button",{name:"Save property listing",exact:true}).click();await expect(page.getByRole("status")).toContainText("Property registry updated");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+
+ await page.getByLabel("Property record",{exact:true}).selectOption("template-7");await page.getByLabel("Property image",{exact:true}).fill("/art/foundry-small.webp");await page.getByLabel("Property audit reason",{exact:true}).fill("Update a property image without offering a city lease");await page.getByRole("button",{name:"Save property listing",exact:true}).click();await expect(page.getByRole("status")).toContainText("Property registry updated");
  await page.goto("/districts/the-waterfront?tab=Overview&plot=plot-25");await expect(page.getByRole("dialog")).toContainText("$650");
 });
 test("interrupted property response safely retries one payment",async({page})=>{

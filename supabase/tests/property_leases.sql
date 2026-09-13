@@ -62,6 +62,9 @@ begin
  perform pg_temp.verify(not res?'error','Owner lease edit failed: '||res::text);
  perform pg_temp.verify((select ends_at from public.game_property_leases where building_id=bid and released_at is null)=expiry,'Changing rent rewrote paid contract');
  perform pg_temp.verify(exists(select 1 from public.game_audit where actor_id=o and reason like 'Property planning:%'),'Owner edits not audited');
+
+ res:=public.property_manage('property',jsonb_build_object('template_id',(select template_id from public.game_district_plots where season_id=s and code='W07'),'street_id',null,'image_url','/art/foundry-small.webp','rent',null,'term_hours',null,'lease_enabled',false,'reason','Change ordinary property artwork without rental terms'));
+ perform pg_temp.verify(not res?'error','Non-rental property required rent settings: '||res::text);
  update public.game_user_roles set role_id='moderator' where player_id=b;
  perform set_config('request.jwt.claim.sub',b::text,true);denied:=false;begin perform public.property_manage('street',jsonb_build_object('district_id',p.district_id,'name','Unauthorized street','reason','Unauthorized property edit'));exception when raise_exception then denied:=true;end;perform pg_temp.verify(denied,'Moderator changed city economy');
  perform set_config('request.jwt.claim.sub',a::text,true);
