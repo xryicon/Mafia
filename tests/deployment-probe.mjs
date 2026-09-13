@@ -140,3 +140,5 @@ console.log(JSON.stringify({gangHeadquartersDeployed:styles.includes(".gh-hero")
 console.log(JSON.stringify({gameReadabilityDeployed:styles.includes('--bw-reading-scale:1')}));
 
 console.log(JSON.stringify({districtPropertiesDeployed:styles.includes('.dp-streets')&&styles.includes('.dp-property-sheet')}));
+
+console.log(JSON.stringify({propertyStorageControlsDeployed:styles.includes('.dp-property-views')&&styles.includes('.dp-stock-items')}));
