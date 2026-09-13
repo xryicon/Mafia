@@ -330,7 +330,7 @@ begin
  raise exception 'Unknown prison action.';
 end$$;
 
-create function public.prison_break_action(p_action text,p_payload jsonb) returns jsonb language sql security invoker set search_path='' as $$
+create function public.prison_break_action(p_action text,p_payload jsonb) returns jsonb language sql security definer set search_path='' as $$
  select game_private.prison_break_action(p_action,p_payload)
 $$;
 revoke all on function game_private.expire_prison_break(uuid,uuid,timestamptz),game_private.prison_break_action(text,jsonb),public.prison_break_action(text,jsonb) from public,anon,authenticated;
