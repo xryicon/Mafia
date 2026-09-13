@@ -3,6 +3,7 @@ import {cookie,token} from '../fixtures/identity.mjs';
 const base='http://127.0.0.1:54329',headers={Authorization:'Bearer '+token};
 async function capture(page:Page,name:string){const b=(await page.screenshot({type:'jpeg',quality:72,path:'test-results/'+name+'.jpg'})).toString('base64');if(process.env.VISUAL_REVIEW==='1')for(let i=0;i<b.length;i+=12000)console.log('VISUAL_REVIEW_'+name+'_'+Math.floor(i/12000)+':'+b.slice(i,i+12000));}
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=='1','Isolated fixtures');await request.post(base+'/__reset_world',{headers});await context.addCookies([{name:'sb-127-auth-token',value:cookie,domain:'localhost',path:'/'}]);});
+test.afterEach(async({request})=>{if(process.env.GAME_TEST_FIXTURE==='1')await request.post(base+'/__reset_world',{headers});});
 test('Skills opens from the dashboard and shows saved progress, maximum level and milestones',async({page,request})=>{
  await request.post(base+'/__skills_setup',{headers,data:{awards:{crafting:2500,sharpshooting:10000,lockpicking:25}}});await page.setViewportSize({width:1536,height:1120});
  await page.goto('/dashboard');await page.locator('.command-quick').getByRole('link',{name:'Skills',exact:true}).click();await expect(page).toHaveURL(/\/skills/);await expect(page.getByRole('heading',{name:'Skills',exact:true})).toBeVisible();
