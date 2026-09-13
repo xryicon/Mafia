@@ -167,3 +167,14 @@ if(shootingRangeDeployed){
 }
 
 console.log(JSON.stringify({rangeReloadAudioDeployed:styles.includes('.range-reload-progress')&&styles.includes('.range-audio-controls')}));
+
+const rangeRecordings=await fetch(origin+"/audio/range/indoor-range.mp3",{signal:AbortSignal.timeout(20000)});
+console.log(JSON.stringify({rangeRecordedAudioDeployed:rangeRecordings.ok,paperImpactsDeployed:styles.includes(".range-bullet-hole")}));
+if(rangeRecordings.ok){
+ for(const name of ["indoor-range","colt-1911-shot","1911-reload"]){
+  const response=name==="indoor-range"?rangeRecordings:await fetch(origin+"/audio/range/"+name+".mp3",{signal:AbortSignal.timeout(20000)});
+  const bytes=new Uint8Array(await response.arrayBuffer());
+  if(!response.ok||bytes.length<20000||!response.headers.get("content-type")?.includes("audio/"))throw new Error("Range recording unavailable: "+name);
+  console.log(JSON.stringify({rangeRecording:name,status:response.status,bytes:bytes.length}));
+ }
+}
