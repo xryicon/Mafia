@@ -123,7 +123,7 @@ test("completed sessions show earned XP once and recovery expiry enables the nex
  await page.reload();d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(16);
  await expect(page.getByRole('button',{name:/Start session/})).toBeEnabled({timeout:7000});await page.getByRole('radio',{name:/Advanced/}).click();await page.getByRole('button',{name:/Start session/}).click();
  await aim(page,1);await expect(page.getByRole('button',{name:/Record session/})).toBeVisible();await page.getByRole('button',{name:/Record session/}).click();
- await expect(page.locator('.range-session-result')).toContainText('+50 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(66);
+ await expect(page.locator('.range-session-result')).toContainText('+50 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(66);expect((await rpc(request,'skills_state')).skills.find((s:any)=>s.id==='sharpshooting').xp).toBe(66);
 });
 
 test("bullseye precision drives live accuracy, saved Advanced averages and score XP",async({page,request})=>{

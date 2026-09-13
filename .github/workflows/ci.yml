@@ -160,5 +160,6 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_magazines.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_difficulty.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_score_accuracy.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/skills.sql
           bash supabase/tests/range_rewards_races.sh
           bash supabase/tests/shooting_range_races.sh

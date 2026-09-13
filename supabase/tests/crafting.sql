@@ -42,6 +42,8 @@ begin
  perform pg_temp.verify((select quantity from public.game_inventory where season_id=s and player_id=a and good_id='iron-ingot')=8,'Wrong combined carried deduction');
  perform pg_temp.verify((select quantity from public.game_storage_inventory where season_id=s and player_id=a and building_id=bid and good_id='iron-ingot')=0,'Property materials not consumed first');
  perform pg_temp.verify((select output_units from public.game_crafting_batches where job_id=jobid)=1,'Browser overrode output');
+ perform pg_temp.verify((select skill_xp from public.game_crafting_batches where job_id=jobid)=25,'Crafting XP was not snapshotted from work time');
+ update public.game_settings set value=20 where key='skill_crafting_xp_per_minute';
 
  -- Missing a later input rolls back earlier material reservations.
  select sum(quantity) into ledger0 from public.game_inventory where season_id=s and player_id=a and good_id in('iron-ingot','copper-ingot');
@@ -78,6 +80,7 @@ begin
  update public.game_storage_rules set capacity=200 where building_type='garage';
  first:=public.crafting_action('collect',q);perform pg_temp.verify(not first?'error','Collection failed '||first::text);
  res:=public.crafting_action('collect',q);perform pg_temp.verify(res=first,'Collection retry duplicated output');
+ perform pg_temp.verify((select count(*)=1 and sum(delta)=25 from game_private.skill_xp_ledger where source_id=jobid and skill_id='crafting'),'Collection duplicated, omitted or recalculated snapshotted skill XP');
  perform pg_temp.verify((select quantity from public.game_inventory where season_id=s and player_id=a and good_id='homemade-pistol')=1,'Incorrect crafted quantity');
  perform pg_temp.verify((select value from public.game_season_stats where season_id=s and player_id=a and metric='crafting')=1,'Crafting metric not recorded');
  -- Cancellation preserves materials in overflow-safe deliveries.

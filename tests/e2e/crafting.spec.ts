@@ -22,6 +22,7 @@ test("installed garage table learns once, queues and stores finished equipment",
  await request.post(base+"/__crafting_setup",{headers,data:{ready:true}});await page.getByRole("button",{name:"Refresh crafting"}).click();await page.getByLabel("Crafted item destination").selectOption("storage");
  await page.locator(".cf-job").getByRole("button",{name:"Collect",exact:true}).click();await page.getByRole("button",{name:"Confirm collection"}).click();await expect(page.locator(".cf-job")).toHaveCount(0);
  await expect(page.locator(".cf-property-column .cf-stock-grid")).toContainText("Homemade pistol");
+ const skills=await(await request.post(base+"/rest/v1/rpc/skills_state",{headers,data:{}})).json();expect(skills.skills.find((s:any)=>s.id==="crafting").xp).toBe(25);
  await expect.poll(()=>page.locator(".cf-page .commodity-art img").evaluateAll((imgs:HTMLImageElement[])=>imgs.length>0&&imgs.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);
  d=await (await request.post(base+"/rest/v1/rpc/crafting_state",{headers,data:{}})).json();expect(d.inventory.stores.find((s:any)=>s.id==="building-25").contents.find((g:any)=>g.good_id==="homemade-pistol").quantity).toBe(1);
  await page.goto("/inventory?building=building-25");await page.getByLabel("Search inventory").fill("Homemade pistol");await page.getByRole("button",{name:"Retrieve",exact:true}).click();await page.getByRole("button",{name:"Confirm retrieval"}).click();await expect(page.getByRole("dialog")).toHaveCount(0);

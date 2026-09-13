@@ -50,6 +50,7 @@ begin
  r:=public.range_action('fire',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',v.id,'elapsed_ms',elapsed,'x',0,'y',0));perform pg_temp.precision_check(not r?'error','Miss-only shot: '||r::text);perform pg_sleep(3.05);r:=public.range_state();
  perform pg_temp.precision_check(r#>>'{session,status}'='finished' and (r#>>'{session,xp_awarded}')::int=0 and (r#>>'{advanced_stats,average_accuracy}')::numeric=58.33,'Zero-score expiry or precision average failed');
  perform pg_temp.precision_check((select count(*) from game_private.range_xp_ledger where player_id=u)=1,'Misses generated an XP ledger award');
+ perform pg_temp.precision_check((select count(*)=1 and sum(delta)=87 from game_private.skill_xp_ledger where player_id=u and skill_id='sharpshooting'),'Sharpshooting skill XP did not match verified range awards');
  perform pg_temp.precision_check((r#>>'{recent,0,accuracy_percent}')::numeric=0 and (r#>>'{stats,best_accuracy}')::numeric=100,'History or best accuracy still uses binary hit rate');
  denied:=false;begin update game_private.range_shot_precision set accuracy_percent=100 where session_id=v.id;exception when raise_exception then denied:=true;end;perform pg_temp.precision_check(denied,'Shot precision history is mutable');
  perform pg_temp.precision_check(not has_table_privilege('authenticated','game_private.range_shot_precision','select') and not has_function_privilege('authenticated','game_private.range_session_accuracy(uuid)','execute'),'Private accuracy internals exposed');
