@@ -30,6 +30,6 @@ export const atlasAreas:{slug:string;name:string;subtitle:string;icon:string;col
  {slug:"downtown",name:"Downtown",subtitle:"Banking · Commerce · Power",icon:"bank",color:"#d0ab63",label:[635,254],polygon:[[515,169],[581,141],[650,158],[711,202],[787,221],[791,276],[731,315],[637,318],[559,283],[497,254]]},
  {slug:"the-waterfront",name:"The Waterfront",subtitle:"Shipping · Exports · Player trade",icon:"anchor",color:"#74a587",label:[339,393],polygon:[[31,320],[176,287],[313,298],[450,341],[521,352],[567,405],[645,463],[588,499],[469,479],[367,440],[224,465],[60,430],[8,377]]},
  {slug:"industrial-quarter",name:"Industrial Quarter",subtitle:"Factories · Production · Jobs",icon:"production",color:"#7e9daa",label:[971,268],polygon:[[858,158],[965,126],[1070,170],[1177,185],[1196,264],[1130,316],[980,350],[862,335],[822,276],[790,216]]},
- {slug:"blackwater-island",name:"Blackwater Island",subtitle:"Maximum security",icon:"bank",color:"#b1a786",label:[680,95],polygon:[[558,51],[641,27],[753,35],[820,82],[756,127],[641,116],[565,96]]},
+ {slug:"blackwater-island",name:"Blackwater Island",subtitle:"City prison · Maximum security",icon:"bank",color:"#b1a786",label:[680,95],polygon:[[558,51],[641,27],[753,35],[820,82],[756,127],[641,116],[565,96]]},
  {slug:"drilling-shore",name:"Drilling Shore",subtitle:"Oil · Fuel · Strategic",icon:"rig",color:"#b89a65",label:[1053,470],polygon:[[948,422],[1030,364],[1147,396],[1169,479],[1090,525],[954,497]]}
 ];
