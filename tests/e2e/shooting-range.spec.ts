@@ -51,15 +51,15 @@ test("ten shots require reload, R works, and a refresh cannot refill the magazin
 
 test("sounds play on accepted shots and reloads; mute persists and leaving closes audio",async({page,request})=>{
  await equip(request,14);let closed=0;await page.exposeFunction('__closedAudio',()=>closed++);
- await page.addInitScript(()=>{const w=window as any;w.__rangeSounds=[];const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args:any[]){w.__rangeAudioContext=this.context;w.__rangeSounds.push({duration:this.buffer?.duration,rate:this.playbackRate.value});return (start as any).apply(this,args);};const close=AudioContext.prototype.close;AudioContext.prototype.close=function(){void w.__closedAudio();return close.call(this);};});
- await start(page);await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(1);
- await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>Math.abs(s.duration-.85)<.001&&s.rate===1).length)).toBe(1);
- await page.getByRole('button',{name:'Reload weapon',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===1.8).length)).toBe(1);await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');
+ await page.addInitScript(()=>{const w=window as any;w.__rangeSounds=[];const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args:any[]){w.__rangeAudioContext=this.context;w.__rangeSounds.push({duration:this.buffer?.duration,channels:this.buffer?.numberOfChannels,loop:this.loop,rate:this.playbackRate.value});return (start as any).apply(this,args);};const close=AudioContext.prototype.close;AudioContext.prototype.close=function(){void w.__closedAudio();return close.call(this);};});
+ await start(page);await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration>59&&s.duration<61&&s.loop&&s.channels===2).length)).toBe(1);
+ await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration>1.9&&s.duration<2&&s.rate===1&&s.channels===2).length)).toBe(1);
+ await page.getByRole('button',{name:'Reload weapon',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>Math.abs(s.duration-1.8)<.05&&!s.loop).length)).toBe(1);await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');
  await page.getByRole('button',{name:'Mute range sound',exact:true}).click();await expect(page.getByRole('button',{name:'Enable range sound',exact:true})).toHaveAttribute('aria-pressed','false');
- await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-firebar strong')).toHaveText('12');expect(await page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>Math.abs(s.duration-.85)<.001&&s.rate===1).length)).toBe(1);
+ await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await page.locator('.range-lane').click({position:{x:8,y:100},force:true});await expect(page.locator('.range-firebar strong')).toHaveText('12');expect(await page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration>1.9&&s.duration<2&&s.rate===1&&s.channels===2).length)).toBe(1);
  await page.locator('.range-heading a').click();await expect.poll(()=>closed).toBe(1);await page.locator('.command-quick').getByRole('link',{name:/Shooting Range/i}).click();await expect(page.getByRole('button',{name:'Enable range sound',exact:true})).toHaveAttribute('aria-pressed','false');
- await page.getByRole('button',{name:'Enable range sound',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(2);
- await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeAudioContext.state)).toBe('suspended');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration===8).length)).toBe(3);
+ await page.getByRole('button',{name:'Enable range sound',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration>59&&s.duration<61&&s.loop&&s.channels===2).length)).toBe(2);
+ await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeAudioContext.state)).toBe('suspended');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>page.evaluate(()=>(window as any).__rangeSounds.filter((s:any)=>s.duration>59&&s.duration<61&&s.loop&&s.channels===2).length)).toBe(3);
 });
 
 test("an interrupted reload reply keeps the original timer and bullets",async({page,request})=>{
@@ -67,4 +67,35 @@ test("an interrupted reload reply keeps the original timer and bullets",async({p
  let first='';await page.route('**/rest/v1/rpc/range_action',async route=>{if(!first){first=route.request().postData()!;await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(first);await route.continue();}});
  await page.getByRole('button',{name:'Reload weapon',exact:true}).click();await expect(page.getByRole('button',{name:'Retry safely'})).toBeVisible();const before=await rpc(request,'range_state');await page.getByRole('button',{name:'Retry safely'}).click();const after=await rpc(request,'range_state');expect(after.weapons[0].magazine.ready_at).toBe(before.weapons[0].magazine.ready_at);
  await expect(page.locator('.range-magazine-counter b')).toHaveText('10 / 10');await expect(page.locator('.range-firebar strong')).toHaveText('13');
+});
+
+test("bullet holes stay on moving paper, repeated hits leave holes, and fresh targets clear them",async({page,request})=>{
+ await rpc(request,"range_manage",{p_action:"settings",p_payload:{settings:{range_round_seconds:12},reason:"Verify paper damage across moving rounds"}});
+ await equip(request,8);await start(page);await aim(page,1);
+ const target=page.locator('.range-target[data-lane="1"]'),holes=target.locator('.range-bullet-hole');
+ await expect(holes).toHaveCount(1);
+ const local=await holes.first().getAttribute("transform"),position=await target.getAttribute("transform");
+ await expect.poll(()=>target.getAttribute("transform")).not.toBe(position);
+ expect(await holes.first().getAttribute("transform")).toBe(local);
+ await expect(page.locator('.range-action-state')).toHaveText('Ready to fire');await aim(page,1);
+ await expect(holes).toHaveCount(2);
+ const state=await rpc(request,"range_state");expect(state.session.hits).toBe(1);expect(state.session.shots).toBe(2);
+ await page.getByRole("button",{name:"Refresh shooting range"}).click();await expect(holes).toHaveCount(2);
+ await page.setViewportSize({width:390,height:844});await capture(page,"range-paper-holes-mobile");
+ await expect(page.locator(".range-bullet-hole")).toHaveCount(0,{timeout:15000});
+});
+
+test("a delayed range recording respects mute, and missing audio cannot block shooting",async({page,request})=>{
+ await equip(request,4);let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
+ await page.route("**/audio/range/indoor-range.mp3",async route=>{await gate;await route.continue();});
+ await page.route("**/audio/range/colt-1911-shot.mp3",route=>route.fulfill({status:503,body:"Unavailable"}));
+ await page.addInitScript(()=>{const w=window as any;w.__ambientStarts=0;const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args:any[]){if(this.loop)w.__ambientStarts++;return(start as any).apply(this,args);};});
+ await start(page);await page.getByRole("button",{name:"Mute range sound",exact:true}).click();
+ const fetched=page.waitForResponse("**/audio/range/indoor-range.mp3");release();await fetched;
+ await page.locator(".range-lane").click({position:{x:8,y:100},force:true});await expect(page.locator(".range-firebar strong")).toHaveText("3");
+ expect(await page.evaluate(()=>(window as any).__ambientStarts)).toBe(0);
+ await page.getByRole("button",{name:"Enable range sound",exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as any).__ambientStarts)).toBe(1);
+ await expect(page.locator(".range-action-state")).toHaveText("Ready to fire");
+ await page.locator(".range-lane").click({position:{x:8,y:100},force:true});await expect(page.locator(".range-firebar strong")).toHaveText("2");
 });

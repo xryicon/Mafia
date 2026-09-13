@@ -21,7 +21,7 @@ export function rangeWorld(state,inventory){
    const r=Math.floor(e/(c.round_seconds*1000));let lane=null,best=Infinity;for(let l=0;l<c.targets_per_round;l++){if(v.hit_targets.includes(`${r}:${l}`))continue;const t=target(v,l,e),dist=((p.x-t.x)/c.radius_x)**2+((p.y-t.y)/c.radius_y)**2;if(dist<=1&&dist<best){best=dist;lane=l;}}
    const points=lane===null?0:best<=(c.bullseye_percent/100)**2?c.bullseye_points:c.hit_points;
    inventory.rangeShot(w.id,d.ammo.id,v.weapon_rule.wear_per_shot,v.weapon_rule.condition_max);
-   m.loaded=w.magazine.loaded-1;v.shots++;v.hits+=lane===null?0:1;v.score+=points;v.streak=lane===null?0:v.streak+1;v.best_streak=Math.max(v.best_streak,v.streak);v.last_elapsed_ms=e;v.last_shot_at=new Date().toISOString();if(lane!==null)v.hit_targets.push(`${r}:${lane}`);v.last_shot={id:'shot-'+next++,hit:lane!==null,points,round:r,lane,x:p.x,y:p.y,created_at:v.last_shot_at};message=lane===null?'Miss.':points===c.bullseye_points?'Bullseye.':'Target hit.';result={...v.last_shot};
+   m.loaded=w.magazine.loaded-1;v.shots++;v.hits+=lane===null?0:1;v.score+=points;v.streak=lane===null?0:v.streak+1;v.best_streak=Math.max(v.best_streak,v.streak);v.last_elapsed_ms=e;v.last_shot_at=new Date().toISOString();if(lane!==null)v.hit_targets.push(`${r}:${lane}`);v.last_shot={id:'shot-'+next++,hit:lane!==null,points,round:r,lane,x:p.x,y:p.y,elapsed_ms:e,created_at:v.last_shot_at};message=lane===null?'Miss.':points===c.bullseye_points?'Bullseye.':'Target hit.';result={...v.last_shot};
   }else fail('Unknown range action.');}
   result={...result,message};requests.set(p.request_id,{key,result});return {...result,state:read()};
  }catch(e){return{error:e.message};}};
