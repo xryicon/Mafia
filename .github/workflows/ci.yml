@@ -156,4 +156,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/shooting_range.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_magazines.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/range_difficulty.sql
+          bash supabase/tests/range_rewards_races.sh
           bash supabase/tests/shooting_range_races.sh
