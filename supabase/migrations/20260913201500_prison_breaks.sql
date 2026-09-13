@@ -16,7 +16,7 @@ values('breakouts','Prison breakouts','Successful Blackwater Island prison break
 insert into public.game_leaderboards(season_id,metric,label,enabled,direction,include_banned,hall_of_fame)
 select id,'breakouts','Prison breakouts',true,'desc',false,true from public.game_seasons on conflict do nothing;
 
-alter table public.game_bin_rules drop constraint game_bin_rules_check;
+alter table public.game_bin_rules drop constraint game_bin_rules_check1;
 alter table public.game_bin_rules add column lockpick_chance numeric(5,2) not null default 5 check(lockpick_chance between 0 and 100);
 alter table public.game_bin_rules add constraint game_bin_rules_total_chance_check
  check(cash_chance+pickaxe_chance+pistol_blueprint_chance+bullet_blueprint_chance+lockpick_chance<=100);
