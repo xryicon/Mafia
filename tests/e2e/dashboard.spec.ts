@@ -52,7 +52,7 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Dashboard overflow at "+width).toBe(true);await expect(page.getByRole("meter",{name:"Health",exact:true})).toBeVisible();await expect(page.getByRole("meter",{name:"Armour",exact:true})).toBeVisible();
   const header=await page.locator(".estate-header").boundingBox(),wallet=await page.locator(".header-wallet").boundingBox();
   expect(wallet!.y).toBeGreaterThanOrEqual(header!.y);expect(wallet!.y+wallet!.height).toBeLessThanOrEqual(header!.y+header!.height);
-  if(width===375){await page.evaluate(()=>scrollTo(0,0));await capture(page,"command-mobile");await capture(page,"command-mobile-full",true);}
+  if(width===375){await page.evaluate(()=>scrollTo(0,0));await capture(page,"command-mobile");await capture(page,"command-mobile-full",true);await page.locator(".command-player-stats").scrollIntoViewIfNeeded();await capture(page,"dashboard-vitals-mobile");}
  }
  await page.locator(".command-telegram").getByRole("link",{name:/Open Telegrams/}).click();await expect(page).toHaveURL(/\/telegrams$/);
  await page.goto("/dashboard");await page.locator(".command-season").getByRole("link",{name:"View Leaderboard",exact:true}).click();
@@ -105,7 +105,7 @@ test("personal health supports future overheal without stock counters",async({pa
  const health=page.getByRole("meter",{name:"Health",exact:true}),armour=page.getByRole("meter",{name:"Armour",exact:true});
  await expect(health).toHaveAttribute("aria-valuemax","120");await expect(health).toHaveAttribute("aria-valuenow","120");await expect(armour).toHaveAttribute("aria-valuenow","40");
  await expect(page.locator(".command-player-stats dt")).toHaveText(["Cash","Health","Armour","Operations","District heat"]);
- await expect(page.getByLabel("Inventory stock")).toHaveCount(0);await capture(page,"dashboard-vitals-boost");
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);await page.locator(".command-player-stats").scrollIntoViewIfNeeded();await capture(page,"dashboard-vitals-boost");
  mode="ending";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(health).toHaveAttribute("aria-valuenow","100");await expect(health).toHaveAttribute("aria-valuemax","100");
  mode="injured";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(health).toHaveAttribute("aria-valuenow","37");
  mode="offline";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(page.getByRole("img",{name:"Health unavailable"})).toBeVisible();

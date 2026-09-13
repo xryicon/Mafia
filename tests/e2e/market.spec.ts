@@ -35,7 +35,9 @@ test("players create auctions, reserve bids, receive goods, and keep the command
  await request.post("http://127.0.0.1:54329/__close_auctions",{headers:{Authorization:"Bearer "+token}});
  await page.getByRole("button",{name:"Refresh market",exact:true}).click();
  await expect(page.locator(".market-auction.leading")).toContainText("Won · goods delivered");
- await expect(page.getByLabel("Inventory stock")).toContainText("15");
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);
+ const inventory=await request.post("http://127.0.0.1:54329/rest/v1/rpc/inventory_state",{headers:{Authorization:"Bearer "+token},data:{}});
+ expect((await inventory.json()).carried.reduce((n:number,x:{quantity:number})=>n+x.quantity,0)).toBe(15);
  await page.getByLabel("Search goods or seller").fill("nonexistent commodity");
  await expect(page.locator(".market-empty")).toContainText(["You haven't listed any goods","No auctions here yet."]);
  await page.getByLabel("Search goods or seller").fill("");
@@ -71,4 +73,3 @@ test("an interrupted auction creation retries the same request without duplicati
  await expect(page.locator(".market-auction")).toHaveCount(1);
  await expect(ticket.locator(".market-stock-note")).toContainText("3 units available");
 });
-

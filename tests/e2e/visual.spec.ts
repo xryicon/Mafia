@@ -22,7 +22,7 @@ test("game navigation and inventory stay responsive",async({page,context,request
  await request.post("http://127.0.0.1:54329/__visual_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
  await page.setViewportSize({width:1672,height:941});await page.goto("/market");
- await expect(page.getByLabel("Inventory stock")).toContainText("540");
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);
  await expect(page.locator(".estate-header")).toHaveCSS("height","76px");
  await noOverflow(page);await capture(page,"shared-market-desktop");
  await page.setViewportSize({width:1044,height:700});await page.goto("/telegrams");
