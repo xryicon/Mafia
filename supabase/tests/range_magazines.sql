@@ -17,7 +17,10 @@ do $$declare u uuid:=gen_random_uuid();other uuid:=gen_random_uuid();s uuid:=gam
  p:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'elapsed_ms',floor(extract(epoch from(clock_timestamp()-started))*1000)::int,'x',0,'y',0,'loaded',999,'ammo',999);
  r:=public.range_action('fire',p);perform pg_temp.mag_check(r->>'error' like '%Magazine empty%','Eleventh shot did not require reload');
  perform pg_temp.mag_check((select loaded=0 from game_private.range_magazines where weapon_id=gun) and (select quantity=2 from public.game_inventory_gear where id=ammo) and (select condition=90 from public.game_inventory_gear where id=gun),'Magazine exhaustion changed bullets or wear incorrectly');
- perform public.range_action('finish',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid));r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary'));sid:=(r->>'session_id')::uuid;select started_at into started from public.game_range_sessions where id=sid;
+ perform public.range_action('finish',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid));
+ -- Advance the isolated recovery deadline; a later session must still have an empty magazine.
+ update public.game_range_sessions set cooldown_until=clock_timestamp()-interval '1 second' where id=sid;
+ r:=public.range_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'equipment_slot','secondary'));perform pg_temp.mag_check(not r?'error','Second session failed: '||r::text);sid:=(r->>'session_id')::uuid;select started_at into started from public.game_range_sessions where id=sid;
  r:=public.range_state();perform pg_temp.mag_check((r->'weapons'->0->'magazine'->>'loaded')::int=0,'Starting another session refilled magazine');
  p:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'session_id',sid,'reload_ms',0,'magazine_capacity',9999);
  r:=public.range_action('reload',p);perform pg_temp.mag_check(not r?'error','Reload failed: '||r::text);ready:=(r->>'reload_ready_at')::timestamptz;
