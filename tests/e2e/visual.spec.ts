@@ -28,7 +28,7 @@ test("game navigation and inventory stay responsive",async({page,context,request
  await page.setViewportSize({width:1044,height:700});await page.goto("/telegrams");
  await expect(page.locator(".header-cash")).toContainText("$2,480,000");
  const nav=page.getByRole("navigation",{name:"Game navigation"});
- await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Inventory","Bank","Gangs","Telegrams"]);
+ await expect(nav.locator("a > span")).toHaveText(["Dashboard","Market","Inventory","Bank","Gangs","Telegrams","Skills"]);
  await expect(nav.getByRole("link",{name:"Profile",exact:true})).toHaveCount(0);
  for(const link of await nav.getByRole("link").all())await expect(link.locator("svg")).toBeHidden();
  await expect(page.locator(".estate-header")).toHaveCSS("height","130px");
@@ -52,7 +52,7 @@ test("game navigation and inventory stay responsive",async({page,context,request
   console.log("HEADER_BOUNDS "+JSON.stringify({path,header,wallet}));
   expect(wallet!.y).toBeGreaterThanOrEqual(header!.y);
   expect(wallet!.y+wallet!.height).toBeLessThanOrEqual(header!.y+header!.height);
-  const links=nav.getByRole("link");await expect(links).toHaveCount(6);
+  const links=nav.getByRole("link");await expect(links).toHaveCount(7);
   for(const link of await links.all()){const box=await link.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(376);}
   if(path==="/dashboard")await capture(page,"clear-city-mobile");
   if(path==="/market")await capture(page,"shared-market-mobile");
