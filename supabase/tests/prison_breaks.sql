@@ -64,7 +64,7 @@ begin
  v:=public.prison_break_action('start',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'sentence_id',sentence_id));
  attempt_id:=(v->'attempt'->>'id')::uuid;
  reset role;
- update game_private.prison_break_attempts set expires_at=clock_timestamp()-interval '1 second' where id=attempt_id;
+ update game_private.prison_break_attempts set started_at=clock_timestamp()-interval '92 seconds',expires_at=clock_timestamp()-interval '1 second' where id=attempt_id;
  set local role authenticated;
  v:=public.prison_break_action('tension',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'attempt_id',attempt_id,'angle',0));
  perform pg_temp.verify(v->>'outcome'='caught','Expired lock action did not catch the rescuer');
