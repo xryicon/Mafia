@@ -54,3 +54,50 @@ test("interrupted property response safely retries one payment",async({page})=>{
  await sheet.getByRole("button",{name:"Check action result",exact:true}).click();
  await expect(sheet).toContainText("Your lease");await expect(page.locator(".header-cash")).toContainText("$9,700");
 });
+
+test("Your properties and leases finds holdings across streets and survives reload",async({page})=>{
+ await page.goto("/districts/the-waterfront?view=mine");
+ const mine=page.getByRole("navigation",{name:"Property views"}).getByRole("button",{name:/Your properties & leases/});
+ await expect(mine).toHaveAttribute("aria-pressed","true");await expect(page.locator(".dp-cards .dp-card")).toHaveCount(0);await expect(page.locator(".dp-empty")).toContainText("No properties here yet");
+ await page.goto("/districts/the-waterfront?plot=plot-25");
+ const sheet=page.getByRole("dialog",{name:"Plot W25 details"});
+ await sheet.getByRole("button",{name:"Lease this property",exact:true}).click();await sheet.getByRole("button",{name:"Confirm city lease",exact:true}).click();await expect(sheet).toContainText("Your lease");await sheet.getByRole("button",{name:"Close plot details",exact:true}).click();
+ await page.getByRole("button",{name:/Harbor Road/}).click();await expect(page.locator(".dp-card")).toHaveCount(6);await mine.click();
+ await expect(page).toHaveURL(/view=mine/);await expect(page.locator(".dp-card")).toHaveCount(1);await expect(page.locator(".dp-card")).toContainText("W25");await expect(page.locator(".dp-card")).toContainText("Your lease");
+ await page.reload();await expect(mine).toHaveAttribute("aria-pressed","true");await expect(page.locator(".dp-card")).toHaveCount(1);
+ await page.getByRole("button",{name:"Manage property",exact:true}).click();await expect(sheet.getByRole("region",{name:"Move goods at this property"})).toBeVisible();
+});
+
+for(const [code,width] of [["25",1536],["26",390]] as const)test("on-property transfers in "+(code==="25"?"garage desktop":"warehouse mobile"),async({page,request})=>{
+ const headers={Authorization:"Bearer "+token};
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{storage:true}});
+ await page.setViewportSize({width,height:code==="25"?1000:844});await page.goto("/districts/the-waterfront?plot=plot-"+code);
+ const sheet=page.getByRole("dialog",{name:"Plot W"+code+" details"});
+ await sheet.getByRole("button",{name:"Lease this property",exact:true}).click();await sheet.getByRole("button",{name:"Confirm city lease",exact:true}).click();
+ const stock=sheet.getByRole("region",{name:"Move goods at this property"});
+ const store=stock.getByRole("button",{name:/Store Whiskey/i});await expect(store).toBeVisible();
+ await expect.poll(()=>stock.locator(".commodity-art img").evaluateAll((imgs:HTMLImageElement[])=>imgs.length>0&&imgs.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);
+ await store.click();
+ const transfer=page.getByRole("dialog",{name:"Secure your goods"});await expect(transfer).toBeVisible();
+ await expect(transfer.getByLabel("Storage building")).toHaveValue("building-"+code);await expect(transfer.locator("select option")).toHaveCount(1);
+ await transfer.getByLabel("Quantity",{exact:true}).fill("2");await capture(page,"property-transfer-"+code);
+ await transfer.getByRole("button",{name:"Confirm storage"}).click();await expect(transfer).toHaveCount(0);await expect(sheet).toBeVisible();
+ await expect(stock.locator(".dp-stock-capacity")).toContainText("Stored 2 /");await expect(stock.locator(".dp-stock-items")).toContainText("3 units");
+ await stock.getByRole("button",{name:"Storage → inventory",exact:true}).click();await expect(stock.locator(".dp-stock-items")).toContainText("2 units");await stock.scrollIntoViewIfNeeded();await capture(page,"property-stock-"+code);
+ await stock.getByRole("button",{name:/Retrieve Whiskey/i}).click();const retrieve=page.getByRole("dialog",{name:"Retrieve your goods"});await retrieve.getByRole("button",{name:"Confirm retrieval"}).click();await expect(retrieve).toHaveCount(0);
+ await expect(stock.locator(".dp-stock-capacity")).toContainText("Stored 1 /");
+ await stock.getByRole("button",{name:/Retrieve Whiskey/i}).click();await page.keyboard.press("Escape");await expect(page.getByRole("dialog",{name:"Retrieve your goods"})).toHaveCount(0);await expect(sheet).toBeVisible();
+ const response=await request.post("http://127.0.0.1:54329/rest/v1/rpc/inventory_state",{headers,data:{}}),state=await response.json();
+ expect(state.carried.find((i:any)=>i.good_id==="whiskey").quantity).toBe(4);expect(state.stores.find((s:any)=>s.id==="building-"+code).contents.find((i:any)=>i.good_id==="whiskey").quantity).toBe(1);
+ expect(state.stores.filter((s:any)=>s.id!=="building-"+code).every((s:any)=>s.contents.length===0)).toBe(true);
+ expect(await sheet.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("on-property interrupted transfer preserves its exact retry",async({page,request})=>{
+ await page.goto("/districts/the-waterfront?plot=plot-25");
+ const sheet=page.getByRole("dialog",{name:"Plot W25 details"});await sheet.getByRole("button",{name:"Lease this property",exact:true}).click();await sheet.getByRole("button",{name:"Confirm city lease",exact:true}).click();
+ await sheet.getByRole("button",{name:/Store Whiskey/i}).click();const transfer=page.getByRole("dialog",{name:"Secure your goods"});await transfer.getByLabel("Quantity",{exact:true}).fill("2");
+ let first="";await page.route("**/rest/v1/rpc/inventory_action",async route=>{if(!first){first=route.request().postData()!;await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(first);await route.continue();}});
+ await transfer.getByRole("button",{name:"Confirm storage"}).click();await expect(transfer.getByRole("button",{name:"Retry safely"})).toBeVisible();await page.keyboard.press("Escape");await expect(transfer).toBeVisible();await transfer.getByRole("button",{name:"Retry safely"}).click();await expect(transfer).toHaveCount(0);await expect(sheet).toBeVisible();
+ const r=await request.post("http://127.0.0.1:54329/rest/v1/rpc/inventory_state",{headers:{Authorization:"Bearer "+token},data:{}}),d=await r.json();expect(d.stores.find((s:any)=>s.id==="building-25").used).toBe(2);expect(d.history).toHaveLength(2);
+});

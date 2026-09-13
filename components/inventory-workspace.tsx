@@ -7,14 +7,14 @@ import {useInventory} from "@/components/use-inventory";
 import {categoryNames,countGood,storeReady,equipmentSlots,kg,carryRoom,type Gear,type InventoryGood,type InventoryState} from "@/lib/inventory";
 import {money} from "@/lib/game";
 type Move={action:"store"|"retrieve";good:InventoryGood;season:string;building?:string;gear?:Gear};
-function Transfer({move,h,close}:{move:Move;h:ReturnType<typeof useInventory>;close:()=>void}){
+function Transfer({move,h,close,fixedBuilding}:{move:Move;h:ReturnType<typeof useInventory>;close:()=>void;fixedBuilding?:string}){
  const dialog=useRef<HTMLDialogElement>(null),[building,setBuilding]=useState(move.building??h.data.stores.find(s=>storeReady(s)&&(move.action==="store"?s.enabled&&!s.listed:countGood(s.contents,move.good.id)>0))?.id??""),[quantity,setQuantity]=useState(String(move.gear?.quantity??1));
- const d=h.data,storing=move.action==="store",eligible=d.stores.filter(s=>storeReady(s)&&(storing?s.enabled&&!s.listed:(move.gear?s.id===move.gear.building_id:s.contents.some(x=>x.good_id===move.good.id&&x.quantity>0))));
+ const d=h.data,storing=move.action==="store",eligible=d.stores.filter(s=>(!fixedBuilding||s.id===fixedBuilding)&&storeReady(s)&&(storing?s.enabled&&!s.listed:(move.gear?s.id===move.gear.building_id:s.contents.some(x=>x.good_id===move.good.id&&x.quantity>0))));
  const selected=eligible.find(s=>s.id===building),available=move.gear?.quantity??(storing?countGood(d.carried,move.good.id):countGood(selected?.contents??[],move.good.id));
  const max=Math.max(0,Math.min(available,d.max_transfer,storing?Infinity:move.gear?(d.capacity.used_slots<d.capacity.slots&&d.capacity.used_grams+move.good.weight_grams*move.gear.quantity<=d.capacity.weight_grams?move.gear.quantity:0):carryRoom(d,move.good),storing?Math.max(0,(selected?.capacity??0)-(selected?.used??0)):Infinity)),n=Number(quantity);
  const valid=!!selected&&Number.isSafeInteger(n)&&n>0&&n<=max&&d.playable&&move.season===d.season.id;
  useEffect(()=>{dialog.current?.showModal();},[]);
- return <dialog ref={dialog} className="inv-dialog" aria-labelledby="inventory-move-title" onCancel={e=>{if(h.busy)e.preventDefault();else close();}}><button className="inv-close" aria-label="Close item transfer" disabled={h.busy} onClick={close}>×</button><p className="inv-eyebrow">BLACKWATER / SECURE STORAGE</p><h2 id="inventory-move-title">{storing?"Secure your goods":"Retrieve your goods"}</h2>
+ return <dialog ref={dialog} className="inv-dialog" aria-labelledby="inventory-move-title" onCancel={e=>{e.stopPropagation();if(h.busy)e.preventDefault();else close();}}><button className="inv-close" aria-label="Close item transfer" disabled={h.busy} onClick={close}>×</button><p className="inv-eyebrow">BLACKWATER / SECURE STORAGE</p><h2 id="inventory-move-title">{storing?"Secure your goods":"Retrieve your goods"}</h2>
  <div className="inv-move-item"><CommodityArtwork goodId={move.good.id} size={88}/><div><strong>{move.good.name}</strong><span>{available.toLocaleString()} available</span></div></div>
  <form onSubmit={async e=>{e.preventDefault();if(valid&&await h.act(move.gear?(storing?"gear_store":"gear_retrieve"):move.action,{item_key:move.gear?"gear:"+move.gear.id:undefined,season_id:move.season,building_id:selected.id,good_id:move.good.id,quantity:n}))close();}}>
  <label>{storing?"Store in":"Retrieve from"}<select aria-label="Storage building" value={selected?.id??""} disabled={h.busy} onChange={e=>setBuilding(e.target.value)}>{eligible.length?eligible.map(s=><option key={s.id} value={s.id}>{s.code} {s.name} · {s.district}</option>):<option value="">No eligible storage</option>}</select></label>
@@ -97,3 +97,6 @@ export function InventoryWorkspace({initial}:{initial:InventoryState}){
  {delivery&&<DeliveryCollection id={delivery} h={h} close={()=>setDelivery(null)}/>}
  </div>;
 }
+
+export {Transfer as InventoryTransfer};
+export type {Move};
