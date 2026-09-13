@@ -18,11 +18,13 @@ begin
  set local role authenticated;
  perform set_config('request.jwt.claim.sub',owner_id::text,true);
  v:=public.staff_action('setting',jsonb_build_object('key','closed_beta_starts_at_unix','value',launch,'reason','Closed beta schedule regression test'));
- perform pg_temp.verify(not (v?'error') and game_private.setting('closed_beta_starts_at_unix')=launch,'Owner could not update the launch time');
+ reset role;
+ perform pg_temp.verify(not (v?'error') and (select value from public.game_settings where key='closed_beta_starts_at_unix')=launch,'Owner could not update the launch time');
+ set local role authenticated;
  perform set_config('request.jwt.claim.sub',ordinary_id::text,true);
  v:=public.staff_action('setting',jsonb_build_object('key','closed_beta_starts_at_unix','value',launch+60,'reason','Unauthorized beta schedule change'));
- perform pg_temp.verify(v?'error' and game_private.setting('closed_beta_starts_at_unix')=launch,'Player changed the Owner launch setting');
  reset role;
+ perform pg_temp.verify(v?'error' and (select value from public.game_settings where key='closed_beta_starts_at_unix')=launch,'Player changed the Owner launch setting');
 end$$;
 select 'PASS: public beta countdown, private settings and Owner-only scheduling';
 rollback;
