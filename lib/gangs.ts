@@ -1,0 +1,9 @@
+import type {CitySeason} from "./social";
+export type GangRank={id:string;label:string;priority:number;manage_members:boolean;review_requests:boolean;assignable:boolean};
+export type GangMember={id:string;name:string;avatar_url:string;respect:number;contribution:number;rank_id:string;rank_label:string;priority:number;version:number;joined_at:string;is_owner:boolean;online:boolean;can_edit:boolean};
+export type GangSummary={id:string;name:string;description:string;members:number;respect:number;contribution:number;rank:number;joined:boolean;recruiting:boolean};
+export type GangApplication={id:string;player_id:string;name:string;avatar_url:string;respect:number;created_at:string};
+export type GangBank={balance:number;can_withdraw:boolean;offset:number;page_size:number;total:number;my_deposits:number;history:{id:string;actor_id:string;name:string;delta:number;balance_after:number;created_at:string}[]};
+export type GangDetail={id:string;name:string;description:string;version:number;created_at:string;recruiting:boolean;leader:{id:string;name:string;avatar_url:string};is_member:boolean;is_owner:boolean;can_review:boolean;can_manage:boolean;my_rank:string|null;member_count:number;respect:number;application:{id:string;status:string;created_at:string}|null;members:GangMember[];requests:GangApplication[];bank:GangBank|null;events:{id:number;actor_id:string;target_id:string|null;kind:string;description:string;created_at:string}[];territories:{name:string;slug:string;status:string}[]};
+export type GangWorkspaceState={season:CitySeason;playable:boolean;player:{id:string;name:string;cash:number};directory:GangSummary[];total:number;my_gang_id:string|null;selected:GangDetail|null;ranks:GangRank[];settings:Record<string,number>;server_time:string};
+export type GangCommand={action:string;payload:Record<string,unknown>};

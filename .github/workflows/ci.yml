@@ -125,3 +125,8 @@ jobs:
 
       - name: Player profile privacy and persistence
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/player_profiles.sql
+
+      - name: Gang headquarters permissions and concurrency
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gangs.sql
+          bash supabase/tests/gang_races.sh

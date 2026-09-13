@@ -7,7 +7,10 @@ export function telegramWorld(playerId,season,officePlot){
  messages:[{id:"77777777-1111-4111-8111-111111111111",thread_id:thread.id,sender_id:other,recipient_id:playerId,sender_name:"HarborJack",body:"The docks are ready. Shall we make a deal?",created_at:new Date().toISOString()}],
  drafts:[],blocks:[],reports:[],office:{name:"Blackwater Telegram Office",description:"A direct line to the people who move this city.",fee:25,status:"open",available:true,owner_type:"city",owner_id:"99999999-9999-4999-8999-999999999999",owner_name:"Blackwater Port Authority",plot_id:officePlot,plot_code:"W06",district_name:"The Waterfront",district_slug:"the-waterfront",building_id:"building-office",business_id:"business-office",asking_price:15000,minimum_fee:0,maximum_fee:500,can_operate:false,can_manage:true,config:{minimum_fee:0,maximum_fee:500,default_fee:25,available:true,reset_sale_price:15000},history:[],locations:[],archives:[],stats:{today_count:1,week_count:1,season_count:1,today_revenue:25,week_revenue:25,season_revenue:25,average_per_day:1},hours:Array.from({length:24},(_,hour)=>({hour,count:hour===9?1:0}))}};
  const requests=new Map(),rooms=new Map();let ownAvatar="/art/command-portrait.jpg";
- return {read(p={}){
+ return {recruitmentNotice(gid,name,applicant){
+ const t={...thread,id:randomUUID(),subject:"Join request · "+name,excerpt:applicant+" requested to join.",unread:1};state.threads.unshift(t);
+ state.messages.push({id:randomUUID(),thread_id:t.id,sender_id:other,recipient_id:playerId,sender_name:applicant,body:"GANG RECRUITMENT NOTICE: review the application in gang headquarters.",recruitment_gang_id:gid,created_at:new Date().toISOString()});
+},read(p={}){
   const selected=state.threads.find(t=>t.id===p.p_thread);if(selected)selected.unread=0;
   return {...state,player_avatar:ownAvatar,members:rooms.get(p.p_thread)||[],thread:selected||null,unread:state.threads.reduce((n,t)=>n+t.unread,0),messages:state.messages.filter(m=>m.thread_id===p.p_thread).map(m=>({...m,sender_avatar:m.sender_id===playerId?ownAvatar:"/art/command-portrait.jpg"})),
    threads:state.threads.filter(t=>(!["groups","gang"].includes(p.p_folder)||t.kind===(p.p_folder==="groups"?"group":"gang"))).filter(t=>p.p_folder==="archive"?t.archived:p.p_folder==="starred"?t.starred:!t.archived)};
