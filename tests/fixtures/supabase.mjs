@@ -1,5 +1,6 @@
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
+import {rangeWorld} from "./range.mjs";
 import {craftingWorld} from "./crafting.mjs";
 import {propertyWorld} from "./property-leases.mjs";
 import {readProfile,saveDescription} from "./profiles.mjs";
@@ -38,9 +39,9 @@ let bank=bankWorld(state);
 let gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));
 let inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));
 let properties=propertyWorld(districts,state,inventory);
-let crafting=craftingWorld(state,districts,inventory);
+let crafting=craftingWorld(state,districts,inventory);let range=rangeWorld(state,inventory);
 const initialState=structuredClone(state);
-const resetWorld=()=>{Object.assign(state,structuredClone(initialState));delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));properties=propertyWorld(districts,state,inventory);crafting=craftingWorld(state,districts,inventory);};
+const resetWorld=()=>{Object.assign(state,structuredClone(initialState));delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));properties=propertyWorld(districts,state,inventory);crafting=craftingWorld(state,districts,inventory);range=rangeWorld(state,inventory);};
 const community={chat:[{id:"77777777-7777-4777-8777-777777777777",player_id:"33333333-3333-4333-8333-333333333333",username:"HarborJack",handle:"HarborJack",body:"The docks are open. Who is trading today?",role:"player",created_at:new Date().toISOString()}],cases:[],sanctions:[]};
 const staff=()=>({permissions:state.permissions,players:[{id:playerId,handle:state.player.handle,role_id:"owner"}],sanctions:[],cases:community.cases,evidence:[],chat:community.chat,
  settings:[{key:"market_fee_percent",value:state.settings.market_fee_percent,minimum:0,maximum:100}],jobs:[],goods:state.goods,
@@ -65,6 +66,8 @@ const server = http.createServer(async(req,res) => {
 
 
  if(url.pathname==="/rest/v1/rpc/vitals_state"){send(200,{season_id:season.id,health:100,health_max:100,health_cap:120,armour:0,armour_max:100,decay_seconds:60,server_time:new Date().toISOString()});return;}
+ if(url.pathname.startsWith("/rest/v1/rpc/range_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("range_state")?range.read():url.pathname.endsWith("range_manage")?range.manage(p.p_action,p.p_payload):range.action(p.p_action,p.p_payload));return;}
+ if(url.pathname==="/__range_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;range.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/crafting_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("crafting_state")?crafting.read(p.p_building):url.pathname.endsWith("crafting_manage")?crafting.manage(p.p_payload):crafting.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/__crafting_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;crafting.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/property_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("property_manage")?properties.manage(p.p_action,p.p_payload):properties.action(p.p_action,p.p_payload));return;}

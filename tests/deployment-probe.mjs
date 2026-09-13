@@ -156,3 +156,12 @@ if(craftingDeployed){
 }
 
 console.log(JSON.stringify({playerVitalsDeployed:styles.includes(".command-vital-health")&&styles.includes(".command-vital-armour"),stockCounterRemoved:!styles.includes(".command-header-stock")}));
+
+const shootingRangeDeployed=styles.includes(".range-lane");console.log(JSON.stringify({shootingRangeDeployed}));
+if(shootingRangeDeployed){
+ const r=await fetch(origin+"/shooting-range",{redirect:"manual",signal:AbortSignal.timeout(20000)});
+ if(![302,303,307,308].includes(r.status)||!r.headers.get("location")?.includes("/login"))throw new Error("Shooting range must require login");
+ const a=await fetch(origin+"/art/shooting-range.png",{signal:AbortSignal.timeout(20000)}),bytes=(await a.arrayBuffer()).byteLength;
+ if(!a.ok||bytes<50000||!a.headers.get("content-type")?.includes("image/png"))throw new Error("Shooting range artwork unavailable");
+ console.log(JSON.stringify({shootingRangeProtected:r.status,rangeArtwork:a.status,bytes}));
+}

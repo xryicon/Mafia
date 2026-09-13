@@ -1,5 +1,5 @@
 // Explicit destinations keep post-auth redirects on this app.
-const destinations = ["/crafting", "/inventory", "/bank", "/refineries", "/bin-diving", "/telegrams", "/ledger", "/dashboard", "/market", "/properties", "/districts", "/gangs", "/profile", "/update-password", "/staff", "/owner", "/community", "/support", "/seasons", "/players", "/account"];
+const destinations = ["/shooting-range","/crafting", "/inventory", "/bank", "/refineries", "/bin-diving", "/telegrams", "/ledger", "/dashboard", "/market", "/properties", "/districts", "/gangs", "/profile", "/update-password", "/staff", "/owner", "/community", "/support", "/seasons", "/players", "/account"];
 export function safeNext(value: unknown): string {
   return typeof value === "string" && destinations.includes(value) ? value : "/dashboard";
 }
