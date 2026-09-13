@@ -1,5 +1,6 @@
 export function GameIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
+    heart: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z",
     weight: "M6 8h12l3 13H3L6 8 M9 8V5a3 3 0 0 1 6 0v3",
     move: "M12 2v20 M2 12h20 M8 6l4-4 4 4 M8 18l4 4 4-4 M6 8l-4 4 4 4 M18 8l4 4-4 4",
     plus: "M12 5v14 M5 12h14",

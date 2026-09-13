@@ -3,7 +3,7 @@ import {useCallback,useEffect,useLayoutEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
-import {money,type GameState} from "@/lib/game";
+import {money} from "@/lib/game";
 import type {CityState} from "@/lib/city";
 import {PlayerAvatar} from "@/components/player-avatar";
 import {Brand} from "@/components/brand";
@@ -17,18 +17,18 @@ function UsernameGate(){
 }
 export function CityChrome({children}:{children:React.ReactNode}){
  const path=usePathname(),[data,setData]=useState<CityState|null>(null),[stale,setStale]=useState(false);
- const [summary,setSummary]=useState<{stock:number|null;unread:number|null}|null>(null);
+ const [summary,setSummary]=useState<{unread:number|null}|null>(null);
  const alive=useRef(false),reading=useRef(false),account=useRef<HTMLDetailsElement>(null);
  const refresh=useCallback(async()=>{
   if(reading.current||document.hidden)return;reading.current=true;
   try{
    const client=createClient();
-   const [city,game,mail]=await Promise.allSettled([client.rpc("city_status"),client.rpc("game_state"),client.rpc("telegram_state")]);
+   const [city,mail]=await Promise.allSettled([client.rpc("city_status"),client.rpc("telegram_state")]);
    if(!alive.current)return;
    if(city.status==="fulfilled"&&!city.value.error&&city.value.data){setData(city.value.data);setStale(false);}else setStale(true);
-   const inventory=game.status==="fulfilled"&&!game.value.error?(game.value.data as GameState|null)?.inventory:null;
+
    const unread=mail.status==="fulfilled"&&!mail.value.error?mail.value.data?.unread:null;
-   setSummary({stock:Array.isArray(inventory)?inventory.reduce((total,item)=>total+item.quantity,0):null,unread:typeof unread==="number"?unread:null});
+   setSummary({unread:typeof unread==="number"?unread:null});
   }
   catch{if(alive.current)setStale(true);}finally{reading.current=false;}
  },[]);
@@ -52,7 +52,7 @@ export function CityChrome({children}:{children:React.ReactNode}){
  return <div className={"estate-city fresh-city command-city"+(blank?" fresh-page":"")+(path==="/dashboard"?" command-dashboard-page":"")}>
   <header className="estate-header"><Brand href="/dashboard" className="estate-brand" status={<><span className={"presence-dot"+(stale?" offline":"")}/><span>{data&&!stale?data.online_count.toLocaleString("en-US"):"—"} online</span></>}/><span className="command-header-tagline">A PLAYER-DRIVEN CRIME ECONOMY</span><nav className="estate-nav" aria-label="Game navigation">{links.map(([href,name,icon])=><Link href={href} key={href} aria-current={active(href)?"page":undefined}><GameIcon name={icon} size={18}/><span>{name}</span>{href==="/telegrams"&&!!summary?.unread&&<b className="command-nav-badge" aria-hidden="true">{summary.unread}</b>}</Link>)}</nav>
   <div className="estate-player-tools"><div className="header-wallet" aria-label="Cash balance"><span className="wallet-label">CASH</span><strong className="header-cash">{data?money(data.player.cash):"—"}</strong></div>
-  <Link href="/inventory" className="command-header-stock" title="Carried inventory" aria-label="Inventory stock"><GameIcon name="inventory" size={22}/>{summary?.stock?.toLocaleString("en-US")??"—"}</Link>
+
   <Link className="command-header-bell" href="/telegrams" aria-label="Telegram notifications"><GameIcon name="bell" size={21}/>{!!summary?.unread&&<b aria-hidden="true">{summary.unread}</b>}</Link>
   <details className="estate-account-menu" ref={account}><summary aria-label="Player menu"><PlayerAvatar className="don-portrait" src={data?.avatar_url} size={36}/><div><span className="estate-player-name">{data?.username||"Your account"} <i>⌄</i></span><span className="estate-player-numbers"><span className="header-power">Power <strong>{data?.player.power?.toLocaleString("en-US")??"—"}</strong></span><span className="header-rank" title="Rank">{data?.player.rank||"—"}</span></span></div></summary>
    <div className="estate-dropdown"><p className="eyebrow">YOUR BLACKWATER</p><p className="account-identity">{data?.username||"Your account"}<small>Power {data?.player.power?.toLocaleString("en-US")??"—"} · {data?.player.rank||"—"}</small></p><Link href="/players">Players & respect</Link><Link href="/seasons?view=rankings">Leaderboards</Link><Link href="/seasons">Seasons</Link><Link href="/support">Support</Link>{!!data?.permissions.length&&<Link className="owner-menu-link" href={data.permissions.includes("roles.manage")?"/owner":"/staff"}>{data.permissions.includes("roles.manage")?"Owner panel":"Staff panel"}</Link>}<Link href="/districts">City map & districts</Link><Link href="/ledger">Financial history</Link><Link href="/account">Account & security</Link><LogoutButton/></div>

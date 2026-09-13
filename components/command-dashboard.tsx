@@ -12,6 +12,7 @@ import {PlayerAvatar} from "@/components/player-avatar";
 import {GameIcon} from "./game-icon";
 import {CommodityArtwork} from "@/components/commodity-artwork";
 import {PanMap} from "./district-map";
+import {PlayerVitalBars} from "./player-vital-bars";
 
 function Panel({title,action,children,className=""}:{title:string;action?:ReactNode;children:ReactNode;className?:string}){
  return <section className={"command-panel "+className}><header className="command-panel-head"><h2>{title}</h2>{action}</header>{children}</section>;
@@ -68,11 +69,11 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   const id=++version.current;selected.current=slug;loading.current=true;setRefreshing(true);
   try{
    const client=createClient();
-   const [game,city,district,season,mailbox]=await Promise.all([client.rpc("game_state"),client.rpc("city_status"),client.rpc("district_state",{p_slug:slug}),client.rpc("season_state",{p_metric:"respect"}),client.rpc("telegram_state")]);
+   const [game,city,district,season,mailbox,vitals]=await Promise.all([client.rpc("game_state"),client.rpc("city_status"),client.rpc("district_state",{p_slug:slug}),client.rpc("season_state",{p_metric:"respect"}),client.rpc("telegram_state"),client.rpc("vitals_state")]);
    if(game.error||!game.data||district.error)throw new Error("The city could not be refreshed. Your last saved figures are shown.");
    if(!alive.current||id!==version.current)return false;
    offset.current=Date.parse(game.data.server_time)-Date.now();setNow(Date.parse(game.data.server_time));
-   setData({game:game.data,city:city.error?null:city.data,district:district.data,season:season.error?null:season.data,mailbox:mailbox.error||!mailbox.data?null:mailboxSummary(mailbox.data)});
+   setData({vitals:vitals.error?null:vitals.data,game:game.data,city:city.error?null:city.data,district:district.data,season:season.error?null:season.data,mailbox:mailbox.error||!mailbox.data?null:mailboxSummary(mailbox.data)});
    setTravel(district.data?.district?.slug??slug);setFailed(false);if(!silent)setNotice("");
    window.dispatchEvent(new Event("blackwater:game"));return true;
   }catch(error){if(alive.current&&id===version.current){setFailed(true);setNotice(error instanceof Error?error.message:"Could not refresh the city.");}return false;}
@@ -87,11 +88,11 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   return()=>{alive.current=false;++version.current;loading.current=false;clearInterval(timer);clearInterval(poll);document.removeEventListener("visibilitychange",visible);};
  },[refresh]);
  useEffect(()=>{
-  const frame=requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent("blackwater:dashboard",{detail:{stock:data.game.inventory.reduce((s,g)=>s+g.quantity,0),unread:data.mailbox?.unread??null}})));return()=>cancelAnimationFrame(frame);
+  const frame=requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent("blackwater:dashboard",{detail:{unread:data.mailbox?.unread??null}})));return()=>cancelAnimationFrame(frame);
  },[data]);
  useEffect(()=>{if(dialog&&!modal.current?.open)modal.current?.showModal();else if(!dialog)modal.current?.close();},[dialog]);
  const game=data.game,ds=data.district,d=ds?.district,player=data.city?.player;
- const playerRank=player?.rank??rank(game.player.xp,game.settings),progress=respectProgress(game.player.xp,game.settings),stock=game.inventory.reduce((n,i)=>n+i.quantity,0);
+ const playerRank=player?.rank??rank(game.player.xp,game.settings),progress=respectProgress(game.player.xp,game.settings);
  const playing=seasonPlayable(game.season,now),cooldown=remaining(game.player.job_ready_at,now);
  const districtPath=d?"/districts/"+d.slug:"/districts";
  const influenceTotal=(ds?.territory.neutral_influence??0)+(ds?.influence.reduce((sum,g)=>sum+g.influence,0)??0);
@@ -126,7 +127,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <dl className="command-player-stats">
     <div><dt><GameIcon name="coins"/>Cash</dt><dd>{money(game.player.cash)}</dd></div>
     
-    <div><dt><GameIcon name="inventory"/>Stock</dt><dd>{stock.toLocaleString("en-US")} <small>units</small></dd></div>
+    <PlayerVitalBars vitals={data.vitals?.season_id===game.season.id?data.vitals:null} now={now}/>
     <div><dt><GameIcon name="bolt"/>Operations</dt><dd><span className={cooldown?"":"command-green"}>{cooldown?until(game.player.job_ready_at,now):playing?"Ready":"Paused"}</span></dd></div>
     <div><dt><GameIcon name="flame"/>District heat</dt><dd>{d?<><Meter value={d.police_heat} label="District police heat" color="#b26050"/><small>{d.police_heat} / 100</small></>:"—"}</dd></div>
    </dl>

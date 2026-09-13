@@ -41,7 +41,7 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
  await expect(page.locator(".command-player-name")).toContainText("HarborBoss");
  await expect(page.locator(".command-gangs")).toContainText("Cobalto Family");
  await expect.poll(()=>page.locator(".command-portrait").evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
- await expect(page.getByLabel("Inventory stock")).toContainText("540");
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);await expect(page.getByRole("meter",{name:"Health",exact:true})).toHaveAttribute("aria-valuenow","100");await expect(page.getByRole("meter",{name:"Armour",exact:true})).toHaveAttribute("aria-valuenow","0");
  await expect(page.locator(".command-atlas").getByRole("link",{name:/Telegram Office/i})).toHaveCount(0);
  await expect(page.locator(".command-office-marker")).toHaveCount(0);
  await expect(page.locator(".command-telegram")).toBeVisible();
@@ -49,10 +49,10 @@ test("reference dashboard renders on desktop, tablet and mobile with working pan
  await capture(page,"command-desktop");
  for(const width of [1448,1024,768,375]){
   await page.setViewportSize({width,height:width===375?812:1000});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Dashboard overflow at "+width).toBe(true);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Dashboard overflow at "+width).toBe(true);await expect(page.getByRole("meter",{name:"Health",exact:true})).toBeVisible();await expect(page.getByRole("meter",{name:"Armour",exact:true})).toBeVisible();
   const header=await page.locator(".estate-header").boundingBox(),wallet=await page.locator(".header-wallet").boundingBox();
   expect(wallet!.y).toBeGreaterThanOrEqual(header!.y);expect(wallet!.y+wallet!.height).toBeLessThanOrEqual(header!.y+header!.height);
-  if(width===375){await page.evaluate(()=>scrollTo(0,0));await capture(page,"command-mobile");await capture(page,"command-mobile-full",true);}
+  if(width===375){await page.evaluate(()=>scrollTo(0,0));await capture(page,"command-mobile");await capture(page,"command-mobile-full",true);await page.locator(".command-player-stats").scrollIntoViewIfNeeded();await capture(page,"dashboard-vitals-mobile");}
  }
  await page.locator(".command-telegram").getByRole("link",{name:/Open Telegrams/}).click();await expect(page).toHaveURL(/\/telegrams$/);
  await page.goto("/dashboard");await page.locator(".command-season").getByRole("link",{name:"View Leaderboard",exact:true}).click();
@@ -93,4 +93,21 @@ test("dashboard prices show active offers only and paginate five goods per page"
  await expect(rows).toHaveCount(1);await expect(rows.first()).toContainText("Whiskey crates");await expect(board.getByRole("navigation")).toHaveCount(0);
  mode="empty";await page.getByRole("button",{name:"Refresh city",exact:true}).click();
  await expect(rows).toHaveCount(0);await expect(board).toContainText("No active offers right now.");
+});
+
+test("personal health supports future overheal without stock counters",async({page})=>{
+ let mode="boost";
+ await page.route("**/rest/v1/rpc/vitals_state",async route=>{
+  if(mode==="offline"){await route.fulfill({status:503,json:{message:"Fixture unavailable"}});return;}
+  await route.fulfill({json:{season_id:"55555555-5555-4555-8555-555555555555",health:mode==="boost"?120:mode==="ending"?101:37,health_max:100,health_cap:120,armour:40,armour_max:100,decay_seconds:mode==="ending"?1:60,server_time:new Date().toISOString()}});
+ });
+ await page.setViewportSize({width:1672,height:1000});await page.goto("/dashboard");await page.getByRole("button",{name:"Refresh city",exact:true}).click();
+ const health=page.getByRole("meter",{name:"Health",exact:true}),armour=page.getByRole("meter",{name:"Armour",exact:true});
+ await expect(health).toHaveAttribute("aria-valuemax","120");await expect(health).toHaveAttribute("aria-valuenow","120");await expect(armour).toHaveAttribute("aria-valuenow","40");
+ await expect(page.locator(".command-player-stats dt")).toHaveText(["Cash","Health","Armour","Operations","District heat"]);
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);await page.locator(".command-player-stats").scrollIntoViewIfNeeded();await capture(page,"dashboard-vitals-boost");
+ mode="ending";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(health).toHaveAttribute("aria-valuenow","100");await expect(health).toHaveAttribute("aria-valuemax","100");
+ mode="injured";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(health).toHaveAttribute("aria-valuenow","37");
+ mode="offline";await page.getByRole("button",{name:"Refresh city",exact:true}).click();await expect(page.getByRole("img",{name:"Health unavailable"})).toBeVisible();
+ for(const path of ["/market","/telegrams","/inventory"]){await page.goto(path);await expect(page.getByRole("navigation",{name:"Game navigation"})).toBeVisible();await expect(page.getByLabel("Inventory stock")).toHaveCount(0);}
 });

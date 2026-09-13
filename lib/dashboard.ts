@@ -5,7 +5,7 @@ import type {SeasonState} from "./seasons";
 import type {TelegramState, TelegramOffice} from "./telegrams";
 
 export type DashboardMailbox={unread:number;office:Pick<TelegramOffice,"name"|"status"|"available"|"fee"|"district_name"|"district_slug"|"plot_id">};
-export type DashboardData={game:GameState;city:CityState|null;district:DistrictState|null;season:SeasonState|null;mailbox:DashboardMailbox|null};
+export type DashboardData={vitals:import("./vitals").PlayerVitals|null;game:GameState;city:CityState|null;district:DistrictState|null;season:SeasonState|null;mailbox:DashboardMailbox|null};
 export function mailboxSummary(data:TelegramState):DashboardMailbox {
  const o=data.office;
  return {unread:data.unread,office:{name:o.name,status:o.status,available:o.available,fee:o.fee,district_name:o.district_name,district_slug:o.district_slug,plot_id:o.plot_id}};

@@ -64,6 +64,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/auth/v1/user"){send(200,user);return;}
 
 
+ if(url.pathname==="/rest/v1/rpc/vitals_state"){send(200,{season_id:season.id,health:100,health_max:100,health_cap:120,armour:0,armour_max:100,decay_seconds:60,server_time:new Date().toISOString()});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/crafting_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("crafting_state")?crafting.read(p.p_building):url.pathname.endsWith("crafting_manage")?crafting.manage(p.p_payload):crafting.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/__crafting_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;crafting.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname.startsWith("/rest/v1/rpc/property_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("property_manage")?properties.manage(p.p_action,p.p_payload):properties.action(p.p_action,p.p_payload));return;}

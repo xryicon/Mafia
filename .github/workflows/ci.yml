@@ -140,3 +140,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/crafting.sql
           bash supabase/tests/crafting_races.sh
+
+      - name: Personal health and armour
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/vitals.sql

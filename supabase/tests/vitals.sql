@@ -1,0 +1,38 @@
+begin;
+create function pg_temp.verify(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+do $$
+declare a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();s uuid:=game_private.current_season();next_s uuid;v jsonb;denied boolean;
+begin
+ insert into auth.users(id) values(a),(b);
+ perform set_config('request.jwt.claim.sub',a::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',b::text,true);perform public.game_state();
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ v:=public.vitals_state();perform pg_temp.verify((v->>'health')::numeric=100 and (v->>'armour')::numeric=0,'New player vitals are not 100 health and zero armour');
+ perform pg_temp.verify(not has_function_privilege('anon','public.vitals_state()','execute'),'Anonymous vitals access');
+ set local role authenticated;
+ denied:=false;begin update public.game_season_players set health=120,armour=100 where player_id=a;exception when insufficient_privilege then denied:=true;end;
+ perform pg_temp.verify(denied,'Player could overwrite health or armour');
+ v:=public.vitals_state();perform pg_temp.verify((v->>'health')::numeric=100,'Authenticated read failed');
+ reset role;
+ perform set_config('game.reason','CI future overheal fixture',true);
+ update public.game_season_players set health=120,armour=40 where player_id=a and season_id=s;
+ update public.game_season_players set health_updated_at=clock_timestamp()-interval '10 minutes' where player_id=a and season_id=s;
+ v:=public.vitals_state();perform pg_temp.verify(abs((v->>'health')::numeric-110)<0.1 and (v->>'armour')::numeric=40,'Overheal did not decay with server time');
+ update public.game_season_players set health_updated_at=clock_timestamp()-interval '1 day' where player_id=a and season_id=s;
+ v:=public.vitals_state();perform pg_temp.verify((v->>'health')::numeric=100,'Overheal fell below 100');
+ update public.game_season_players set health=37 where player_id=a and season_id=s;
+ update public.game_season_players set health_updated_at=clock_timestamp()-interval '1 day' where player_id=a and season_id=s;
+ v:=public.vitals_state();perform pg_temp.verify((v->>'health')::numeric=37,'Normal injured health changed');
+ update public.game_season_players set health=0 where player_id=a and season_id=s;
+ v:=public.vitals_state();perform pg_temp.verify((v->>'health')::numeric=0,'Zero health became full health');
+ perform set_config('request.jwt.claim.sub',b::text,true);v:=public.vitals_state();
+ perform pg_temp.verify((v->>'health')::numeric=100 and (v->>'armour')::numeric=0,'Another player vitals were exposed');
+ perform pg_temp.verify(exists(select 1 from public.game_audit where reason='CI future overheal fixture'),'Vital changes omitted audit history');
+ insert into public.game_seasons(name,status,starting_cash,starting_crates) values('Vitals next season','draft',10000,5) returning id into next_s;
+ update game_private.season_runtime set season_id=next_s where singleton;
+ perform set_config('request.jwt.claim.sub',a::text,true);v:=public.vitals_state();
+ perform pg_temp.verify((v->>'health')::numeric=100 and (v->>'armour')::numeric=0,'New season retained old health or armour');
+ perform pg_temp.verify((select health from public.game_season_players where season_id=s and player_id=a)=0,'Previous season history changed');
+end$$;
+select 'PASS: personal vitals, privacy, server decay, lower bound, injuries and season reset';
+rollback;

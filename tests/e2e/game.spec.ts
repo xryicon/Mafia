@@ -5,6 +5,8 @@ test("market trading remains usable alongside the city dashboard",async({page,co
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Uses isolated fixture");
  await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
+ const carriedUnits=async()=>{const r=await request.post("http://127.0.0.1:54329/rest/v1/rpc/inventory_state",{headers:{Authorization:"Bearer "+token},data:{}});return (await r.json()).carried.reduce((n:number,x:{quantity:number})=>n+x.quantity,0);};
+ await expect(page.getByLabel("Inventory stock")).toHaveCount(0);
  await page.setViewportSize({width:1672,height:941});
  await page.goto("/dashboard");
  const gameNav=page.getByRole("navigation",{name:"Game navigation"});
@@ -14,22 +16,22 @@ test("market trading remains usable alongside the city dashboard",async({page,co
  await expect(page.locator(".estate-header img.don-portrait")).toHaveAttribute("src","/art/command-portrait.jpg");
  await page.reload();
  await expect(page.locator(".command-city")).toHaveCount(1);
- await expect(page.getByLabel("Inventory stock")).toContainText("5");
+ await expect.poll(carriedUnits).toBe(5);
  await expect(page.locator(".command-nav-badge")).toHaveText("1");
  await expect(page.locator(".market-wallet-stats")).toContainText("$10,000");
  await page.getByRole("button",{name:"Buy lot",exact:true}).click();
  await expect(page.getByRole("dialog")).toBeVisible();await page.getByRole("button",{name:"Confirm purchase"}).click();
  await expect(page.getByRole("dialog")).not.toBeVisible();await expect(page.locator(".market-wallet-stats")).toContainText("$9,800");
- await expect(page.getByLabel("Inventory stock")).toContainText("7");
+ await expect.poll(carriedUnits).toBe(7);
  await page.getByRole("navigation",{name:"Market sections"}).getByRole("button",{name:"Inventory",exact:true}).click();
  await page.getByLabel("Quantity",{exact:true}).fill("2");await page.getByLabel("Price per unit ($)",{exact:true}).fill("120");
  await page.getByRole("button",{name:"Post market offer"}).click();await expect(page.locator(".game-notice")).toContainText("Offer posted");
- await expect(page.getByLabel("Inventory stock")).toContainText("5");
+ await expect.poll(carriedUnits).toBe(5);
  const nav=page.getByRole("navigation",{name:"Game navigation"});
  await page.getByRole("navigation",{name:"Market sections"}).getByRole("button",{name:"My listings",exact:true}).click();
  await page.locator(".own-offers").getByRole("button",{name:"Withdraw"}).click();
  await expect(page.locator(".own-offers")).toContainText("You haven't listed any goods");
- await expect(page.getByLabel("Inventory stock")).toContainText("7");
+ await expect.poll(carriedUnits).toBe(7);
  await expect(page.locator(".header-cash")).toContainText("$9,800");
  await page.setViewportSize({width:375,height:812});
  for(const [name,path] of [["Inventory","/inventory"]]){
