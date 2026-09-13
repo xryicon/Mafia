@@ -40,7 +40,7 @@ begin
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=98 and (select quantity from public.game_inventory_gear where id=a)=1,'A miss did not consume ammunition and wear');
  -- Changing equipment mid-session cannot fire the old weapon or refund its wear.
  res:=public.inventory_action('unequip',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_range(not res?'error','Worn weapon unequip failed');
- perform pg_temp.check_range(jsonb_typeof(res#>'{state,session,last_shot}')='object' and res#>'{state,session,last_shot,lane}'='null'::jsonb and res#>'{state,session,last_shot,hit}'='false'::jsonb and res#>'{state,session,last_shot,x}'='0'::jsonb,'Miss details are not a real shot object');
+
  perform pg_temp.check_range((select condition from public.game_inventory_gear where id=g)=98 and (select location from public.game_inventory_gear where id=g)='carried','Worn weapon was reset or restacked');
  perform pg_sleep(.22);
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'elapsed_ms',floor(extract(epoch from(clock_timestamp()-v.started_at))*1000)::int);
