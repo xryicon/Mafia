@@ -146,6 +146,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/prison.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/prison_breaks.sql
 
+      - name: Public closed-beta schedule
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/closed_beta.sql
+
       - name: Personal health and armour
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/vitals.sql
 
