@@ -50,5 +50,5 @@ begin
  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>'pickaxe')::int=1,'Equip did not consume exactly one purchased pickaxe');
  perform pg_temp.loot_check(not exists(select 1 from public.game_players p where p.id in(a,b,owner,m) and p.cash<>(select sum(l.delta) from public.game_ledger l where l.player_id=p.id)),'Trade ledger does not reconcile');
 end $$;
-select 'PASS: Owner grants, permissions, audit, all loot trading and auctions, escrow, purchased equipment and ledger';
+select 'PASS: Owner grants, permissions, audit, loot and weapon trading, auctions, escrow, purchased equipment and ledger';
 rollback;
