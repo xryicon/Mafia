@@ -86,3 +86,10 @@
 .mine-xp-reward{color:#d7b172!important}.mine-xp-reward strong{color:#e8c681!important}.mine-history li{position:relative}.mine-history-xp{margin-left:auto;align-self:center;color:#d9b474;font-size:13px;white-space:nowrap}
 @media(max-width:900px){.mining-refined .mine-top-stats{grid-template-columns:repeat(5,minmax(0,1fr))}.mine-xp-reward{grid-column:1/-1;padding-top:7px;border-top:1px solid #80683c55}}
 @media(max-width:600px){.mining-refined .mine-top-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.mining-refined .mine-top-stats>div:last-child{grid-column:auto}.mine-history li{gap:9px}.mine-history-xp{font-size:12px}}
+
+/* Focused mine view: keep extraction sites and activity in the foreground. */
+.mine-map-column .mine-map-tools,.mine-map-column .mine-map,.mine-map-column .mine-map-legend{display:none}
+.mine-layout{display:block}
+.mine-layout .mine-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:900px){.mine-layout .mine-sidebar{grid-template-columns:1fr}}
+.mine-haul-heading,.mine-inventory,.mine-work-grid{display:none}
