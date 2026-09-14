@@ -1,3 +1,6 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-export default defineCloudflareConfig();
+const config = defineCloudflareConfig();
+// The public build script produces the Worker; avoid calling it recursively.
+config.buildCommand = "npm run build:next";
+export default config;
