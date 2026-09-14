@@ -1,5 +1,5 @@
 export function skillsWorld(state){
- const definitions=[['crafting','Crafting','Collect completed crafting jobs.'],['sharpshooting','Sharpshooting','Earn score-based range rewards.'],['lockpicking','Lockpicking','Successfully free players from Blackwater Island.']].map(([id,name,description],i)=>({id,name,description,xp_to_20:10000,version:1,display_order:i+1}));
+ const definitions=[['crafting','Crafting','Collect completed crafting jobs.'],['sharpshooting','Sharpshooting','Earn score-based range rewards.'],['lockpicking','Lockpicking','Successfully free players from Blackwater Island.'],['mining','Mining','Earn XP for every ore delivered.']].map(([id,name,description],i)=>({id,name,description,xp_to_20:10000,version:1,display_order:i+1}));
  const ledger=[],requests=new Map();let rate=10;
  const threshold=(l,t)=>l-1+Math.floor((t-19)*(l-1)*(l-1)/361);
  const award=(skill_id,source_id,delta,description)=>{if(delta<=0||ledger.some(r=>r.skill_id===skill_id&&r.source_id===source_id))return;ledger.push({id:skill_id+':'+source_id,season_id:state.season.id,skill_id,source_id,delta,description,created_at:new Date().toISOString()});};
