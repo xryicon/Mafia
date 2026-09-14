@@ -66,6 +66,14 @@ if(commodityArtworkDeployed){
    if(!art.ok||bytes<1000||!art.headers.get("content-type")?.includes("image/webp"))process.exitCode=1;
   }
  }
+ for(const name of ["m4-carbine","556x45mm-ammo"]){
+  for(const suffix of ["","-256","-96"]){
+   const art=await fetch(origin+"/art/weapons/"+name+suffix+".webp",{signal:AbortSignal.timeout(20000)});
+   const bytes=(await art.arrayBuffer()).byteLength;
+   console.log(JSON.stringify({weapon:name+suffix,status:art.status,contentType:art.headers.get("content-type"),bytes}));
+   if(!art.ok||bytes<1000||!art.headers.get("content-type")?.includes("image/webp"))process.exitCode=1;
+  }
+ }
 }
 
 const miningDeployed=styles.includes('.mining-district');

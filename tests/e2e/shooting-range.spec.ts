@@ -7,6 +7,10 @@ async function equip(request:APIRequestContext,n=3){
  await request.post(base+"/__crafting_setup",{headers,data:{grant:{"homemade-pistol":1,"homemade-bullets":n}}});const d=await rpc(request,"range_state");
  for(const [id,slot,quantity]of [["homemade-pistol","secondary",1],["homemade-bullets","ammo",n]]){const r=await rpc(request,"inventory_action",{p_action:"equip",p_payload:{season_id:d.season.id,request_id:crypto.randomUUID(),item_key:"good:"+id,equipment_slot:slot,quantity}});expect(r.error).toBeUndefined();}
 }
+async function equipM4(request:APIRequestContext,n=35){
+ await request.post(base+"/__crafting_setup",{headers,data:{grant:{"m4-carbine":1,"556x45mm-ammo":n}}});const d=await rpc(request,"range_state");
+ for(const [id,slot,quantity]of [["m4-carbine","primary",1],["556x45mm-ammo","ammo",n]]){const r=await rpc(request,"inventory_action",{p_action:"equip",p_payload:{season_id:d.season.id,request_id:crypto.randomUUID(),item_key:"good:"+id,equipment_slot:slot,quantity}});expect(r.error).toBeUndefined();}
+}
 async function start(page:Page){await page.goto("/shooting-range");await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-intro")).toHaveCount(0);await expect(page.locator(".range-action-state")).toHaveText("Ready to fire");}
 async function aim(page:Page,lane:number){const el=page.getByRole("button",{name:"Shooting lane",exact:true});await el.scrollIntoViewIfNeeded();const b=await el.boundingBox();const t=await page.locator(`[data-lane="${lane}"]`).getAttribute("transform");const xy=t!.match(/[\d.]+/g)!.map(Number);await page.mouse.click(b!.x+xy[0]/1000*b!.width,b!.y+xy[1]/600*b!.height);}
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixtures");await request.post(base+"/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
@@ -14,6 +18,17 @@ test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTU
 test("range shares game HUD, requires equipment and is reachable from dashboard",async({page})=>{
  await page.goto("/dashboard");await page.locator(".command-quick").getByRole("link",{name:/Shooting Range/i}).click();await expect(page).toHaveURL(/shooting-range/);
  await expect(page.getByRole("navigation",{name:"Game navigation"})).toBeVisible();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();await expect(page.locator(".range-loadout")).toContainText("No weapon equipped");await expect(page.locator(".range-best:not(.range-advanced-average) strong")).toHaveText("0");
+});
+
+test("M4 uses its 5.56 ammunition, primary slot artwork and thirty-round magazine",async({page,request})=>{
+ await equipM4(request);await page.goto("/shooting-range");
+ await expect(page.locator(".range-loadout h3")).toHaveText("M4 carbine");await expect(page.getByLabel("Range weapon")).toHaveValue("primary");
+ const art=page.locator('.range-weapon-art img[src*="/art/weapons/m4-carbine"]');await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+ await expect(page.locator(".range-condition strong")).toHaveText("250 / 250");await expect(page.locator(".range-loadout")).toContainText("5.56x45mm ammunition");
+ await expect(page.getByRole("link",{name:"Visit player market"})).toHaveAttribute("href","/market?view=inventory&good=556x45mm-ammo");
+ await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-magazine-counter b")).toHaveText("30 / 30");
+ await page.locator(".range-lane").click({position:{x:8,y:100}});await expect(page.locator(".range-condition strong")).toHaveText("249 / 250");await expect(page.locator(".range-magazine-counter b")).toHaveText("29 / 30");await expect(page.locator(".range-firebar strong")).toHaveText("34");
+ const d=await rpc(request,"range_state");expect(d.weapons[0].good_id).toBe("m4-carbine");expect(d.weapons[0].ammo_good_id).toBe("556x45mm-ammo");expect(d.weapons[0].magazine.capacity).toBe(30);expect(d.weapons[0].magazine.reload_ms).toBe(2400);
 });
 
 test("moving targets, verified hits and misses consume actual equipped ammunition and condition",async({page,request})=>{
@@ -33,7 +48,7 @@ test("interrupted shot response safely retries without firing again",async({page
 });
 
 test("Owner weapon wear applies at the range and broken weapons stop mobile shots",async({page,request})=>{
- await equip(request,5);await page.goto("/owner?section=shooting-range");await page.getByLabel("Condition lost per shot").fill("100");await page.getByLabel("Weapon audit reason").fill("Test broken weapon protection");await page.getByRole("button",{name:"Save weapon rules",exact:true}).click();await expect(page.locator(".range-owner [role=status]")).toContainText("saved");await page.setViewportSize({width:1536,height:1080});await capture(page,"range-owner");
+ await equip(request,5);await page.goto("/owner?section=shooting-range");await page.getByLabel("Edit range weapon").selectOption("homemade-pistol");await page.getByLabel("Condition lost per shot").fill("100");await page.getByLabel("Weapon audit reason").fill("Test broken weapon protection");await page.getByRole("button",{name:"Save weapon rules",exact:true}).click();await expect(page.locator(".range-owner [role=status]")).toContainText("saved");await page.setViewportSize({width:1536,height:1080});await capture(page,"range-owner");
  await page.setViewportSize({width:390,height:844});await start(page);await expect.poll(()=>page.evaluate(()=>document.querySelector('.range-scoreboard')!.getBoundingClientRect().top-document.querySelector('.estate-header')!.getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(0);await capture(page,"range-mobile");await page.locator(".range-lane").click({position:{x:10,y:100}});await expect(page.locator(".range-condition strong")).toHaveText("0 / 100");await expect(page.locator(".range-firebar strong")).toHaveText("4");await expect(page.locator(".range-loadout-status")).toContainText("broken");await expect(page.locator(".range-lane")).toHaveAttribute("aria-disabled","true");
  for(const width of [360,390,768,1024,1536]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"range width "+width).toBe(true);}
  await page.getByRole("button",{name:"End session",exact:true}).click();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();const d=await rpc(request,"range_state");expect(d.stats.shots).toBe(1);expect(d.ammo.quantity).toBe(4);

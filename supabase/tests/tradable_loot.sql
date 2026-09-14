@@ -8,7 +8,7 @@ begin
  foreach who in array array[owner,a,b,m] loop perform set_config('request.jwt.claim.sub',who::text,true);perform public.game_state();end loop;
  update public.game_user_roles set role_id='owner' where player_id=owner;
  update public.game_user_roles set role_id='moderator' where player_id=m;
- foreach item in array array['pickaxe','lockpick','pistol_blueprint','bullet_blueprint'] loop
+ foreach item in array array['pickaxe','lockpick','pistol_blueprint','bullet_blueprint','m4-carbine','556x45mm-ammo'] loop
   q:=jsonb_build_object('player_id',a,'good_id',item,'quantity',2,'reason','Test loot grant and trading');
   perform set_config('request.jwt.claim.sub',m::text,true);
   r:=public.staff_action('spawn_asset',q);perform pg_temp.loot_check(r?'error','Moderator granted loot');
@@ -50,5 +50,5 @@ begin
  perform pg_temp.loot_check((public.bin_diving_state()->'inventory'->>'pickaxe')::int=1,'Equip did not consume exactly one purchased pickaxe');
  perform pg_temp.loot_check(not exists(select 1 from public.game_players p where p.id in(a,b,owner,m) and p.cash<>(select sum(l.delta) from public.game_ledger l where l.player_id=p.id)),'Trade ledger does not reconcile');
 end $$;
-select 'PASS: Owner grants, permissions, audit, all loot trading and auctions, escrow, purchased equipment and ledger';
+select 'PASS: Owner grants, permissions, audit, loot and weapon trading, auctions, escrow, purchased equipment and ledger';
 rollback;

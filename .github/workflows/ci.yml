@@ -160,6 +160,7 @@ jobs:
       - name: Shooting range scoring, consumption and concurrent shots
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/shooting_range.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/m4_carbine.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_magazines.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_difficulty.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/range_score_accuracy.sql
