@@ -48,6 +48,8 @@ begin
  r:=public.mining_action('claim',q||jsonb_build_object('request_id',gen_random_uuid()));if not(r?'error') then raise exception 'Duplicate resource grant';end if;
  if (select quantity from public.game_inventory where player_id=a and season_id=s and good_id='iron-ore')<>4 then raise exception 'Wrong mining inventory';end if;
  if (select count(*) from public.game_mining_yields where run_id=shift)<>1 then raise exception 'Extraction ledger duplicated';end if;
+ if (select xp_awarded from public.game_mining_yields where run_id=shift)<>4*game_private.setting('mining_skill_xp_per_ore') then raise exception 'Mining XP was not calculated per ore';end if;
+ if (select coalesce(sum(delta),0) from game_private.skill_xp_ledger where season_id=s and player_id=a and skill_id='mining')<>4*game_private.setting('mining_skill_xp_per_ore') then raise exception 'Mining skill ledger missed the public shift';end if;
  denied:=false;begin delete from public.game_mining_yields where run_id=shift;exception when others then denied:=true;end;if not denied then raise exception 'Mining history deleted';end if;
  r:=public.game_action('list',jsonb_build_object('season_id',s,'good_id','iron-ore','quantity',1,'unit_price',30));if r?'error' then raise exception 'Mined resources cannot trade %',r;end if;
  before_cash:=(select cash from public.game_players where id=a);
@@ -83,6 +85,7 @@ begin
  q:=jsonb_build_object('season_id',s,'mine_id',other.id,'request_id',gen_random_uuid());
  r:=public.mining_action('collect',q);if r?'error' then raise exception 'Owner mine production failed %',r;end if;
  if (select quantity from public.game_inventory where season_id=s and player_id=b and good_id='copper-ore')<>30 then raise exception 'Owner production yield wrong';end if;
+ if (select coalesce(sum(delta),0) from game_private.skill_xp_ledger where season_id=s and player_id=b and skill_id='mining')<>30*game_private.setting('mining_skill_xp_per_ore') then raise exception 'Mining skill ledger missed owner extraction';end if;
  perform set_config('request.jwt.claim.sub',a::text,true);r:=public.mining_action('collect',q);if not(r?'error') then raise exception 'Other player stole production';end if;
  -- Reservations, pickaxes and mine ownership are seasonal; a paused clock cannot earn output.
  q:=jsonb_build_object('season_id',s,'mine_id',m.id,'request_id',gen_random_uuid());
