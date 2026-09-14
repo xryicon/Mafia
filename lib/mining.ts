@@ -8,10 +8,10 @@ export type Mine= {
 };
 export type MiningState={
  world:DistrictState;sites:Mine[];can_manage:boolean;server_time:string;playable:boolean;season_end:string|null;
- tool:{durability:number};settings:Record<string,number>;
+ tool:{durability:number};settings:Record<string,number>;mining_skill_xp:number;
  shift:{id:string;mine_id:string;mine_name:string;code:string;good_id:string;good_name:string;quantity:number;respect:number;wear:number;ready_at:string;started_at:string}|null;
  inventory:{good_id:string;name:string;quantity:number}[];
- history:{id:number;mine_id:string;mine_name:string;good_id:string;good_name:string;quantity:number;source:string;created_at:string}[];
+ history:{id:number;mine_id:string;mine_name:string;good_id:string;good_name:string;quantity:number;source:string;xp_awarded:number;created_at:string}[];
 };
 export const mineStatus=(m:Mine)=>m.auction?"Auction":m.status==="reserved"?"Reserved":m.status==="closed"?"Closed":m.remaining===0?"Exhausted":m.access_mode==="public"?"Public mining":m.owner_type==="player"?"Private operation":"Ready for auction";
 export function mineNextBid(m:Mine,increment:number){return m.auction?Math.max(m.auction.minimum_bid,m.auction.bid+(m.auction.bidder_id?increment:0)):0;}
