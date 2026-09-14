@@ -68,10 +68,6 @@ where y.quantity>0
       and l.created_at=y.created_at
   );
 
-update public.game_mining_yields
-set xp_awarded=quantity::bigint*game_private.setting('mining_skill_xp_per_ore')::bigint
-where xp_awarded=0;
-
 create or replace function game_private.mining_state(p_slug text default 'mines-and-quarries')
 returns jsonb language plpgsql security definer set search_path='' as $$
 #variable_conflict use_column
