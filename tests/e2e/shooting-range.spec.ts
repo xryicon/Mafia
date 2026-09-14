@@ -20,14 +20,18 @@ test("range shares game HUD, requires equipment and is reachable from dashboard"
  await expect(page.getByRole("navigation",{name:"Game navigation"})).toBeVisible();await expect(page.getByRole("link",{name:/Prepare your loadout/})).toBeVisible();await expect(page.locator(".range-loadout")).toContainText("No weapon equipped");await expect(page.locator(".range-best:not(.range-advanced-average) strong")).toHaveText("0");
 });
 
-test("M4 uses its 5.56 ammunition, primary slot artwork and thirty-round magazine",async({page,request})=>{
- await equipM4(request);await page.goto("/shooting-range");
+test("M4 uses its own sounds, automatic fire, 5.56 ammunition and thirty-round magazine",async({page,request})=>{
+ await equipM4(request);await page.addInitScript(()=>{const w=window as any;w.__m4Sounds=[];const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...args:any[]){if(!this.loop)w.__m4Sounds.push({duration:this.buffer?.duration,channels:this.buffer?.numberOfChannels,rate:this.playbackRate.value});return(start as any).apply(this,args);};});await page.goto("/shooting-range");
  await expect(page.locator(".range-loadout h3")).toHaveText("M4 carbine");await expect(page.getByLabel("Range weapon")).toHaveValue("primary");
  const art=page.locator('.range-weapon-art img[src*="/art/weapons/m4-carbine"]');await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  await expect(page.locator(".range-condition strong")).toHaveText("250 / 250");await expect(page.locator(".range-loadout")).toContainText("5.56x45mm ammunition");
  await expect(page.getByRole("link",{name:"Visit player market"})).toHaveAttribute("href","/market?view=inventory&good=556x45mm-ammo");
- await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-magazine-counter b")).toHaveText("30 / 30");
- await page.locator(".range-lane").click({position:{x:8,y:100}});await expect(page.locator(".range-condition strong")).toHaveText("249 / 250");await expect(page.locator(".range-magazine-counter b")).toHaveText("29 / 30");await expect(page.locator(".range-firebar strong")).toHaveText("34");
+ await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-magazine-counter b")).toHaveText("30 / 30");await expect(page.locator(".range-firebar")).toContainText("Hold to fire automatically");
+ const lane=page.locator(".range-lane"),box=await lane.boundingBox();await page.mouse.move(box!.x+8,box!.y+100);await page.mouse.down();await page.waitForTimeout(1300);await page.mouse.up();
+ await expect(page.locator(".range-action-state")).toHaveText("Ready to fire");const stopped=(await rpc(request,"range_state")).session.shots;expect(stopped).toBeGreaterThanOrEqual(2);expect(stopped).toBeLessThanOrEqual(4);await page.waitForTimeout(700);expect((await rpc(request,"range_state")).session.shots).toBe(stopped);
+ await expect(page.locator(".range-condition strong")).toHaveText(`${250-stopped} / 250`);await expect(page.locator(".range-magazine-counter b")).toHaveText(`${30-stopped} / 30`);await expect(page.locator(".range-firebar strong")).toHaveText(String(35-stopped));
+ await expect.poll(()=>page.evaluate(()=>(window as any).__m4Sounds.filter((s:any)=>s.duration>2.6&&s.duration<2.7&&s.channels===1&&s.rate===1).length)).toBe(stopped);
+ await page.getByRole("button",{name:"Reload weapon",exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__m4Sounds.filter((s:any)=>s.duration>1.8&&s.duration<1.95&&s.channels===1&&s.rate>.7&&s.rate<.85).length)).toBe(1);await expect(page.locator(".range-magazine-counter b")).toHaveText("30 / 30");
  const d=await rpc(request,"range_state");expect(d.weapons[0].good_id).toBe("m4-carbine");expect(d.weapons[0].ammo_good_id).toBe("556x45mm-ammo");expect(d.weapons[0].magazine.capacity).toBe(30);expect(d.weapons[0].magazine.reload_ms).toBe(2400);
 });
 

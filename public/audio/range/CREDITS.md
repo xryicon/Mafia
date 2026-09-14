@@ -21,4 +21,16 @@ https://creativecommons.org/publicdomain/zero/1.0/
   Source: https://cdn.freesound.org/previews/396/396331_932959-hq.mp3
   Edit: stretched to 1.8 seconds while preserving pitch, peak limiting and short endpoint fades; stereo 44.1 kHz / 192 kbps MP3.
 
-Licenses and source descriptions verified 2026-09-13. The game serves these files itself; players do not contact the source websites. Attribution is retained as a courtesy.
+- **m4-carbine-shot.mp3** — "M4 Carbine Rifle Shot" by qubodup.
+  https://freesound.org/people/qubodup/sounds/854173/
+  A cleaned rifle shot extracted from a 2026 live-fire range recording.
+  Source: https://cdn.freesound.org/previews/854/854173_71257-hq.mp3
+  Edit: Freesound high-quality MP3 preview; mono 48 kHz.
+
+- **m4-carbine-reload.mp3** — "Assault Rifle Reload" by qubodup.
+  https://freesound.org/people/qubodup/sounds/815879/
+  A complete rifle magazine change assembled from CC0 firearm handling recordings.
+  Source: https://cdn.freesound.org/previews/815/815879_71257-hq.mp3
+  Edit: Freesound high-quality MP3 preview; mono 44.1 kHz. Playback follows the M4's configured reload time.
+
+Licenses and source descriptions verified 2026-09-14. The game serves these files itself; players do not contact the source websites. Attribution is retained as a courtesy.

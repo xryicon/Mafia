@@ -2,9 +2,12 @@
 export const RANGE_AUDIO = {
  shot: "/audio/range/colt-1911-shot.mp3",
  reload: "/audio/range/1911-reload.mp3",
+ m4Shot: "/audio/range/m4-carbine-shot.mp3",
+ m4Reload: "/audio/range/m4-carbine-reload.mp3",
  ambient: "/audio/range/indoor-range.mp3",
 } as const;
 type RangeSound = keyof typeof RANGE_AUDIO;
+type RangeEffect = Exclude<RangeSound,"ambient">;
 
 export class RangeAudio {
  private context: AudioContext | null = null;
@@ -21,7 +24,7 @@ export class RangeAudio {
 
  constructor(private onError: () => void = () => {}) {}
 
- async unlock(enabled: boolean, volume: number) {
+ async unlock(enabled: boolean, volume: number, weaponGoodId?: string) {
   if (this.closed) return;
   this.enabled = enabled;
   this.volume = volume;
@@ -42,7 +45,10 @@ export class RangeAudio {
   if (this.closed) return;
   this.set(this.enabled, this.volume);
   // Small effect files load independently of the longer room recording.
-  if (this.enabled) await Promise.all([this.load("shot"), this.load("reload")]);
+  if (this.enabled) {
+   const effects:RangeEffect[]=weaponGoodId==="m4-carbine"?["m4Shot","m4Reload"]:["shot","reload"];
+   await Promise.all(effects.map(effect=>this.load(effect)));
+  }
  }
 
  private load(kind: RangeSound): Promise<AudioBuffer> {
@@ -93,22 +99,22 @@ export class RangeAudio {
   return source;
  }
 
- private async effect(kind: "shot" | "reload", milliseconds?: number, elapsed = 0) {
+ private async effect(kind: RangeEffect, milliseconds?: number, elapsed = 0) {
   if (!this.canPlay()) return;
   const generation = this.generation, started = performance.now();
   const buffer = await this.load(kind);
   if (generation !== this.generation || !this.canPlay()) return;
   const waited = performance.now() - started;
   // Never replay a stale shot after a slow download, mute, tab switch or navigation.
-  if (kind === "shot") {
+  if (kind === "shot" || kind === "m4Shot") {
    if (waited < 350) this.play(buffer, .8);
   } else if (milliseconds && milliseconds > 0) {
    this.play(buffer, .8, buffer.duration * 1000 / milliseconds, (elapsed + waited) * buffer.duration / milliseconds);
   }
  }
 
- shot() { return this.effect("shot"); }
- reload(milliseconds: number, elapsed = 0) { return this.effect("reload", milliseconds, elapsed); }
+ shot(weaponGoodId?: string) { return this.effect(weaponGoodId==="m4-carbine"?"m4Shot":"shot"); }
+ reload(milliseconds: number, elapsed = 0, weaponGoodId?: string) { return this.effect(weaponGoodId==="m4-carbine"?"m4Reload":"reload", milliseconds, elapsed); }
 
  private background() {
   if (this.ambient || !this.canPlay()) return;
