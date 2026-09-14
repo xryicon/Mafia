@@ -10,7 +10,7 @@ begin
  insert into auth.users(id) values(owner_id),(u),(other_id);
  perform set_config('request.jwt.claim.sub',owner_id::text,true);perform public.game_state();update public.game_user_roles set role_id='owner' where player_id=owner_id;
  perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();select cash,xp into before_cash,before_xp from public.game_players where id=u;
- r:=public.skills_state();perform pg_temp.skill_check(jsonb_array_length(r->'skills')=3 and (r->>'max_level')::int=20 and not exists(select 1 from jsonb_array_elements(r->'skills') entry where (entry->>'level')::int<>1 or (entry->>'xp')::bigint<>0),'New player did not start with three level-one skills');
+ r:=public.skills_state();perform pg_temp.skill_check(jsonb_array_length(r->'skills')=4 and (r->>'max_level')::int=20 and not exists(select 1 from jsonb_array_elements(r->'skills') entry where (entry->>'level')::int<>1 or (entry->>'xp')::bigint<>0),'New player did not start with four level-one skills');
  insert into game_private.skill_xp_ledger(season_id,player_id,skill_id,source_id,delta,description) values(s,u,'crafting',source,2500,'Test completed crafting job'),(s,u,'sharpshooting',gen_random_uuid(),20000,'Test recorded range practice');
  r:=public.skills_state();select x into v from jsonb_array_elements(r->'skills') x where x->>'id'='sharpshooting';perform pg_temp.skill_check((v->>'level')::int=20 and v->'next_level_xp'='null'::jsonb and (v->>'xp')::int=20000,'Excess XP lost or level cap exceeded');
  set local role authenticated;
