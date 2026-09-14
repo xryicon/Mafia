@@ -92,3 +92,14 @@
 .mining-refined .mine-layout .mine-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:12px}
 .mining-refined .mine-sidebar:has(.mine-desktop-details)>.mine-equipment{display:block}
 @media(max-width:900px){.mining-refined .mine-layout .mine-sidebar{grid-template-columns:1fr}}
+
+/* Focused extraction registry: ores only, with the mine sites kept central. */
+.mining-refined .mine-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;align-items:start;gap:14px}
+.mining-refined .mine-registry{padding:0;overflow:hidden;background:linear-gradient(135deg,#101c1c,#0a1215)}
+.mining-refined .mine-registry .mine-map-tools{display:grid;grid-template-columns:minmax(240px,1fr) minmax(180px,240px) 160px;align-items:center;padding:18px 20px}
+.mining-refined .mine-registry .mine-map-tools>div{width:auto;margin:0}.mining-refined .mine-registry .mine-map-tools p{margin:6px 0 0;color:#91a398;font:12px/1.55 Arial,sans-serif}
+.mining-refined .mine-layout .mine-sidebar{display:grid;grid-template-columns:1fr;gap:14px;margin:0}
+.mining-refined .mine-resource-strip{margin:18px 0 10px;padding:18px;background:linear-gradient(90deg,#111d1d,#0d171a);border:1px solid #a78b5140}
+.mining-refined .mine-resource-strip>div{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.mining-refined .mine-resource-strip button{min-height:83px}
+@media(max-width:1100px){.mining-refined .mine-layout{grid-template-columns:1fr}.mining-refined .mine-registry .mine-map-tools{grid-template-columns:minmax(220px,1fr) minmax(180px,1fr) 155px}.mining-refined .mine-layout .mine-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.mining-refined .mine-registry .mine-map-tools{grid-template-columns:1fr;padding:15px}.mining-refined .mine-registry .mine-map-tools select{max-width:none;width:100%}.mining-refined .mine-resource-strip{padding:14px}.mining-refined .mine-layout .mine-sidebar{grid-template-columns:1fr}}
