@@ -16,17 +16,19 @@ test("public mining requires found equipment, keeps existing tools usable and il
  await page.getByLabel('Search mine sites').fill('Copperhead');await expect(page.locator('.mine-cards .mine-card')).toHaveCount(1);await page.getByLabel('Search mine sites').fill('');
  await capture(page,"mining-focused-desktop");
  await page.getByRole("button",{name:"Open MQ-01 North Ridge Iron Mine",exact:true}).click();
+ await expect(page).toHaveURL(/mine=mine-0/);await expect(page.locator(".mine-site-title h1")).toHaveText("North Ridge Iron Mine");await page.reload();await expect(page.locator(".mine-site-scene")).toBeVisible();await capture(page,"dedicated-mine-desktop");
  const detail=page.locator(".mine-desktop-details");await expect(detail).toContainText('Find a spare by bin diving');await expect(page.getByRole('button',{name:/Buy pickaxe|Replace pickaxe/})).toHaveCount(0);await expect(page.locator('.mine-equipment')).toContainText('Not equipped');
  await request.post('http://127.0.0.1:54329/__mining_equipped',{headers:{Authorization:'Bearer '+token}});await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.locator('.header-cash')).toContainText('$10,000');
  await detail.getByRole("button",{name:"Start mining shift",exact:true}).click();
  await expect(page.getByRole("button",{name:"Collect mined resources",exact:true})).toBeDisabled();await expect(page.locator(".mine-equipment")).toContainText("99 condition");await expect(detail).toContainText('+4Mining XP');
  await request.post("http://127.0.0.1:54329/__finish_mining",{headers:{Authorization:"Bearer "+token}});await page.getByRole("button",{name:"Refresh",exact:true}).click();
  await page.getByRole("button",{name:"Collect mined resources",exact:true}).click();await expect(page.locator(".mine-shift")).toHaveCount(0);
+ await page.getByRole("button",{name:"Back to Mines & Quarries"}).click();await expect(page).not.toHaveURL(/mine=/);
  await expect(page.locator(".mine-top-stats")).toContainText("4MINING XP");await expect(page.locator(".mine-resource-strip")).toContainText("4 units mined");await expect(page.locator(".mine-nav")).not.toContainText(/Your haul|Local market|Territory/);
  await expect(page.locator(".mine-inventory")).toHaveCount(0);
  await page.goto("/districts/mines-and-quarries");
  for(const width of [1448,1024,768,375]){await page.setViewportSize({width,height:width===375?812:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Mining overflow at "+width).toBe(true);}
- await page.getByRole("button",{name:"Open MQ-04 East Quarry",exact:true}).click();const sheet=page.getByRole("dialog",{name:"MQ-04 mine details"});await expect(sheet).toBeVisible();await expect(sheet).toContainText("Private extraction rights");await expect(sheet.getByRole("button",{name:"Start mining shift"})).toHaveCount(0);await capture(page,"mining-mobile-site");await sheet.getByRole("button",{name:"Close mine details"}).click();await expect(sheet).not.toBeVisible();
+ await page.getByRole("button",{name:"Open MQ-04 East Quarry",exact:true}).click();await expect(page.locator(".mine-site-title h1")).toHaveText("East Quarry");await expect(page.locator(".mine-desktop-details")).toContainText("Private extraction rights");await expect(page.getByRole("button",{name:"Start mining shift"})).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"dedicated-mine-mobile");await page.goBack();await expect(page.locator(".mine-site-view")).toHaveCount(0);
  await page.getByRole("button",{name:"District activity",exact:true}).click();await expect(page.locator(".mine-history li")).toHaveCount(10);
 });
 test("Owner opens a mine and auctions it; a player reserves their bid",async({page,request})=>{

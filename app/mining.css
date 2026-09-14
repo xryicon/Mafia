@@ -103,3 +103,23 @@
 .mining-refined .mine-resource-strip>div{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.mining-refined .mine-resource-strip button{min-height:83px}
 @media(max-width:1100px){.mining-refined .mine-layout{grid-template-columns:1fr}.mining-refined .mine-registry .mine-map-tools{grid-template-columns:minmax(220px,1fr) minmax(180px,1fr) 155px}.mining-refined .mine-layout .mine-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.mining-refined .mine-registry .mine-map-tools{grid-template-columns:1fr;padding:15px}.mining-refined .mine-registry .mine-map-tools select{max-width:none;width:100%}.mining-refined .mine-resource-strip{padding:14px}.mining-refined .mine-layout .mine-sidebar{grid-template-columns:1fr}}
+
+/* Dedicated mine operations screen. */
+.mine-site-view .mine-site-title{display:flex;align-items:center;gap:24px;padding:20px 24px;margin-bottom:14px}
+.mine-site-title>div{flex:1;min-width:0}.mine-site-title h1{font:clamp(26px,3vw,42px) Georgia,serif;color:#e1c79c;margin:8px 0}.mine-site-title p{color:#a3b0a7;font-size:14px}
+.mine-site-workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.mine-site-workspace>main,.mine-site-workspace>aside{min-width:0;display:grid;gap:16px}
+.mine-site-scene{position:relative;min-height:480px;height:clamp(420px,42vw,670px);overflow:hidden;padding:0!important;background:#091315}
+.mine-site-scene>img{width:100%;height:100%;object-fit:cover;object-position:center 55%;filter:brightness(.75)}
+.mine-site-scene:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#07111410 30%,#071114ed);pointer-events:none}
+.mine-site-scene-caption{position:absolute;bottom:26px;left:26px;right:26px;z-index:1}.mine-site-scene-caption h2{font:36px Georgia,serif;color:#ead0a6;margin:10px 0}.mine-site-scene-caption p{max-width:600px;font-size:15px;line-height:1.7;color:#c0c7be}
+.mine-site-hotspot{position:absolute;top:35%;left:22%;z-index:2;display:flex;align-items:center;gap:14px;padding:16px 20px;border:1px solid #b1945f;background:#091416e8;color:#e4c592;text-decoration:none;box-shadow:0 10px 35px #0008}
+.mine-site-hotspot small{display:block;font:13px Arial,sans-serif;color:#adbbb0;margin-top:7px}.mine-site-hotspot:hover,.mine-site-hotspot:focus-visible{background:#25312c;border-color:#efd19b}
+.mine-site-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.mine-site-metrics>.command-panel{padding:18px}.mine-site-metrics strong{display:block;font:24px Georgia,serif;color:#dbc49a;margin:14px 0 8px}.mine-site-metrics p{font-size:14px;color:#a7b5aa;line-height:1.6}
+.mine-site-workspace>main>.command-panel:last-child{padding:18px}
+.mine-site-view .mine-desktop-details{display:block;max-height:none;overflow:visible;scroll-margin-top:90px;padding:0}
+.mine-site-view .mine-detail-art{display:none}.mine-site-view .mine-detail-content{padding:20px}.mine-site-view .mine-detail-heading h2{font-size:26px}.mine-site-view .mine-detail-content p,.mine-site-view .mine-facts>div{font-size:14px}
+.mine-site-view .mine-equipment{padding:20px}.mine-site-view .mine-shift{margin-bottom:16px}
+@media(max-width:1100px){.mine-site-workspace{grid-template-columns:minmax(0,1fr) 320px}.mine-site-title{flex-wrap:wrap}.mine-site-metrics{grid-template-columns:1fr}.mine-site-scene{min-height:400px}}
+@media(max-width:900px){.mine-site-workspace{grid-template-columns:1fr}.mine-site-view .mine-site-title{padding:16px;gap:14px}.mine-site-title>div{flex-basis:100%;order:2}.mine-site-title>button:last-child{margin-left:auto}.mine-site-scene{height:440px;min-height:0}.mine-site-hotspot{left:16px;top:22%;padding:13px}.mine-site-scene-caption{left:18px;right:18px;bottom:18px}.mine-site-scene-caption h2{font-size:28px}.mine-site-view .mine-desktop-details{display:block}.mine-site-view .mine-site-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.mine-site-metrics strong{font-size:20px}}
+@media(max-width:600px){.mine-site-view .mine-site-metrics{grid-template-columns:1fr}.mine-site-scene{height:390px}.mine-site-scene-caption p{font-size:14px}.mine-site-title .market-outline{font-size:13px;padding:10px}.mine-site-workspace .market-gold{min-height:46px}}
