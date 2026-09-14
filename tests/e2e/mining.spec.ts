@@ -11,7 +11,7 @@ test("public mining requires found equipment, keeps existing tools usable and il
  await page.setViewportSize({width:1672,height:1000});await page.goto("/districts/mines-and-quarries");
  await expect(page.locator(".mine-map")).toHaveCount(0);await expect(page.locator(".mine-cards .mine-card")).toHaveCount(10);
  await page.locator('.mine-resource-strip').scrollIntoViewIfNeeded();
- await expect.poll(()=>page.locator('.mine-resource-strip img').evaluateAll(imgs=>imgs.length===5&&imgs.every(i=>(i as HTMLImageElement).complete&&(i as HTMLImageElement).naturalWidth>0))).toBe(true);
+ await expect.poll(()=>page.locator('.mine-resource-strip img').evaluateAll(imgs=>imgs.length===5&&imgs.every(i=>(i as HTMLImageElement).complete&&(i as HTMLImageElement).naturalWidth>0))).toBe(true);await expect(page.locator('.mine-resource-strip')).not.toContainText('Pickaxe');
  await page.getByRole('button',{name:'Show Iron ore sites',exact:true}).click();await expect(page.locator('.mine-cards .mine-card')).toHaveCount(2);await page.getByRole('button',{name:'Clear filters',exact:true}).click();
  await page.getByLabel('Search mine sites').fill('Copperhead');await expect(page.locator('.mine-cards .mine-card')).toHaveCount(1);await page.getByLabel('Search mine sites').fill('');
  await capture(page,"mining-focused-desktop");
@@ -22,7 +22,7 @@ test("public mining requires found equipment, keeps existing tools usable and il
  await expect(page.getByRole("button",{name:"Collect mined resources",exact:true})).toBeDisabled();await expect(page.locator(".mine-equipment")).toContainText("99 condition");await expect(detail).toContainText('+4Mining XP');
  await request.post("http://127.0.0.1:54329/__finish_mining",{headers:{Authorization:"Bearer "+token}});await page.getByRole("button",{name:"Refresh",exact:true}).click();
  await page.getByRole("button",{name:"Collect mined resources",exact:true}).click();await expect(page.locator(".mine-shift")).toHaveCount(0);
- await expect(page.locator(".mine-top-stats")).toContainText("4MINING XP");await expect(page.locator(".mine-resource-strip")).toContainText("4 in your inventory");await expect(page.locator(".mine-nav")).not.toContainText(/Your haul|Local market|Territory/);
+ await expect(page.locator(".mine-top-stats")).toContainText("4MINING XP");await expect(page.locator(".mine-resource-strip")).toContainText("4 units mined");await expect(page.locator(".mine-nav")).not.toContainText(/Your haul|Local market|Territory/);
  await expect(page.locator(".mine-inventory")).toHaveCount(0);
  await page.goto("/districts/mines-and-quarries");
  for(const width of [1448,1024,768,375]){await page.setViewportSize({width,height:width===375?812:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Mining overflow at "+width).toBe(true);}
