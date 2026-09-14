@@ -12,5 +12,5 @@ test("recorded range sounds ship as bounded, self-hosted MP3 assets with source 
   assert.ok(bytes.subarray(0,3).toString()==="ID3"||(bytes[0]===255&&(bytes[1]&224)===224),"MP3 header");
   assert.ok(credits.includes(path.split("/").at(-1)!));
  }
- assert.ok(credits.includes("CC0 1.0")&&credits.includes("740897")&&credits.includes("396331")&&credits.includes("811818"));
+ assert.ok(credits.includes("CC0 1.0")&&credits.includes("740897")&&credits.includes("396331")&&credits.includes("811818")&&credits.includes("854173")&&credits.includes("815879"));
 });

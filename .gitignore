@@ -9,3 +9,7 @@ test-results/
 .DS_Store
 
 /supabase/.temp/
+
+.open-next/
+.wrangler/
+.dev.vars*
