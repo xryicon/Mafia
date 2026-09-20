@@ -4,7 +4,7 @@
 .mining-overhaul :is(button,a,input,select):focus-visible{outline:2px solid #e3bc7d;outline-offset:4px}
 .mining-overhaul :is(.market-outline,.market-gold,.command-action){min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:14px}
 .mining-overhaul .command-panel{border:1px solid #9d85543d;background:linear-gradient(145deg,#111e21,#0a1418);box-shadow:0 8px 24px #0002}
-.mining-overhaul .eyebrow{font-size:11px;letter-spacing:2px;color:var(--mine-gold)}
+.mining-overhaul .eyebrow{font-size:12px;letter-spacing:2px;color:var(--mine-gold)}
 .mining-overhaul .mine-masthead{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:10px 0 26px;background:none;border-bottom:1px solid #9d85543d}
 .mining-overhaul .mine-masthead h1{font-size:clamp(32px,4vw,54px);font-weight:400;line-height:1.1;margin:12px 0;color:var(--mine-cream)}
 .mining-overhaul .mine-back{font-size:13px;color:#bdb297;margin:0 0 22px;min-height:36px}
@@ -19,7 +19,7 @@
 .mining-overhaul .mine-top-stats>div:first-child{border:0}
 .mining-overhaul .mine-top-stats svg{grid-row:1/3;color:var(--mine-gold)}
 .mining-overhaul .mine-top-stats strong,.mining-overhaul .mine-top-stats>div:last-child strong{font:28px Georgia,serif;margin:0;color:var(--mine-cream)}
-.mining-overhaul .mine-top-stats span{font-size:10px;letter-spacing:1.5px;line-height:1.5}
+.mining-overhaul .mine-top-stats span{font-size:12px;letter-spacing:1.5px;line-height:1.5}
 .mining-overhaul .mine-nav{margin:0 0 22px;gap:6px;flex-wrap:wrap;background:transparent}
 .mining-overhaul .mine-nav>button,.mining-overhaul .mine-nav>a{font-size:14px;min-height:46px}
 .mining-overhaul .mine-nav [aria-current=page]{background:#c9a66a16;border-bottom:2px solid var(--mine-gold);color:var(--mine-cream)}
@@ -50,15 +50,15 @@
 .mining-overhaul .mine-card-art>img{filter:brightness(.9);object-position:center 55%}
 .mining-overhaul .mine-card-art:after{content:"";position:absolute;inset:50% 0 0;background:linear-gradient(transparent,#0b161a);pointer-events:none}
 .mining-overhaul .mine-card-art>.eyebrow{top:12px;left:12px;padding:5px 7px;z-index:1}
-.mining-overhaul .mine-card-art>.mine-status{top:12px;right:10px;left:auto;max-width:72%;font-size:11px;z-index:1;white-space:normal;text-align:right}
+.mining-overhaul .mine-card-art>.mine-status{top:12px;right:10px;left:auto;max-width:72%;font-size:12px;z-index:1;white-space:normal;text-align:right}
 .mining-overhaul .mine-card-art>.commodity-art{bottom:-18px;left:18px;z-index:1}
 .mining-overhaul .mine-card-body{padding:32px 18px 0}
-.mine-card-resource{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mine-gold)}
+.mine-card-resource{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mine-gold)}
 .mining-overhaul .mine-card h3{font:23px/1.25 Georgia,serif;color:var(--mine-cream);margin:8px 0;min-height:58px}
 .mining-overhaul .mine-card-body>small{font-size:13px;line-height:1.5;min-height:38px;color:var(--mine-muted);margin:0 0 15px}
 .mine-card-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid #9d855433;padding-top:14px;font-size:12px;color:var(--mine-muted)}
 .mine-card-facts strong{font:18px Georgia,serif;display:block;color:#e0cfaf;margin-top:8px}
-.mine-card-facts strong small{display:block;font:11px/1.7 Arial,sans-serif;color:#a9b4ae;margin-top:5px}
+.mine-card-facts strong small{display:block;font:12px/1.7 Arial,sans-serif;color:#a9b4ae;margin-top:5px}
 .mining-overhaul .mine-card-link{padding:15px 0;font-size:14px;margin-top:13px;color:var(--mine-gold)}
 .mining-overhaul :is(.mine-equipment,.mine-skill-panel,.mine-district-report,.mine-event-panel){padding:20px}
 .mining-overhaul .command-panel-head h2{font-size:15px;letter-spacing:1.5px}
@@ -97,7 +97,7 @@
 .mining-overhaul .mine-site-scene>img{filter:brightness(.85);object-fit:cover;object-position:center 60%;width:100%;height:100%}
 .mining-overhaul .mine-site-scene:after{background:linear-gradient(180deg,#07111410,#07111430 20%,#071114eb 85%)}
 .mine-scene-code{position:absolute;top:22px;left:24px;border-left:2px solid var(--mine-gold);padding-left:14px;color:#eed8b1;font:26px Georgia,serif;z-index:1}
-.mine-scene-code small{display:block;font:10px Arial,sans-serif;letter-spacing:2px;margin-top:7px}
+.mine-scene-code small{display:block;font:12px Arial,sans-serif;letter-spacing:2px;margin-top:7px}
 .mining-overhaul .mine-site-scene-caption{bottom:66px;left:28px;right:28px}
 .mining-overhaul .mine-site-scene-caption h2{font:44px Georgia,serif;margin:12px 0;color:var(--mine-cream)}
 .mine-site-scene-caption h2 em{display:block;font:20px Georgia,serif;margin-top:10px;color:var(--mine-gold)}
@@ -128,5 +128,5 @@
 @media(min-width:1600px){.mining-overhaul .mine-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.mining-overhaul .mine-card-art{height:210px}}
 @media(max-width:1250px){.mine-registry-layout{grid-template-columns:minmax(0,1fr) 270px;gap:18px}.mining-overhaul .mine-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.mine-registry-filters{grid-template-columns:1fr 1fr}.mine-registry-filters .mine-search{grid-column:1/-1}.mining-overhaul .mine-site-workspace{grid-template-columns:minmax(0,1fr) 330px;gap:16px}.mining-overhaul .mine-site-metrics{grid-template-columns:1fr}.mining-overhaul .mine-top-stats>div{padding:16px 12px}}
 @media(max-width:900px){.mine-registry-layout,.mining-overhaul .mine-site-workspace{grid-template-columns:1fr}.mine-registry-sidebar{grid-template-columns:1fr 1fr}.mine-registry-sidebar .mine-district-report{grid-column:1/-1}.mining-overhaul .mine-site-scene{height:450px}.mining-overhaul .mine-site-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.mine-masthead-note{display:none}.mining-overhaul .mine-top-stats>div,.mining-overhaul .mine-top-stats>div:last-child{grid-template-columns:1fr;text-align:center;padding:14px 8px}.mining-overhaul .mine-top-stats svg{grid-row:auto;margin:auto}.mining-overhaul .mine-top-stats strong{font-size:25px}.mining-overhaul .mine-site-title>div{flex-basis:100%}.mining-overhaul .mine-site-title .mine-title-actions{justify-content:space-between}.mining-overhaul .mine-resource-strip header>.eyebrow{display:block}}
-@media(max-width:600px){.mining-overhaul{padding:16px 12px 28px}.mining-overhaul .mine-masthead{padding:0 0 22px}.mining-overhaul .mine-masthead h1{font-size:34px}.mining-overhaul .mine-top-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.mining-overhaul .mine-top-stats>div{border-bottom:1px solid #9d85543d}.mining-overhaul .mine-top-stats span{font-size:9px;letter-spacing:.8px}.mining-overhaul .mine-nav{gap:0}.mining-overhaul .mine-nav>button,.mining-overhaul .mine-nav>a{font-size:13px;padding:12px}.mining-overhaul .mine-resource-strip>div{grid-template-columns:repeat(2,minmax(0,1fr))}.mining-overhaul .mine-resource-strip button{padding:9px;gap:9px}.mining-overhaul .mine-resource-strip .commodity-art{width:42px!important;height:42px!important}.mining-overhaul .mine-resource-strip button strong{font-size:16px}.mining-overhaul .mine-resource-strip button small{font-size:11px}.mining-overhaul .mine-cards{grid-template-columns:1fr}.mining-overhaul .mine-card-art{height:190px}.mining-overhaul .mine-card h3{min-height:0;font-size:26px}.mining-overhaul .mine-card-body>small{min-height:0}.mining-overhaul .mine-section-head{align-items:flex-start;flex-wrap:wrap}.mining-overhaul .mine-section-head h2{font-size:26px}.mining-overhaul .mine-section-head h2 small{display:block;margin:8px 0 0}.mine-registry-sidebar{grid-template-columns:1fr}.mining-overhaul .mine-site-metrics{grid-template-columns:1fr}.mining-overhaul .mine-site-scene{height:440px}.mining-overhaul .mine-site-scene-caption{left:20px;right:20px;bottom:65px}.mining-overhaul .mine-site-scene-caption h2{font-size:36px}.mining-overhaul .mine-site-scene-caption p{font-size:14px}.mine-scene-footer{padding:14px;font-size:11px}.mine-section-links a{padding:15px 13px;font-size:13px}.mining-overhaul .mine-shift{padding:16px;gap:12px}.mining-overhaul .mine-shift-copy{min-width:160px}.mine-shift-clock{font-size:21px}.mining-overhaul .mine-shift .market-gold,.mining-overhaul .mine-shift .market-outline{width:100%}}
+@media(max-width:600px){.mining-overhaul{padding:16px 12px 28px}.mining-overhaul .mine-masthead{padding:0 0 22px}.mining-overhaul .mine-masthead h1{font-size:34px}.mining-overhaul .mine-top-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.mining-overhaul .mine-top-stats>div{border-bottom:1px solid #9d85543d}.mining-overhaul .mine-top-stats span{font-size:12px;letter-spacing:.8px}.mining-overhaul .mine-nav{gap:0}.mining-overhaul .mine-nav>button,.mining-overhaul .mine-nav>a{font-size:13px;padding:12px}.mining-overhaul .mine-resource-strip>div{grid-template-columns:repeat(2,minmax(0,1fr))}.mining-overhaul .mine-resource-strip button{padding:9px;gap:9px}.mining-overhaul .mine-resource-strip .commodity-art{width:42px!important;height:42px!important}.mining-overhaul .mine-resource-strip button strong{font-size:16px}.mining-overhaul .mine-resource-strip button small{font-size:12px}.mining-overhaul .mine-cards{grid-template-columns:1fr}.mining-overhaul .mine-card-art{height:190px}.mining-overhaul .mine-card h3{min-height:0;font-size:26px}.mining-overhaul .mine-card-body>small{min-height:0}.mining-overhaul .mine-section-head{align-items:flex-start;flex-wrap:wrap}.mining-overhaul .mine-section-head h2{font-size:26px}.mining-overhaul .mine-section-head h2 small{display:block;margin:8px 0 0}.mine-registry-sidebar{grid-template-columns:1fr}.mining-overhaul .mine-site-metrics{grid-template-columns:1fr}.mining-overhaul .mine-site-scene{height:440px}.mining-overhaul .mine-site-scene-caption{left:20px;right:20px;bottom:65px}.mining-overhaul .mine-site-scene-caption h2{font-size:36px}.mining-overhaul .mine-site-scene-caption p{font-size:14px}.mine-scene-footer{padding:14px;font-size:12px}.mine-section-links a{padding:15px 13px;font-size:13px}.mining-overhaul .mine-shift{padding:16px;gap:12px}.mining-overhaul .mine-shift-copy{min-width:160px}.mine-shift-clock{font-size:21px}.mining-overhaul .mine-shift .market-gold,.mining-overhaul .mine-shift .market-outline{width:100%}}
 @media(prefers-reduced-motion:reduce){.mining-overhaul .mine-card{transition:none}.mining-overhaul .mine-card:hover{transform:none}}
