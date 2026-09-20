@@ -18,6 +18,11 @@ test('walk to cars, require a tool, consume it once and award Lockpicking XP',as
 test('named streets, keyboard movement, map zoom and phone layout',async({page})=>{
  await page.setViewportSize({width:1440,height:1000});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await expect(page.locator('.scav-map')).toContainText('Harbor Road');
+ await expect(page.locator('.scav-map-art')).toHaveAttribute('href','/art/scavenging/blackwater-streets.webp');
+ await expect.poll(()=>page.evaluate(async()=>{const image=new Image();image.src='/art/scavenging/blackwater-streets.webp';await image.decode();return image.naturalWidth;})).toBeGreaterThan(1000);
+ await page.locator('.scav-map').scrollIntoViewIfNeeded();
+ const desktop=await page.screenshot({path:'test-results/scavenging-real-map-desktop.jpg',type:'jpeg',quality:70});
+ if(process.env.VISUAL_REVIEW==='1'){const b=desktop.toString('base64');for(let n=0;n<b.length;n+=12000)console.log('VISUAL_REVIEW_scavenging-real-map-desktop_'+Math.floor(n/12000)+':'+b.slice(n,n+12000));}
  const destination=page.getByRole('button',{name:'Walk to Harbor Road, block 2',exact:true});await destination.focus();await page.keyboard.press('Enter');
  await expect(page.locator('.scav-action-desk')).toContainText('Choose your next stop');await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect(page.locator('.scav-map')).toHaveAttribute('style',/125%/);
  for(const width of [1440,1024,768,390,360]){await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}

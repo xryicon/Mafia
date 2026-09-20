@@ -1,0 +1,13 @@
+# Scavenging overhead map
+
+Generated with the built-in image generation tool. Final game asset: `public/art/scavenging/blackwater-streets.webp` (1520 × 1035, approximately 530 KiB). The generated original remains outside the repository; the game uses an optimized WebP copy.
+
+The artwork supplies the scenery. Street names, search markers, walking paths and the player remain interactive SVG overlays. The visible crossing positions in `lib/scavenging.ts` align with the artwork. Server node IDs, adjacency, travel durations, rewards and permissions are unchanged. New districts reuse this neighborhood artwork with their own names and search data.
+
+## Generation prompt
+
+Create a production-ready realistic TOP DOWN orthographic overhead street map background for the browser game Blackwater Mafia. Landscape aspect ratio 1000:680. Absolutely vertical camera looking straight down, NO isometric perspective, no horizon, no UI or labels or lettering. A dense 1920s American industrial port neighborhood at dusk, richly detailed brick warehouse rooftops, tenements, interior courtyards, narrow service alleys inside blocks, rooftop water towers, fire escapes, wet cobblestone roads, sidewalks, a few vintage cars parked along curbs, rubbish bins by buildings, scattered crates, amber street lamps. Premium atmospheric crime strategy game art, realistic textures, muted blue-black charcoal, iron rooftops, warm copper and gold lighting; readable midtones rather than excessively dark. CRITICAL street layout alignment for gameplay: five straight vertical north-south streets centered at exactly 10%, 30%, 50%, 70%, 90% of canvas width, and three straight horizontal east-west streets centered at exactly 19.1%, 50%, 80.9% of canvas height. Streets form a connected regular grid of eight central rectangular blocks, FOUR columns and TWO rows of blocks. Each roadway about 4.5% canvas width wide. All fifteen intersections remain clear and unobstructed. Surrounding outer margins contain partial building blocks. Do not curve or bend the main streets. Vary individual buildings inside each block to feel organically lived-in, avoid identical repeated squares. No people icons, player dots, pins, route markings, outlines, borders, text, legend or watermark. This is the actual textured game map layer over which interactive labels and characters will be placed.
+
+## Verification
+
+Inspect the generated artwork, align the overlays to its actual road centers, and validate movement/click mapping with unit tests. Browser tests check image decoding, street labels, keyboard and click movement, car searches, zoom, responsive widths and screenshots. No database migration is required.
