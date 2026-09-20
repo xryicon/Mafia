@@ -13,7 +13,7 @@ begin;
 select set_config('request.jwt.claim.sub','eeeeeeee-3000-4000-8000-000000000001',true);
 select set_config('bin.district',(select id::text from public.game_districts where slug=case when :'attempt' in ('1','2') then 'the-waterfront' else 'old-town' end),true);
 set local role authenticated;
-select public.bin_diving_action('dive',jsonb_build_object('season_id',game_private.current_season(),'district_id',current_setting('bin.district'),'request_id',case when :'attempt' in ('1','2') then 'eeeeeeee-3000-4000-8000-000000000002'::uuid else gen_random_uuid() end));
+select game_private.bin_action('dive',jsonb_build_object('season_id',game_private.current_season(),'district_id',current_setting('bin.district'),'request_id',case when :'attempt' in ('1','2') then 'eeeeeeee-3000-4000-8000-000000000002'::uuid else gen_random_uuid() end));
 commit;
 SQL
 done

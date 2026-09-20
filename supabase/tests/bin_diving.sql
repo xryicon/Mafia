@@ -30,27 +30,27 @@ begin
  reset role;
  select cash into before_cash from public.game_players where id=a;
  q:=jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid(),'cash',999999,'outcome','pistol_blueprint','player_id',b);
- first:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(not first?'error','First dive failed: '||first::text);
+ first:=game_private.bin_action('dive',q);perform pg_temp.check_bin(not first?'error','First dive failed: '||first::text);
  perform pg_temp.check_bin((select cash from public.game_players where id=a)=before_cash+77,'Cash reward trusts frontend or missing ledger');
  perform pg_temp.check_bin((first->'receipt'->>'cash')::int=77 and first->'receipt'->>'outcome'='cash','Forged outcome accepted');
- r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r=first,'Retry returned a different roll');
+ r:=game_private.bin_action('dive',q);perform pg_temp.check_bin(r=first,'Retry returned a different roll');
  perform pg_temp.check_bin((select count(*) from public.game_bin_dives where player_id=a)=1,'Retry duplicated reward');
  perform pg_temp.check_bin(exists(select 1 from public.game_ledger where player_id=a and reason='Bin diving: '||(first->'receipt'->>'id')),'Cash find has no ledger');
- r:=public.bin_diving_action('dive',q||jsonb_build_object('request_id',gen_random_uuid(),'district_id',(select id from public.game_districts where slug='old-town')));
+ r:=game_private.bin_action('dive',q||jsonb_build_object('request_id',gen_random_uuid(),'district_id',(select id from public.game_districts where slug='old-town')));
  perform pg_temp.check_bin(r?'error','Changing district bypasses cooldown');
- r:=public.bin_diving_action('dive',q||jsonb_build_object('district_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Reused nonce accepts changed payload');
+ r:=game_private.bin_action('dive',q||jsonb_build_object('district_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Reused nonce accepts changed payload');
  denied:=false;begin delete from public.game_bin_dives where player_id=a;exception when raise_exception then denied:=true;end;perform pg_temp.check_bin(denied,'Reward receipts can be deleted');
  denied:=false;begin update game_private.bin_requests set result='{}' where player_id=a;exception when raise_exception then denied:=true;end;perform pg_temp.check_bin(denied,'Retry receipts can be changed');
  perform set_config('request.jwt.claim.sub',b::text,true);
  r:=public.bin_diving_state();perform pg_temp.check_bin(jsonb_array_length(r->'history')=0,'Another player can read private loot history');
  update public.game_districts set status='lockdown' where id=d;
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','District lockdown ignored');
+ r:=game_private.bin_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','District lockdown ignored');
  update public.game_districts set status='neutral',archived_at=now() where id=d;
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Archived district allowed');
+ r:=game_private.bin_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(r?'error','Archived district allowed');
  update public.game_districts set archived_at=null where id=d;
  insert into public.game_districts(slug,name) values('test-new-bin-district','Newly Opened District') returning id into new_d;
  perform pg_temp.check_bin(exists(select 1 from jsonb_array_elements(public.bin_diving_state()->'districts') x where x->>'id'=new_d::text),'New district requires code edits');
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',new_d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(not r?'error','Cannot dive in newly opened district: '||r::text);
+ r:=game_private.bin_action('dive',jsonb_build_object('season_id',s,'district_id',new_d,'request_id',gen_random_uuid()));perform pg_temp.check_bin(not r?'error','Cannot dive in newly opened district: '||r::text);
  foreach item in array array['pickaxe','lockpick','pistol_blueprint','bullet_blueprint','nothing'] loop
   perform set_config('request.jwt.claim.sub',owner::text,true);
   rules:=(public.bin_diving_state()->'rules')||jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'reason','CI guaranteed item verification','cash_chance',0,'pickaxe_chance',0,'lockpick_chance',0,'pistol_blueprint_chance',0,'bullet_blueprint_chance',0);
@@ -58,7 +58,7 @@ begin
   r:=public.bin_diving_action('configure',rules);perform pg_temp.check_bin(not r?'error','Item configuration failed: '||r::text);
   target:=gen_random_uuid();insert into auth.users(id) values(target);perform set_config('request.jwt.claim.sub',target::text,true);perform public.game_state();
   q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d);
-  r:=public.bin_diving_action('dive',q);perform pg_temp.check_bin(r->'receipt'->>'outcome'=item,'100% item roll failed: '||r::text);
+  r:=game_private.bin_action('dive',q);perform pg_temp.check_bin(r->'receipt'->>'outcome'=item,'100% item roll failed: '||r::text);
   if item<>'nothing' then perform pg_temp.check_bin((select quantity from public.game_inventory where player_id=target and season_id=s and game_inventory.good_id=(r->'receipt'->>'outcome'))=1,'Item missing from stash');end if;
   if item='pickaxe' then
    q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid());first:=public.bin_diving_action('equip',q);
@@ -72,7 +72,7 @@ begin
   end if;
  end loop;
  update public.game_seasons set status='locked' where id=s;
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d));perform pg_temp.check_bin(r?'error','Locked season allowed');
+ r:=game_private.bin_action('dive',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d));perform pg_temp.check_bin(r?'error','Locked season allowed');
  select count(*) into old_count from public.game_bin_dives;
  insert into public.game_seasons(name,status,starting_cash,starting_crates) values('Bin test next season','open',100,0) returning id into next_s;
  update game_private.season_runtime set season_id=next_s;

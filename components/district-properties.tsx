@@ -18,7 +18,7 @@ export function DistrictPropertyHeader({state}:{state:DistrictState}){
  <Link className="dp-back" href="/districts">City map <span>› {d.name}</span></Link>
  <p className="dp-eyebrow">BLACKWATER / {d.district_type} DISTRICT</p><h1>{d.name}</h1>
  <p className="dp-tagline">{d.tagline}</p><span className="dp-rule"/><p className="dp-description">{d.description}</p>
- <div className="dp-banner-foot"><span>{state.season.name}</span><Link href={"/bin-diving?district="+d.slug}>Bin diving ↗</Link></div>
+ <div className="dp-banner-foot"><span>{state.season.name}</span><Link href={"/bin-diving?district="+d.slug}>Scavenging ↗</Link></div>
  </header><aside className="dp-summary"><h2>District overview</h2><dl>
  {[[ "Controller",state.territory.controller_name||"Neutral"],["Police heat",d.police_heat+" / 100"],
  ["Average land value",money(state.plots.length?state.plots.reduce((n,p)=>n+p.base_price,0)/state.plots.length:0)],

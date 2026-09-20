@@ -2,6 +2,7 @@ export type LootItem="pickaxe"|"lockpick"|"pistol_blueprint"|"bullet_blueprint";
 export type BinRules={enabled:boolean;cooldown_seconds:number;cash_min:number;cash_max:number;cash_chance:number;pickaxe_chance:number;lockpick_chance:number;pistol_blueprint_chance:number;bullet_blueprint_chance:number;version:number};
 export type BinReceipt={id:string;district_id:string;district_name:string;outcome:LootItem|"cash"|"nothing";cash:number;created_at:string;ready_at:string};
 export type BinState={
+ scavenging?:import('./scavenging').ScavengingState;
  season:{id:string;name:string;status:string;ends_at:string|null};server_time:string;playable:boolean;can_manage:boolean;
  rules:BinRules;districts:{id:string;slug:string;name:string;tagline:string;image_url:string;police_heat:number;status:string}[];
  cash:number;inventory:Partial<Record<LootItem,number>>;tool_condition:number;tool_max:number;mining_shift:boolean;ready_at:string|null;history:BinReceipt[];
@@ -9,7 +10,7 @@ export type BinState={
 export const loot=[
  {id:"cash",name:"Loose cash",icon:"coins",description:"A little forgotten money. Straight into your wallet."},
  {id:"pickaxe",name:"Pickaxe",icon:"pickaxe",description:"Equip it and work a public site in Mines & Quarries."},
- {id:"lockpick",name:"Lockpick",icon:"lock",description:"A single-use tool for a Blackwater Island prison-break attempt."},
+ {id:"lockpick",name:"Lockpick",icon:"lock",description:"Use one on a parked car or for a Blackwater Island prison-break attempt."},
  {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."},
  {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."}
 ] as const;
