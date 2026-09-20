@@ -1,0 +1,14 @@
+.scav-workspace .scav-map-scroll{max-height:800px;border-bottom:1px solid #6c593a;box-shadow:inset 0 0 60px #0006}
+.scav-workspace .scav-map-art{image-rendering:auto}
+.scav-workspace .scav-street-label rect,.scav-workspace .scav-map-title rect{fill:#09181cde;stroke:#a98a536e;stroke-width:1}
+.scav-workspace .scav-street-label text{fill:#efdfbd;font-family:Georgia,serif;paint-order:stroke;stroke:#0b171b;stroke-width:2px}
+.scav-workspace .scav-map-title text{fill:#f1dfba;letter-spacing:1.5px}
+.scav-workspace .scav-compass{fill:#f2e2bc;paint-order:stroke;stroke:#0b171b;stroke-width:5px;stroke-linejoin:round}
+.scav-workspace .scav-target rect{fill:#09191eee;stroke:#d9b478;filter:drop-shadow(0 3px 4px #000c)}
+.scav-workspace .scav-target:hover rect{stroke:#ffe0a7;stroke-width:3}
+.scav-workspace .scav-target text{fill:#f8e4ba;paint-order:stroke;stroke:#071316;stroke-width:5px;stroke-linejoin:round;font-size:18px}
+.scav-workspace .scav-target.searched rect{fill:#24302dec;stroke:#a2a494}
+.scav-workspace g[aria-label="Your position"] text{font-size:18px;font-weight:700;paint-order:stroke;stroke:#071316;stroke-width:5px;stroke-linejoin:round}
+.bin-page:has(.scav-workspace) .bin-stash{grid-column:1/-1}
+@media(min-width:1001px){.bin-page:has(.scav-workspace) .bin-layout{grid-template-columns:220px minmax(0,1fr)}.bin-page:has(.scav-workspace) .bin-stash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.bin-page:has(.scav-workspace) .bin-stash>header,.bin-page:has(.scav-workspace) .bin-stash>.bin-muted{grid-column:1/-1}.bin-page:has(.scav-workspace) .bin-equipment{margin-top:20px}}
+@media(max-width:1000px){.scav-workspace .scav-map-scroll{max-height:600px}}
