@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useState,useRef} from "react";
 import {GameIcon} from "./game-icon";
 import {streetPoint,walkingPosition,nearestStreetNode,STREET_ROWS,type ScavengingState} from "@/lib/scavenging";
 import {binCountdown} from "@/lib/bin-diving";
@@ -10,9 +10,19 @@ type Props={state?:ScavengingState;district:{id:string;name:string;image_url:str
 export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpicks,act}:Props){
  const [selected,setSelected]=useState<string|null>(null),[queued,setQueued]=useState<number|null>(null),[frame,setFrame]=useState(now),[zoom,setZoom]=useState(1);
  const session=state?.session;
+ const workspace=useRef<HTMLDivElement>(null),mapViewport=useRef<HTMLDivElement>(null);
+ const [fit,setFit]=useState({width:640,height:440,header:76});
  useEffect(()=>{const start=performance.now();let id:number;const tick=()=>{setFrame(now+performance.now()-start);id=requestAnimationFrame(tick);};id=requestAnimationFrame(tick);return()=>cancelAnimationFrame(id);},[now]);
  useEffect(()=>{setSelected(null);setQueued(null);setZoom(1);},[district?.id]);
  const entered=!!session&&session.district_id===district?.id;
+ useEffect(()=>{
+  if(!entered||!workspace.current||!mapViewport.current)return;
+  const root=workspace.current,viewport=mapViewport.current,header=document.querySelector('.estate-header'),toolbar=root.querySelector('.scav-map-toolbar'),desk=root.querySelector('.scav-action-desk');
+  const resize=()=>{const headerHeight=header?.getBoundingClientRect().height??76;const available=Math.max(120,window.innerHeight-headerHeight-(toolbar?.getBoundingClientRect().height??70)-(desk?.getBoundingClientRect().height??180)-24);const width=Math.min(viewport.clientWidth,available*1000/680);setFit(old=>old.width===width&&old.height===available&&old.header===headerHeight?old:{width,height:available,header:headerHeight});};
+  const observer=new ResizeObserver(resize);for(const element of [viewport,header,toolbar,desk])if(element)observer.observe(element);
+  resize();const frame=requestAnimationFrame(()=>root.scrollIntoView({block:'start',behavior:'instant'}));window.addEventListener('resize',resize);
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',resize);};
+ },[entered,district?.id]);
  const moving=entered&&Date.parse(session.arrives_at)>frame;
  const pending=entered?session.pending:null;
  const target=entered?state?.targets.find(t=>t.id===selected):undefined;
@@ -24,11 +34,11 @@ export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpick
  const choose=(id:string)=>{const site=state?.targets.find(t=>t.id===id);if(site)travel(site.node);setSelected(id);};
  useEffect(()=>{if(queued===null||!entered||busy||blocked||moving||pending)return;setQueued(null);if(queued!==session.node)void act("scav_move",{node:queued});},[queued,entered,busy,blocked,moving,pending,session?.node,act]);
  const streets=[0,1,2].map((n)=>state?.streets[n]??[`${district?.name??"District"} Road`,"Lantern Street","Foundry Lane"][n]);
- return <div className="scav-workspace">
+ return <div ref={workspace} className="scav-workspace" style={{scrollMarginTop:fit.header+8}}>
  <div className="scav-map-toolbar"><span><i className="scav-dot-key"/> You <span className="scav-key">▣ Bin · ▰ Parked car</span></span><div><button aria-label="Zoom out" disabled={zoom===1} onClick={()=>setZoom(z=>Math.max(1,z-.25))}>−</button><button aria-label="Zoom in" disabled={zoom===2} onClick={()=>setZoom(z=>Math.min(2,z+.25))}>+</button></div></div>
  {!entered?<div className="scav-entry" style={{backgroundImage:`linear-gradient(90deg,#071316e8,#07131666),url(${district?.image_url||"/art/bin-diving.png"})`}}><p className="eyebrow">BLACKWATER / STREET OPERATIONS</p><h2>The city rewards<br/>a curious mind.</h2><p>Walk the streets. Search forgotten bins. Try the locks on parked cars. Every find feeds your next move.</p><button className="bin-gold" disabled={busy||blocked||!district} onClick={()=>void act("scav_enter",{district_id:district?.id})}>Enter {district?.name??"district"} <GameIcon name="arrow"/></button></div>:<>
- <div className="scav-map-scroll" tabIndex={0} aria-label="Street map; scroll to pan when zoomed">
- <svg className="scav-map" viewBox="0 0 1000 680" style={{width:`${zoom*100}%`}} role="group" aria-label={district?.name+" scavenging street map"} onClick={event=>{if(event.target!==event.currentTarget)return;const box=event.currentTarget.getBoundingClientRect();const x=(event.clientX-box.left)/box.width*1000,y=(event.clientY-box.top)/box.height*680;travel(nearestStreetNode(x,y));}}>
+ <div ref={mapViewport} className="scav-map-scroll scav-map-fitted" style={{height:fit.height}} tabIndex={0} aria-label="Street map; scroll to pan when zoomed">
+ <svg className="scav-map" viewBox="0 0 1000 680" style={{width:fit.width*zoom}} role="group" aria-label={district?.name+" scavenging street map"} onClick={event=>{if(event.target!==event.currentTarget)return;const box=event.currentTarget.getBoundingClientRect();const x=(event.clientX-box.left)/box.width*1000,y=(event.clientY-box.top)/box.height*680;travel(nearestStreetNode(x,y));}}>
  <defs><linearGradient id="scav-map-shade" x2="0" y2="1"><stop stopColor="#051114" stopOpacity=".25"/><stop offset=".45" stopColor="#051114" stopOpacity="0"/><stop offset="1" stopColor="#051114" stopOpacity=".15"/></linearGradient></defs>
  <image className="scav-map-art" href="/art/scavenging/blackwater-streets.webp" x="0" y="0" width="1000" height="680" preserveAspectRatio="none" pointerEvents="none"/><rect width="1000" height="680" fill="url(#scav-map-shade)" pointerEvents="none"/>
 
