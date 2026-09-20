@@ -1,9 +1,13 @@
 // Browser fixture only. PostgreSQL tests verify timing, accounting and authorization separately.
-export function scavWorld(game,bins,skills){
+export function scavWorld(game,bins,skills,onArrest=()=>{}){
+ let patrols=[],catchSearch=false;
+ const resolve=()=>{if(!session?.pending||!catchSearch)return false;session.pending=null;onArrest();return true;};
+ const setup=p=>{catchSearch=!!p.catchSearch;patrols=p.enabled?[{id:"police-1",route_points:[[0,0],[4,0],[4,2],[0,2],[0,0]],epoch:1700000000,seconds_per_block:8,radius:.22}]:[];};
  let session=null;const maps=new Map(),requests=new Map(),recent=[];
  const settings={scavenging_walk_seconds:1,scavenging_search_seconds:1,scavenging_lock_seconds:1,scavenging_restock_seconds:600,scavenging_car_success_percent:100,scavenging_lock_xp:25};
- const read=()=>({session,targets:maps.get(session?.district_id)??[],streets:['Harbor Road','Warehouse Row','Dockside Avenue'],settings,recent});
+ const read=()=>{const caught=resolve();return {session,targets:maps.get(session?.district_id)??[],streets:['Harbor Road','Warehouse Row','Dockside Avenue'],settings,recent,patrols,caught};};
  function action(action,p){
+  if(resolve())return {caught:true,message:"Caught by a police patrol."};
   if(requests.has(p.request_id))return requests.get(p.request_id);
   const data=bins().read();let result;const now=Date.now();
   if(action==='enter'){
@@ -24,7 +28,8 @@ export function scavWorld(game,bins,skills){
    if(session.pending.kind==='car'){skills().award('lockpicking',session.pending.id,25,'Opened a parked car');result={...result,message:'Car opened. +25 Lockpicking XP.'};}
    recent.push({kind:session.pending.kind,opened:true,xp:session.pending.kind==='car'?25:0,created_at:new Date().toISOString()});session.pending=null;
   }else if(action==='cancel'){session.pending=null;result={message:'Search abandoned.'};}else return{error:'Unknown action.'};
+  if(resolve())result={caught:true,message:"Caught by a police patrol."};
   requests.set(p.request_id,result);return result;
  }
- return{read,action};
+ return{read,action,setup,resolve};
 }

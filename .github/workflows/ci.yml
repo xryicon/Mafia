@@ -75,7 +75,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
       - name: Configure bulk economy fixtures
-        run: psql -v ON_ERROR_STOP=1 -c "select set_config('game.reason','CI bulk economy fixture capacity',false); update public.game_settings set value=1000000000 where key='inventory_weight_limit_grams';"
+        run: psql -v ON_ERROR_STOP=1 -c "select set_config('game.reason','CI bulk economy fixture capacity',false); update public.game_settings set value=1000000000 where key='inventory_weight_limit_grams'; update public.game_settings set value=0 where key='scavenging_patrol_enabled';"
       - name: Economic and authorization regression tests
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/player_economy.sql
@@ -91,6 +91,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/mining.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bin_diving.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging_patrols.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/tradable_loot.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/refineries.sql
       - name: Concurrent district purchase test
@@ -107,6 +108,9 @@ jobs:
 
       - name: Concurrent bin diving rewards and district cooldown
         run: bash supabase/tests/bin_races.sh
+
+      - name: Concurrent patrol arrests and search collection
+        run: bash supabase/tests/patrol_races.sh
 
       - name: Concurrent refinery purchases and fuel consumption
         run: bash supabase/tests/refinery_races.sh

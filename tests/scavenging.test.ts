@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {walkingPosition,streetPoint,nearestStreetNode,nearestStreetPosition,mapPoint,routePosition,type StreetSession} from '../lib/scavenging';
+import {walkingPosition,streetPoint,nearestStreetNode,nearestStreetPosition,mapPoint,routePosition,patrolPosition,type StreetSession} from '../lib/scavenging';
 const session:StreetSession={district_id:'district',node:6,path:[0,5,6],departed_at:'2026-09-20T00:00:00Z',arrives_at:'2026-09-20T00:00:06Z',pending:null};
+test('police patrol positions loop using server time and configured speed',()=>{
+ const patrol={id:'one',route_points:[[0,0],[2,0],[0,0]] as [number,number][],epoch:100,seconds_per_block:2,radius:.2};
+ assert.deepEqual(patrolPosition(patrol,100000),[0,0]);assert.deepEqual(patrolPosition(patrol,102000),[1,0]);assert.deepEqual(patrolPosition(patrol,106000),[1,0]);assert.deepEqual(patrolPosition(patrol,110000),[1,0]);
+});
 test('free clicks stop between crossings and project onto a road, never inside buildings',()=>{
  assert.deepEqual(nearestStreetPosition(181,114),[.5,0]);
  for(let x=-100;x<=1100;x+=37)for(let y=-100;y<=800;y+=31){const p=nearestStreetPosition(x,y);assert.ok(p[0]>=0&&p[0]<=4&&p[1]>=0&&p[1]<=2);assert.ok(Number.isInteger(p[0])||Number.isInteger(p[1]));}

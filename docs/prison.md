@@ -10,7 +10,7 @@ A correct tension angle releases the inmate, awards the rescuer the configured p
 
 Owner panel → Blackwater Island Prison provides timed imprisonment (1 minute–7 days), a current-inmate register, early release with a required reason, and the power awarded for a successful breakout. The reward defaults to 50 and accepts values from 0 to 100,000. Ordinary players cannot issue sentences, edit custody rows, reveal hidden lock angles, or change the reward. All sentence and reward changes use the existing audit history.
 
-The existing game has no automatic arrest outcome. This feature adds no random arrests to jobs. Future trusted gameplay code can call `game_private.imprison`; clients have no permission to execute it. Current imprisonment is issued by the Owner or by a failed prison-break attempt. No existing player is jailed by this migration.
+Imprisonment can be issued by the Owner, a failed prison-break attempt, or a police patrol catching an active Scavenging search. Patrols use the trusted `game_private.imprison` entry point; clients cannot execute it. Walking near police does not cause arrest. No random arrests are added to jobs. Patrol sentence length is configured through Owner Economy settings, and patrol arrest records are retained separately from the current sentence.
 
 The shared open-season gameplay guard blocks new economic and gameplay actions while jailed, including direct RPC calls. Read-only data and existing cleanup or settlement actions remain available under their original rules. Browsing a district is not a persistent free-player location; while jailed, the player's custody location is always Blackwater Island. A new season starts without old-season custody while retaining audit history.
 
