@@ -31,4 +31,7 @@ do $$begin
  if exists(select 1 from public.game_bin_dives where player_id='eeeeeeee-3100-4000-8000-000000000001') then raise exception 'Concurrent arrested search paid loot';end if;
 end$$;
 select 'PASS: concurrent read, prison refresh, collect and cancel create one arrest and no reward';
+-- Keep later prison-register tests isolated without deleting the retained arrest history.
+select set_config('game.reason','Release completed patrol concurrency fixture',false);
+update public.game_prison_sentences set released_at=clock_timestamp() where player_id='eeeeeeee-3100-4000-8000-000000000001';
 SQL
