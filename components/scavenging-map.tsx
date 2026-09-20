@@ -7,10 +7,10 @@ import "./scavenging.css";
 
 type Props={state?:ScavengingState;district:{id:string;name:string;image_url:string}|undefined;now:number;busy:boolean;blocked:boolean;cooldown:number;lockpicks:number;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>};
 export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpicks,act}:Props){
- const [selected,setSelected]=useState<string|null>(null),[frame,setFrame]=useState(now),[zoom,setZoom]=useState(1);
+ const [selected,setSelected]=useState<string|null>(null),[queued,setQueued]=useState<number|null>(null),[frame,setFrame]=useState(now),[zoom,setZoom]=useState(1);
  const session=state?.session;
  useEffect(()=>{const start=performance.now();let id:number;const tick=()=>{setFrame(now+performance.now()-start);id=requestAnimationFrame(tick);};id=requestAnimationFrame(tick);return()=>cancelAnimationFrame(id);},[now]);
- useEffect(()=>{setSelected(null);setZoom(1);},[district?.id]);
+ useEffect(()=>{setSelected(null);setQueued(null);setZoom(1);},[district?.id]);
  const entered=!!session&&session.district_id===district?.id;
  const moving=entered&&Date.parse(session.arrives_at)>frame;
  const pending=entered?session.pending:null;
@@ -19,8 +19,9 @@ export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpick
  const searched=target?.ready_at?Date.parse(target.ready_at)>frame:false;
  const remaining=pending?Math.max(0,Math.ceil((Date.parse(pending.ready_at)-frame)/1000)):0;
  const point=entered?walkingPosition(session,frame):streetPoint(0);
- const travel=(node:number)=>{if(!entered||busy||blocked||moving||pending)return;void act("scav_move",{node});};
- const choose=(id:string)=>{setSelected(id);const site=state?.targets.find(t=>t.id===id);if(site)travel(site.node);};
+ const travel=(node:number)=>{if(!entered||blocked||pending)return;setSelected(null);setQueued(node);};
+ const choose=(id:string)=>{const site=state?.targets.find(t=>t.id===id);if(site)travel(site.node);setSelected(id);};
+ useEffect(()=>{if(queued===null||!entered||busy||blocked||moving||pending)return;setQueued(null);if(queued!==session.node)void act("scav_move",{node:queued});},[queued,entered,busy,blocked,moving,pending,session?.node,act]);
  const streets=[0,1,2].map((n)=>state?.streets[n]??[`${district?.name??"District"} Road`,"Lantern Street","Foundry Lane"][n]);
  return <div className="scav-workspace">
  <div className="scav-map-toolbar"><span><i className="scav-dot-key"/> You <span className="scav-key">▣ Bin · ▰ Parked car</span></span><div><button aria-label="Zoom out" disabled={zoom===1} onClick={()=>setZoom(z=>Math.max(1,z-.25))}>−</button><button aria-label="Zoom in" disabled={zoom===2} onClick={()=>setZoom(z=>Math.min(2,z+.25))}>+</button></div></div>
@@ -30,8 +31,9 @@ export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpick
  <defs><pattern id="scav-grain" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 12L12 0" stroke="#304039" strokeWidth=".5"/></pattern><radialGradient id="scav-lamp"><stop stopColor="#d7ad68" stopOpacity=".3"/><stop offset="1" stopColor="#d7ad68" stopOpacity="0"/></radialGradient></defs>
  <rect width="1000" height="680" fill="#101d20" pointerEvents="none"/><rect width="1000" height="680" fill="url(#scav-grain)" pointerEvents="none"/>
  {Array.from({length:8},(_,i)=>{const x=137+(i%4)*200,y=163+Math.floor(i/4)*210;return <g key={i} pointerEvents="none"><rect x={x} y={y} width="127" height="142" rx="3" fill="#17252a" stroke="#435048"/><rect x={x+9} y={y+8} width="109" height="125" fill="#1e2d2f" stroke="#354340"/>{Array.from({length:8},(_,w)=><rect key={w} x={x+18+(w%4)*25} y={y+22+Math.floor(w/4)*79} width="9" height="13" fill={w%3?"#847043":"#263d3d"}/>)}<text x={x+64} y={y+76} textAnchor="middle" fill="#8b9284" fontSize="12">BLOCK {String(i+1).padStart(2,"0")}</text></g>;})}
- {[130,340,550].map((y,i)=><g key={y}><path d={`M45 ${y}H955`} stroke="#344242" strokeWidth="48"/><path d={`M45 ${y}H955`} stroke="#bc995a" strokeOpacity=".25" strokeDasharray="8 15"/><text x="500" y={y-38} textAnchor="middle" fill="#d0ba8f" fontSize="16" letterSpacing="2">{streets[i]}</text></g>)}
+ {[130,340,550].map((y,i)=><g key={y}><path d={`M45 ${y}H955`} stroke="#344242" strokeWidth="48"/><path d={`M45 ${y}H955`} stroke="#bc995a" strokeOpacity=".25" strokeDasharray="8 15"/></g>)}
  {[100,300,500,700,900].map(x=><g key={x}><path d={`M${x} 72V608`} stroke="#344242" strokeWidth="42"/><path d={`M${x} 78V602`} stroke="#b69a61" strokeOpacity=".2" strokeDasharray="8 15"/></g>)}
+ {[130,340,550].map((y,i)=><text key={y} x="500" y={y-38} textAnchor="middle" fill="#d0ba8f" fontSize="16" letterSpacing="2" pointerEvents="none">{streets[i]}</text>)}
  <text x="44" y="40" fill="#d8c297" fontFamily="Georgia" fontSize="22">{district?.name.toUpperCase()}</text><text x="955" y="640" fill="#9da596" textAnchor="end" fontSize="13">N ↑ · CLICK TO WALK</text>
  {Array.from({length:15},(_,node)=>{const p=streetPoint(node);return <g key={node} role="button" tabIndex={0} aria-label={`Walk to ${streets[Math.floor(node/5)]}, block ${node%5+1}`} onClick={()=>travel(node)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();travel(node);}}}><circle cx={p.x} cy={p.y} r="35" fill="transparent"/><circle cx={p.x-22} cy={p.y-23} r="33" fill="url(#scav-lamp)" pointerEvents="none"/><circle cx={p.x-22} cy={p.y-23} r="3" fill="#c9a065" pointerEvents="none"/></g>;})}
  {session.path.length>1&&moving&&<polyline points={session.path.map(n=>{const p=streetPoint(n);return `${p.x},${p.y}`;}).join(" ")} fill="none" stroke="#d8b777" strokeWidth="3" strokeDasharray="5 8" pointerEvents="none"/>}
