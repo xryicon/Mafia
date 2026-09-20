@@ -93,10 +93,10 @@ begin
  select x into site from jsonb_array_elements(public.bin_diving_state()->'scavenging'->'targets')x where x->>'kind'='bin' limit 1;
  r:=public.scavenging_action('move',q||jsonb_build_object('request_id',gen_random_uuid(),'x',(site->>'node')::int%5,'y',(site->>'node')::int/5));
  perform pg_temp.check_scav(not r?'error','Could not walk to a search site');
- r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id));perform pg_temp.check_scav(r?'error','Search accepted during continuous travel');
+ r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id'));perform pg_temp.check_scav(r?'error','Search accepted during continuous travel');
  -- Adjacent but not at a target: a rounded legacy node must not grant proximity.
  update game_private.scav_sessions set arrives_at=clock_timestamp()-interval '1 second',route_points=jsonb_build_array(jsonb_build_array((site->>'node')::int%5,((site->>'node')::int/5)::numeric+case when (site->>'node')::int/5=2 then -0.1 else 0.1 end)) where player_id=u;
- r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id));perform pg_temp.check_scav(r?'error','Rounded node bypassed exact proximity');
+ r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id'));perform pg_temp.check_scav(r?'error','Rounded node bypassed exact proximity');
  for a in select value from jsonb_array_elements('[[0.25,0],[1,0.4],[4,1.7],[3.6,2]]'::jsonb) loop
   for b in select value from jsonb_array_elements('[[0,1.1],[2.8,1],[4,0.3],[0.75,0]]'::jsonb) loop
    route:=game_private.scav_route(a,b);perform pg_temp.check_scav(route->0=a and route->-1=b,'Route endpoints changed');
