@@ -4,6 +4,11 @@ do $$
 declare u uuid:=gen_random_uuid();other_u uuid:=gen_random_uuid();s uuid:=game_private.current_season();d uuid;q jsonb;r jsonb;first jsonb;site jsonb;car jsonb;attempt uuid;cash_before bigint;denied boolean;
 begin
  insert into auth.users(id) values(u),(other_u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
+ set local role authenticated;
+ r:=public.bin_diving_state();
+ perform pg_temp.check_scav(r?'scavenging','Signed-in player cannot load the scavenging page');
+ perform pg_temp.check_scav(not has_function_privilege('anon','public.bin_diving_state()','EXECUTE'),'Anonymous player can read scavenging');
+ reset role;
  select id into d from public.game_districts where slug='the-waterfront';
  perform set_config('game.reason','CI scavenging guaranteed loot',true);
  update public.game_bin_rules set cash_chance=100,pickaxe_chance=0,lockpick_chance=0,pistol_blueprint_chance=0,bullet_blueprint_chance=0,cash_min=77,cash_max=77;
@@ -12,6 +17,10 @@ begin
  r:=public.bin_diving_action('dive',q);perform pg_temp.check_scav(r?'error','Legacy endpoint bypasses the map');
  first:=public.scavenging_action('enter',q);perform pg_temp.check_scav(not first?'error','Enter failed: '||first::text);
  r:=public.scavenging_action('enter',q);perform pg_temp.check_scav(r=first,'Entry retry is not safe');
+ set local role authenticated;
+ r:=public.bin_diving_state();
+ perform pg_temp.check_scav(jsonb_array_length(r->'scavenging'->'targets')=10,'Signed-in player cannot read entered map');
+ reset role;
  select x into site from jsonb_array_elements(public.bin_diving_state()->'scavenging'->'targets')x where x->>'kind'='bin' limit 1;
  select x into car from jsonb_array_elements(public.bin_diving_state()->'scavenging'->'targets')x where x->>'kind'='car' limit 1;
  perform pg_temp.check_scav(site is not null and car is not null,'Map needs bins and cars');
