@@ -7,9 +7,11 @@ select set_config('request.jwt.claim.sub','eeeeeeee-3000-4000-8000-000000000001'
 select public.game_state();
 update public.game_bin_rules set cash_chance=0,pickaxe_chance=100,lockpick_chance=0,pistol_blueprint_chance=0,bullet_blueprint_chance=0;
 select public.scavenging_action('enter',jsonb_build_object('season_id',game_private.current_season(),'district_id',(select id from public.game_districts where slug='the-waterfront'),'request_id',gen_random_uuid()));
-update game_private.scav_sessions set node=(select (x->>'node')::int from game_private.scav_maps m cross join lateral jsonb_array_elements(m.targets)x where m.player_id=auth.uid() and x->>'kind'='bin' limit 1) where player_id=auth.uid();
+select public.scavenging_action('move',jsonb_build_object('season_id',game_private.current_season(),'request_id',gen_random_uuid(),'node',(select (x->>'node')::int from game_private.scav_maps m cross join lateral jsonb_array_elements(m.targets)x where m.player_id=auth.uid() and x->>'kind'='bin' limit 1)));
+update game_private.scav_sessions set arrives_at=clock_timestamp()-interval '1 second' where player_id=auth.uid();
 select public.scavenging_action('search',jsonb_build_object('season_id',game_private.current_season(),'request_id','eeeeeeee-3000-4000-8000-000000000009','target_id',(select x->>'id' from game_private.scav_maps m cross join lateral jsonb_array_elements(m.targets)x join game_private.scav_sessions v on v.player_id=m.player_id and v.node=(x->>'node')::int where m.player_id=auth.uid() limit 1)));
 update game_private.scav_sessions set pending=pending||jsonb_build_object('ready_at',clock_timestamp()-interval '1 second') where player_id=auth.uid();
+do $$begin if not exists(select 1 from game_private.scav_sessions where player_id=auth.uid() and pending is not null) then raise exception 'Race fixture did not reach and start searching its target';end if;end$$;
 SQL
 for attempt in 1 2 3 4; do
  psql -At -v ON_ERROR_STOP=1 -v "attempt=$attempt" >"/tmp/bin-race-$attempt.txt" <<'SQL' &
