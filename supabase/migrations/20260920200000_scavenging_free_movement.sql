@@ -31,12 +31,12 @@ end$$;
 -- Endpoints connect arbitrary points to the existing street grid; every segment follows a road.
 create function game_private.scav_route(a jsonb,b jsonb) returns jsonb language plpgsql immutable set search_path='' as $$
 declare ax double precision:=(a->>0)::double precision;ay double precision:=(a->>1)::double precision;
- bx double precision:=(b->>0)::double precision;by double precision:=(b->>1)::double precision;
+ bx double precision:=(b->>0)::double precision;end_y double precision:=(b->>1)::double precision;
  starts jsonb;ends jsonb;p jsonb;q jsonb;candidate jsonb;best jsonb;distance double precision;shortest double precision:='Infinity';
 begin
- if (ax=bx and ax=trunc(ax)) or (ay=by and ay=trunc(ay)) then return jsonb_build_array(a,b);end if;
+ if (ax=bx and ax=trunc(ax)) or (ay=end_y and ay=trunc(ay)) then return jsonb_build_array(a,b);end if;
  starts:=case when ax=trunc(ax) then jsonb_build_array(jsonb_build_array(ax,floor(ay)),jsonb_build_array(ax,ceil(ay))) else jsonb_build_array(jsonb_build_array(floor(ax),ay),jsonb_build_array(ceil(ax),ay)) end;
- ends:=case when bx=trunc(bx) then jsonb_build_array(jsonb_build_array(bx,floor(by)),jsonb_build_array(bx,ceil(by))) else jsonb_build_array(jsonb_build_array(floor(bx),by),jsonb_build_array(ceil(bx),by)) end;
+ ends:=case when bx=trunc(bx) then jsonb_build_array(jsonb_build_array(bx,floor(end_y)),jsonb_build_array(bx,ceil(end_y))) else jsonb_build_array(jsonb_build_array(floor(bx),end_y),jsonb_build_array(ceil(bx),end_y)) end;
  for p in select value from jsonb_array_elements(starts) loop
   for q in select value from jsonb_array_elements(ends) loop
    candidate:=jsonb_build_array(a,p,jsonb_build_array(q->0,p->1),q,b);
