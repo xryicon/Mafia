@@ -44,7 +44,20 @@ test('free street clicks send fractional destinations and street activity can be
  await expect(page.locator('.scav-traffic').first()).toBeHidden();
 });
 
-test('entering a district fits the entire map and search button on screen',async({page})=>{
+test('police patrols leave walking players alone and send caught searches to prison',async({page,request})=>{
+ await request.post('http://127.0.0.1:54329/__patrol_setup',{headers:{Authorization:'Bearer '+token},data:{enabled:true,catchSearch:true}});
+ await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await expect(page.getByRole('group',{name:'1 police patrols',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Street activity',exact:true}).click();await expect(page.locator('.scav-police')).toBeVisible();
+ await page.locator('.scav-target[aria-label^="Bin"]').first().click();await expect(page.getByRole('button',{name:'Search the bins',exact:true})).toBeEnabled();
+ expect((await (await request.post('http://127.0.0.1:54329/rest/v1/rpc/prison_state',{data:{}})).json()).jailed).toBe(false);
+ await page.getByRole('button',{name:'Search the bins',exact:true}).click();await expect(page).toHaveURL(/districts\/blackwater-island/);
+ await expect(page.getByText('Caught by a police patrol while scavenging', {exact:true})).toBeVisible();
+ await page.reload();await expect(page).toHaveURL(/districts\/blackwater-island/);
+});
+
+test('entering a district fits the entire map and search button on screen',async({page,request})=>{
+ await request.post('http://127.0.0.1:54329/__patrol_setup',{headers:{Authorization:'Bearer '+token},data:{enabled:true}});
  for(const viewport of [{width:1440,height:900},{width:1366,height:768},{width:390,height:844}]){
   await page.setViewportSize(viewport);await page.goto('/bin-diving?district=the-waterfront');const enter=page.getByRole('button',{name:'Enter The Waterfront'});if(await enter.count())await enter.click();
   await expect(page.locator('.scav-map')).toBeVisible();

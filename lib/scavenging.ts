@@ -1,7 +1,8 @@
 export type StreetTarget={id:string;node:number;kind:"bin"|"car";ready_at:string|null};
 export type StreetPosition=[number,number];
+export type PolicePatrol={id:string;route_points:StreetPosition[];epoch:number;seconds_per_block:number;radius:number};
 export type StreetSession={district_id:string;node:number;path:number[];route_points?:StreetPosition[];departed_at:string;arrives_at:string;pending:null|{id:string;target_id:string;kind:"bin"|"car";started_at:string;ready_at:string;success_percent:number;xp:number}};
-export type ScavengingState={session:StreetSession|null;targets:StreetTarget[];streets:string[];settings:Record<string,number>;recent:{kind:string;opened:boolean;xp:number;created_at:string}[]};
+export type ScavengingState={session:StreetSession|null;targets:StreetTarget[];streets:string[];settings:Record<string,number>;patrols?:PolicePatrol[];caught?:boolean;recent:{kind:string;opened:boolean;xp:number;created_at:string}[]};
 // Presentation coordinates aligned to the overhead artwork. Server node IDs and travel rules are unchanged.
 export const STREET_COLUMNS=[73,289,497,711,928] as const;
 export const STREET_ROWS=[114,344,607] as const;
@@ -18,6 +19,12 @@ export function nearestStreetPosition(x:number,y:number):StreetPosition{
  return Math.hypot(x-a.x,y-a.y)<=Math.hypot(x-b.x,y-b.y)?horizontal:vertical;
 }
 export const sessionDestination=(session:StreetSession):StreetPosition=>session.route_points?.at(-1)??[session.node%5,Math.floor(session.node/5)];
+export function patrolPosition(patrol:PolicePatrol,now:number):StreetPosition{
+ const blocks=patrol.route_points.slice(1).reduce((sum,p,i)=>sum+Math.abs(p[0]-patrol.route_points[i][0])+Math.abs(p[1]-patrol.route_points[i][1]),0);
+ const duration=blocks*patrol.seconds_per_block;if(duration<=0)return patrol.route_points[0]??[0,0];
+ const phase=((now/1000-patrol.epoch)%duration+duration)%duration;
+ return routePosition(patrol.route_points,phase/duration);
+}
 export function routePosition(points:StreetPosition[],progress:number):StreetPosition{
  const length=(a:StreetPosition,b:StreetPosition)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1]);
  let remaining=points.slice(1).reduce((sum,p,i)=>sum+length(points[i],p),0)*Math.max(0,Math.min(1,progress));

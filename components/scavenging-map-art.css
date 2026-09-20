@@ -20,6 +20,10 @@
 .scav-traffic-west{animation:scav-drive-west 39s linear infinite;animation-delay:-17s}
 .scav-walking-route{filter:drop-shadow(0 1px 2px #000);stroke-linecap:round;stroke-linejoin:round}
 .scav-destination{filter:drop-shadow(0 2px 3px #000)}
+.scav-police-area{fill:#81abc51c;stroke:#9bb7c9;stroke-width:1.5;stroke-dasharray:5 5}
+.scav-police-car{fill:#15232e;stroke:#b0c5cd;stroke-width:2;filter:drop-shadow(0 2px 4px #000)}
+.scav-police text{fill:#c5d7df;font-size:14px;font-weight:700;letter-spacing:1px;paint-order:stroke;stroke:#071316;stroke-width:4px;stroke-linejoin:round}
+.scav-action-desk .scav-police-warning{color:#d8b882;font-size:13px}
 @keyframes scav-lamplight{0%,100%{opacity:.65}50%{opacity:1}}
 @keyframes scav-steam-drift{0%{opacity:0;transform:translate(0,0) scale(.6)}25%{opacity:.1}100%{opacity:0;transform:translate(40px,-36px) scale(2)}}
 @keyframes scav-drive-east{0%{transform:translate(73px,122px);opacity:0}4%,96%{opacity:.8}100%{transform:translate(928px,122px);opacity:0}}
