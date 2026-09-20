@@ -12,3 +12,5 @@
 .bin-page:has(.scav-workspace) .bin-stash{grid-column:1/-1}
 @media(min-width:1001px){.bin-page:has(.scav-workspace) .bin-layout{grid-template-columns:220px minmax(0,1fr)}.bin-page:has(.scav-workspace) .bin-stash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.bin-page:has(.scav-workspace) .bin-stash>header,.bin-page:has(.scav-workspace) .bin-stash>.bin-muted{grid-column:1/-1}.bin-page:has(.scav-workspace) .bin-equipment{margin-top:20px}}
 @media(max-width:1000px){.scav-workspace .scav-map-scroll{max-height:600px}}
+.scav-workspace .scav-map-fitted{max-height:none;min-height:0;overscroll-behavior:contain;background:#081317}
+.scav-workspace .scav-map-fitted .scav-map{min-width:0;margin:0 auto}
