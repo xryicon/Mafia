@@ -20,7 +20,7 @@ export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpick
   const root=workspace.current,viewport=mapViewport.current,header=document.querySelector('.estate-header'),toolbar=root.querySelector('.scav-map-toolbar'),desk=root.querySelector('.scav-action-desk');
   const resize=()=>{const headerHeight=header?.getBoundingClientRect().height??76;const available=Math.max(120,window.innerHeight-headerHeight-(toolbar?.getBoundingClientRect().height??70)-(desk?.getBoundingClientRect().height??180)-24);const width=Math.min(viewport.clientWidth,available*1000/680);setFit(old=>old.width===width&&old.height===available&&old.header===headerHeight?old:{width,height:available,header:headerHeight});};
   const observer=new ResizeObserver(resize);for(const element of [viewport,header,toolbar,desk])if(element)observer.observe(element);
-  resize();const frame=requestAnimationFrame(()=>root.scrollIntoView({block:'start',behavior:'instant'}));window.addEventListener('resize',resize);
+  resize();const frame=requestAnimationFrame(()=>window.scrollTo({top:window.scrollY+root.getBoundingClientRect().top-(header?.getBoundingClientRect().height??76)-8,behavior:'instant'}));window.addEventListener('resize',resize);
   return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',resize);};
  },[entered,district?.id]);
  const moving=entered&&Date.parse(session.arrives_at)>frame;
