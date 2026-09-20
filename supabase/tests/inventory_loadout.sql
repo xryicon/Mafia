@@ -64,7 +64,7 @@ begin
  denied:=false;begin update public.game_inventory set quantity=196 where player_id=a and good_id='ci-slot-1';exception when raise_exception then denied:=true;end;perform pg_temp.check_loadout(denied,'Weight limit ignored');
  r:=public.inventory_action('gear_retrieve',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||g));perform pg_temp.check_loadout(r?'error' and (select location from public.game_inventory_gear where id=g)='storage','Overweight retrieval lost stored equipment');
  -- Bin diving cannot reroll rewards by refusing loot with a full bag.
- r:=public.bin_diving_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));
+ r:=game_private.bin_action('dive',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));
  perform pg_temp.check_loadout(r?'error' and r->>'error' like '%Inventory before searching%', 'Full-bag loot preflight missing: '||r::text);
  perform pg_temp.check_loadout(not exists(select 1 from public.game_bin_dives where player_id=a),'Failed dive consumed a roll');
  -- A manual market purchase must atomically preserve both wallets and offered stock.

@@ -6,6 +6,10 @@ insert into auth.users(id) values('eeeeeeee-3000-4000-8000-000000000001');
 select set_config('request.jwt.claim.sub','eeeeeeee-3000-4000-8000-000000000001',false);
 select public.game_state();
 update public.game_bin_rules set cash_chance=0,pickaxe_chance=100,lockpick_chance=0,pistol_blueprint_chance=0,bullet_blueprint_chance=0;
+select public.scavenging_action('enter',jsonb_build_object('season_id',game_private.current_season(),'district_id',(select id from public.game_districts where slug='the-waterfront'),'request_id',gen_random_uuid()));
+update game_private.scav_sessions set node=(select (x->>'node')::int from game_private.scav_maps m cross join lateral jsonb_array_elements(m.targets)x where m.player_id=auth.uid() and x->>'kind'='bin' limit 1) where player_id=auth.uid();
+select public.scavenging_action('search',jsonb_build_object('season_id',game_private.current_season(),'request_id','eeeeeeee-3000-4000-8000-000000000009','target_id',(select x->>'id' from game_private.scav_maps m cross join lateral jsonb_array_elements(m.targets)x join game_private.scav_sessions v on v.player_id=m.player_id and v.node=(x->>'node')::int where m.player_id=auth.uid() limit 1)));
+update game_private.scav_sessions set pending=pending||jsonb_build_object('ready_at',clock_timestamp()-interval '1 second') where player_id=auth.uid();
 SQL
 for attempt in 1 2 3 4; do
  psql -At -v ON_ERROR_STOP=1 -v "attempt=$attempt" >"/tmp/bin-race-$attempt.txt" <<'SQL' &
@@ -13,7 +17,7 @@ begin;
 select set_config('request.jwt.claim.sub','eeeeeeee-3000-4000-8000-000000000001',true);
 select set_config('bin.district',(select id::text from public.game_districts where slug=case when :'attempt' in ('1','2') then 'the-waterfront' else 'old-town' end),true);
 set local role authenticated;
-select public.bin_diving_action('dive',jsonb_build_object('season_id',game_private.current_season(),'district_id',current_setting('bin.district'),'request_id',case when :'attempt' in ('1','2') then 'eeeeeeee-3000-4000-8000-000000000002'::uuid else gen_random_uuid() end));
+select public.scavenging_action('finish',jsonb_build_object('season_id',game_private.current_season(),'attempt_id','eeeeeeee-3000-4000-8000-000000000009','request_id',case when :'attempt' in ('1','2') then 'eeeeeeee-3000-4000-8000-000000000002'::uuid else gen_random_uuid() end));
 commit;
 SQL
 done
