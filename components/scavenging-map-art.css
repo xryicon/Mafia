@@ -14,3 +14,14 @@
 @media(max-width:1000px){.scav-workspace .scav-map-scroll{max-height:600px}}
 .scav-workspace .scav-map-fitted{max-height:none;min-height:0;overscroll-behavior:contain;background:#081317}
 .scav-workspace .scav-map-fitted .scav-map{min-width:0;margin:0 auto}
+.scav-lamp{animation:scav-lamplight 6s ease-in-out infinite}
+.scav-steam{animation:scav-steam-drift 11s ease-out infinite;transform-box:fill-box;transform-origin:center;opacity:0}
+.scav-traffic-east{animation:scav-drive-east 30s linear infinite}
+.scav-traffic-west{animation:scav-drive-west 39s linear infinite;animation-delay:-17s}
+.scav-walking-route{filter:drop-shadow(0 1px 2px #000);stroke-linecap:round;stroke-linejoin:round}
+.scav-destination{filter:drop-shadow(0 2px 3px #000)}
+@keyframes scav-lamplight{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes scav-steam-drift{0%{opacity:0;transform:translate(0,0) scale(.6)}25%{opacity:.1}100%{opacity:0;transform:translate(40px,-36px) scale(2)}}
+@keyframes scav-drive-east{0%{transform:translate(73px,122px);opacity:0}4%,96%{opacity:.8}100%{transform:translate(928px,122px);opacity:0}}
+@keyframes scav-drive-west{0%{transform:translate(928px,598px);opacity:0}4%,96%{opacity:.7}100%{transform:translate(73px,598px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.scav-street-life *{animation:none!important}.scav-traffic,.scav-steam{display:none}}

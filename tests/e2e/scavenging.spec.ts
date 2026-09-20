@@ -29,6 +29,21 @@ test('named streets, keyboard movement, map zoom and phone layout',async({page})
  await page.locator('.scav-workspace').scrollIntoViewIfNeeded();const image=await page.screenshot({path:'test-results/scavenging-mobile.jpg',type:'jpeg',quality:65});
  if(process.env.VISUAL_REVIEW==='1'){const b=image.toString('base64');for(let n=0;n<b.length;n+=12000)console.log('VISUAL_REVIEW_scavenging-mobile_'+Math.floor(n/12000)+':'+b.slice(n,n+12000));}
 });
+test('free street clicks send fractional destinations and street activity can be paused',async({page})=>{
+ await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ const map=page.locator('.scav-map');await expect(map).toBeVisible();
+ const box=await map.boundingBox();if(!box)throw new Error('Map not visible');
+ const request=page.waitForRequest(r=>r.url().includes('/rpc/scavenging_action')&&r.postDataJSON().p_action==='move');
+ await page.mouse.click(box.x+181/1000*box.width,box.y+114/680*box.height);
+ const payload=(await request).postDataJSON().p_payload;
+ expect(payload.x).toBeCloseTo(.5,1);expect(payload.y).toBe(0);expect(payload).not.toHaveProperty('seconds');
+ await expect.poll(()=>page.locator('[aria-label="Your position"] circle').last().getAttribute('cx')).not.toBe('73');
+ await expect(page.locator('.scav-street-life')).toBeVisible();
+ await page.getByRole('button',{name:'Street activity',exact:true}).click();await expect(page.locator('.scav-street-life')).toHaveCount(0);
+ await page.getByRole('button',{name:'Street activity',exact:true}).click();await page.emulateMedia({reducedMotion:'reduce'});
+ await expect(page.locator('.scav-traffic').first()).toBeHidden();
+});
+
 test('entering a district fits the entire map and search button on screen',async({page})=>{
  for(const viewport of [{width:1440,height:900},{width:1366,height:768},{width:390,height:844}]){
   await page.setViewportSize(viewport);await page.goto('/bin-diving?district=the-waterfront');const enter=page.getByRole('button',{name:'Enter The Waterfront'});if(await enter.count())await enter.click();

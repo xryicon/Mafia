@@ -47,7 +47,7 @@ begin
  perform set_config('request.jwt.claim.sub',other_u::text,true);perform public.game_state();
  q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d);
  r:=public.scavenging_action('enter',q);select x into car from jsonb_array_elements(public.bin_diving_state()->'scavenging'->'targets')x where x->>'kind'='car' limit 1;
- update game_private.scav_sessions set node=(car->>'node')::int where player_id=other_u;
+ update game_private.scav_sessions set node=(car->>'node')::int,route_points=jsonb_build_array(jsonb_build_array((car->>'node')::int%5,(car->>'node')::int/5)) where player_id=other_u;
  q:=q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',car->>'id');
  r:=public.scavenging_action('search',q);perform pg_temp.check_scav(r?'error','Car opened without a tool');
  insert into public.game_inventory(season_id,player_id,good_id,quantity) values(s,other_u,'lockpick',1);
@@ -67,5 +67,44 @@ begin
  update public.game_districts set status='lockdown' where id=d;
  r:=public.scavenging_action('move',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'node',1));perform pg_temp.check_scav(r?'error','Lockdown bypassed');
 end$$;
-select 'PASS: server travel, search timing, loot ledger, replay safety, lockpicks, skill XP and permissions';
+do $$
+declare u uuid:=gen_random_uuid();s uuid:=game_private.current_season();d uuid;q jsonb;r jsonb;original jsonb;v game_private.scav_sessions;after_move game_private.scav_sessions;site jsonb;route jsonb;a jsonb;b jsonb;i integer;
+begin
+ insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
+ select id into d from public.game_districts where slug='the-waterfront';update public.game_districts set status='neutral' where id=d;
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'district_id',d);
+ r:=public.scavenging_action('enter',q);perform pg_temp.check_scav(not r?'error','Continuous movement entry failed');
+ foreach r in array array['{"x":0.5,"y":0.5}'::jsonb,'{"x":-1,"y":0}'::jsonb,'{"x":5,"y":0}'::jsonb,'{"x":"1","y":0}'::jsonb,'{"x":null,"y":0}'::jsonb] loop
+  original:=public.scavenging_action('move',q||r||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.check_scav(original?'error','Invalid coordinate accepted: '||r::text);
+ end loop;
+ q:=q||jsonb_build_object('request_id',gen_random_uuid(),'x',0.5,'y',0,'seconds',0,'speed',999999,'route_points','[[0,0],[4,2]]'::jsonb);
+ r:=public.scavenging_action('move',q);perform pg_temp.check_scav(not r?'error','Mid-block move failed: '||r::text);
+ select * into v from game_private.scav_sessions where player_id=u;
+ perform pg_temp.check_scav(v.route_points->-1='[0.5,0]'::jsonb,'Destination snapped back to a crossing');
+ perform pg_temp.check_scav(abs(extract(epoch from v.arrives_at-v.departed_at)-0.5*game_private.setting('scavenging_walk_seconds'))<0.001,'Client controlled travel speed');
+ original:=public.scavenging_action('move',q);select * into after_move from game_private.scav_sessions where player_id=u;
+ perform pg_temp.check_scav(original=r and after_move.departed_at=v.departed_at,'Retry restarted movement');
+ r:=public.scavenging_action('move',q||jsonb_build_object('request_id',gen_random_uuid(),'x',0,'y',1.5));
+ perform pg_temp.check_scav(not r?'error','Mid-walk reroute was rejected');
+ select * into after_move from game_private.scav_sessions where player_id=u;
+ perform pg_temp.check_scav(after_move.route_points->0=game_private.scav_position(v.route_points,v.departed_at,v.arrives_at,after_move.departed_at),'Rerouting teleported the player');
+ perform pg_temp.check_scav(after_move.arrives_at>after_move.departed_at,'Reroute skipped travel time');
+ update game_private.scav_sessions set arrives_at=clock_timestamp()-interval '1 second' where player_id=u;
+ select x into site from jsonb_array_elements(public.bin_diving_state()->'scavenging'->'targets')x where x->>'kind'='bin' limit 1;
+ r:=public.scavenging_action('move',q||jsonb_build_object('request_id',gen_random_uuid(),'x',(site->>'node')::int%5,'y',(site->>'node')::int/5));
+ perform pg_temp.check_scav(not r?'error','Could not walk to a search site');
+ r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id'));perform pg_temp.check_scav(r?'error','Search accepted during continuous travel');
+ -- Adjacent but not at a target: a rounded legacy node must not grant proximity.
+ update game_private.scav_sessions set arrives_at=clock_timestamp()-interval '1 second',route_points=jsonb_build_array(jsonb_build_array((site->>'node')::int%5,((site->>'node')::int/5)::numeric+case when (site->>'node')::int/5=2 then -0.1 else 0.1 end)) where player_id=u;
+ r:=public.scavenging_action('search',q||jsonb_build_object('request_id',gen_random_uuid(),'target_id',site->>'id'));perform pg_temp.check_scav(r?'error','Rounded node bypassed exact proximity');
+ for a in select value from jsonb_array_elements('[[0.25,0],[1,0.4],[4,1.7],[3.6,2]]'::jsonb) loop
+  for b in select value from jsonb_array_elements('[[0,1.1],[2.8,1],[4,0.3],[0.75,0]]'::jsonb) loop
+   route:=game_private.scav_route(a,b);perform pg_temp.check_scav(route->0=a and route->-1=b,'Route endpoints changed');
+   for i in 1..jsonb_array_length(route)-1 loop
+    perform pg_temp.check_scav(((route->i->>0)::numeric=(route->(i-1)->>0)::numeric and (route->i->>0)::numeric=trunc((route->i->>0)::numeric)) or ((route->i->>1)::numeric=(route->(i-1)->>1)::numeric and (route->i->>1)::numeric=trunc((route->i->>1)::numeric)),'Route cuts through a building');
+   end loop;
+  end loop;
+ end loop;
+end$$;
+select 'PASS: continuous street movement, safe rerouting, proximity, travel timing, loot ledger, replay safety, lockpicks, skill XP and permissions';
 rollback;
