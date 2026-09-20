@@ -50,7 +50,7 @@ test('police patrols leave walking players alone and send caught searches to pri
  await expect(page.getByRole('group',{name:'1 police patrols',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Street activity',exact:true}).click();await expect(page.locator('.scav-police')).toBeVisible();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();await expect(page.getByRole('button',{name:'Search the bins',exact:true})).toBeEnabled();
- expect((await (await request.post('http://127.0.0.1:54329/rest/v1/rpc/prison_state',{data:{}})).json()).jailed).toBe(false);
+ const custody=await request.post('http://127.0.0.1:54329/rest/v1/rpc/prison_state',{headers:{Authorization:'Bearer '+token},data:{}});expect(custody.ok()).toBe(true);expect((await custody.json()).jailed).toBe(false);
  await page.getByRole('button',{name:'Search the bins',exact:true}).click();await expect(page).toHaveURL(/districts\/blackwater-island/);
  await expect(page.getByText('Caught by a police patrol while scavenging', {exact:true})).toBeVisible();
  await page.reload();await expect(page).toHaveURL(/districts\/blackwater-island/);
