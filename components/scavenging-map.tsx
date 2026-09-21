@@ -1,5 +1,7 @@
 "use client";
 import {useEffect,useState,useRef} from "react";
+import {RobberyPanel} from "./robbery-panel";
+import type {RobberyState} from "@/lib/robbery";
 import {ScavengingPolice} from "./scavenging-police";
 import {ScavengingStreetLife} from "./scavenging-street-life";
 import {GameIcon} from "./game-icon";
@@ -8,8 +10,8 @@ import {binCountdown} from "@/lib/bin-diving";
 import "./scavenging.css";
 import "./scavenging-map-art.css";
 
-type Props={state?:ScavengingState;district:{id:string;name:string;image_url:string}|undefined;now:number;busy:boolean;blocked:boolean;cooldown:number;lockpicks:number;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>};
-export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpicks,act}:Props){
+type Props={robbery?:RobberyState;state?:ScavengingState;district:{id:string;name:string;image_url:string}|undefined;now:number;busy:boolean;blocked:boolean;cooldown:number;lockpicks:number;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>};
+export function ScavengingMap({robbery,state,district,now,busy,blocked,cooldown,lockpicks,act}:Props){
  const [selected,setSelected]=useState<string|null>(null),[queued,setQueued]=useState<StreetPosition|null>(null),[frame,setFrame]=useState(now),[zoom,setZoom]=useState(1),[streetLife,setStreetLife]=useState(true);
  const session=state?.session;
  const workspace=useRef<HTMLDivElement>(null),mapViewport=useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export function ScavengingMap({state,district,now,busy,blocked,cooldown,lockpick
  useEffect(()=>{if(queued===null||!entered||busy||blocked||pending)return;const timer=setTimeout(()=>{setQueued(null);void act("scav_move",{x:queued[0],y:queued[1]});},120);return()=>clearTimeout(timer);},[queued,entered,busy,blocked,pending,act]);
  const streets=[0,1,2].map((n)=>state?.streets[n]??[`${district?.name??"District"} Road`,"Lantern Street","Foundry Lane"][n]);
  return <div ref={workspace} className="scav-workspace" style={{scrollMarginTop:fit.header+8}}>
- <div className="scav-map-toolbar"><span><i className="scav-dot-key"/> You <span className="scav-key">▣ Bin · ▰ Parked car</span></span><div><button aria-label="Street activity" title="Toggle background street activity" aria-pressed={streetLife} onClick={()=>setStreetLife(v=>!v)}>◌</button><button aria-label="Zoom out" disabled={zoom===1} onClick={()=>setZoom(z=>Math.max(1,z-.25))}>−</button><button aria-label="Zoom in" disabled={zoom===2} onClick={()=>setZoom(z=>Math.min(2,z+.25))}>+</button></div></div>
+ <div className="scav-map-toolbar"><span><i className="scav-dot-key"/> You <span className="scav-key">▣ Bin · ▰ Parked car</span></span><div>{entered&&<RobberyPanel data={robbery} now={now} busy={busy} blocked={blocked} act={act}/>}<button aria-label="Street activity" title="Toggle background street activity" aria-pressed={streetLife} onClick={()=>setStreetLife(v=>!v)}>◌</button><button aria-label="Zoom out" disabled={zoom===1} onClick={()=>setZoom(z=>Math.max(1,z-.25))}>−</button><button aria-label="Zoom in" disabled={zoom===2} onClick={()=>setZoom(z=>Math.min(2,z+.25))}>+</button></div></div>
  {!entered?<div className="scav-entry" style={{backgroundImage:`linear-gradient(90deg,#071316e8,#07131666),url(${district?.image_url||"/art/bin-diving.png"})`}}><p className="eyebrow">BLACKWATER / STREET OPERATIONS</p><h2>The city rewards<br/>a curious mind.</h2><p>Walk the streets. Search forgotten bins. Try the locks on parked cars. Every find feeds your next move.</p><button className="bin-gold" disabled={busy||blocked||!district} onClick={()=>void act("scav_enter",{district_id:district?.id})}>Enter {district?.name??"district"} <GameIcon name="arrow"/></button></div>:<>
  <div ref={mapViewport} className="scav-map-scroll scav-map-fitted" style={{height:fit.height}} tabIndex={0} aria-label="Street map; scroll to pan when zoomed">
  <svg className="scav-map" viewBox="0 0 1000 680" style={{width:fit.width*zoom}} role="group" aria-label={district?.name+" scavenging street map"} onClick={event=>{const box=event.currentTarget.getBoundingClientRect();const x=(event.clientX-box.left)/box.width*1000,y=(event.clientY-box.top)/box.height*680;travel(nearestStreetPosition(x,y));}}>

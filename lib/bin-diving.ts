@@ -2,6 +2,7 @@ export type LootItem="pickaxe"|"lockpick"|"pistol_blueprint"|"bullet_blueprint"|
 export type BinRules={enabled:boolean;cooldown_seconds:number;cash_min:number;cash_max:number;cash_chance:number;pickaxe_chance:number;lockpick_chance:number;pistol_blueprint_chance:number;bullet_blueprint_chance:number;bandages_blueprint_chance:number;version:number};
 export type BinReceipt={id:string;district_id:string;district_name:string;outcome:LootItem|"cash"|"nothing";cash:number;created_at:string;ready_at:string};
 export type BinState={
+ robbery?:import("./robbery").RobberyState;
  scavenging?:import('./scavenging').ScavengingState;
  season:{id:string;name:string;status:string;ends_at:string|null};server_time:string;playable:boolean;can_manage:boolean;
  rules:BinRules;districts:{id:string;slug:string;name:string;tagline:string;image_url:string;police_heat:number;status:string}[];
