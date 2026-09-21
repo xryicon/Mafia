@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {DashboardTutorial} from "./dashboard-tutorial";
 import {useCallback,useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
@@ -117,6 +118,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
 
  const change=()=>{travelSelect.current?.scrollIntoView({behavior:"smooth",block:"center"});travelSelect.current?.focus();};
  return <div className="command-dashboard">
+  <DashboardTutorial playerId={game.player.id}/>
   {notice&&<div className={"command-notice"+(failed?" error":"")} role={failed?"alert":"status"}>{notice}<button aria-label="Dismiss dashboard message" onClick={()=>setNotice("")}>×</button></div>}
   {!playing&&<div className="command-notice">This season is {game.season.status}. Your empire remains available to view.</div>}
   <aside className="command-player command-panel" aria-label="Your empire">
