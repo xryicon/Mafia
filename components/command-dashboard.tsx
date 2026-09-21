@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import {DashboardTutorial} from "./dashboard-tutorial";
+import {DashboardQuickActions} from "./dashboard-quick-actions";
 import {useCallback,useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
@@ -134,13 +135,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
     <div><dt><GameIcon name="flame"/>District heat</dt><dd>{d?<><Meter value={d.police_heat} label="District police heat" color="#b26050"/><small>{d.police_heat} / 100</small></>:"—"}</dd></div>
    </dl>
    <div className="command-location"><GameIcon name="pin" size={23}/><span>Viewing district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
-   <div className="command-quick"><h3>QUICK ACTIONS</h3>
-    <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="operations"/><span>Plan an Operation</span><GameIcon name="arrow" size={16}/></button>
-    <Go href="/shooting-range" icon="target">Shooting Range</Go>
-    <Go href="/districts/mines-and-quarries" icon="pickaxe">Explore Resources</Go><Go href="/bin-diving" icon="bin">Scavenging</Go><Go href="/refineries" icon="production">Refineries</Go>
-    <button className="command-button" onClick={()=>setDialog("production")}><GameIcon name="tools"/><span>Production</span><GameIcon name="arrow" size={16}/></button>
-    <button className="command-button" onClick={()=>setDialog("jobs")}><GameIcon name="briefcase"/><span>Find a Job</span><GameIcon name="arrow" size={16}/></button>
-   </div>
+   <DashboardQuickActions playerId={game.player.id} onAction={setDialog}/>
    <div className="command-player-art"><img src="/art/harbor-small.webp" alt="" width={640} height={360}/><p>Every fortune<br/>has a dark side.</p></div>
    <p className="command-player-signature">BLACKWATER <small>A PLAYER-DRIVEN CRIME ECONOMY</small></p>
   </aside>
