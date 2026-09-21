@@ -13,7 +13,7 @@ test("dashboard entry, find a pickaxe, equip it and mine with the same equipment
  await page.getByRole("button",{name:"Equip pickaxe",exact:false}).click();await expect(page.locator(".bin-equipment")).toContainText("100 condition remaining");
  await page.getByRole("link",{name:"Explore Mines & Quarries"}).click();await expect(page.locator(".mine-equipment")).toContainText("100 condition remaining");
 });
-test("cash and both blueprints persist, with one cooldown across districts",async({page,request})=>{
+test("cash and all blueprints persist, with one cooldown across districts",async({page,request})=>{
  await page.goto("/bin-diving?district=the-waterfront");await expect(page.locator(".bin-search>header")).toContainText("The Waterfront");
  for(const [item,label] of [["cash","$75"],["pistol_blueprint","Homemade pistol blueprint"],["bullet_blueprint","Homemade bullet blueprint"],["bandages_blueprint","Bandages blueprint"],["nothing","Nothing this time."]]){
   await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{next:item,ready:true}});
