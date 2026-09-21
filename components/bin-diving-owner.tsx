@@ -5,7 +5,7 @@ import {useBinDiving} from "@/components/use-bin-diving";
 import {loot,emptyChance,type BinRules} from "@/lib/bin-diving";
 function RulesForm({initial,busy,save}:{initial:BinRules;busy:boolean;save:(rules:BinRules,reason:string)=>Promise<boolean>}){
  const [rules,setRules]=useState(initial),[reason,setReason]=useState("");
- const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance;
+ const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance+rules.bandages_blueprint_chance;
  const number=(key:keyof BinRules,value:string)=>setRules(r=>({...r,[key]:Number(value)}));
  return <form className="bin-rules-form" onSubmit={async e=>{e.preventDefault();if(await save(rules,reason.trim()||"Updated city-wide bin diving rules"))setReason("");}}>
  <label className="bin-enabled"><input type="checkbox" checked={rules.enabled} onChange={e=>setRules(r=>({...r,enabled:e.target.checked}))}/> Open bin diving across the city</label>
@@ -21,6 +21,6 @@ export function BinDivingOwner(){
  const h=useBinDiving(),data=h.data;
  return <section className="bin-panel bin-owner"><header><h2>Bin diving & loot</h2><Link href="/bin-diving">View the streets ↗</Link></header>
  {h.notice&&<p role={h.failed?"alert":"status"}>{h.notice}{h.retry&&<button disabled={h.working} onClick={()=>void h.retryAction()}>Retry safely</button>}</p>}
- {!data?<p>Loading city rules… <button onClick={h.refresh}>Refresh</button></p>:!data.can_manage?<p>Owner permission required.</p>:<><p>Control scavenging loot across every open district. Bins and successfully opened cars use these chances. Each car attempt consumes one lockpick.</p><p><Link href="/owner?section=economy">Edit patrol enablement, count, speed, detection radius, prison sentence, movement and search rules in Economy settings →</Link></p><RulesForm key={data.rules.version} initial={data.rules} busy={h.busy} save={(r,reason)=>h.act("configure",{...r,reason})}/><button className="bin-outline" disabled={h.busy} onClick={h.refresh}>Refresh current rules</button><p><Link href="/owner?section=adjustments">Give a player loot through Asset grants →</Link></p></>}
+ {!data?<p>Loading city rules… <button onClick={h.refresh}>Refresh</button></p>:!data.can_manage?<p>Owner permission required.</p>:<><p>Control scavenging loot across every open district. Bins and successfully opened cars use these chances. Each car attempt consumes one lockpick.</p><p><Link href="/owner?section=economy">Edit bandage healing, patrols, prison sentences, movement and search rules in Economy settings →</Link></p><RulesForm key={data.rules.version} initial={data.rules} busy={h.busy} save={(r,reason)=>h.act("configure",{...r,reason})}/><button className="bin-outline" disabled={h.busy} onClick={h.refresh}>Refresh current rules</button><p><Link href="/owner?section=adjustments">Give a player loot through Asset grants →</Link></p></>}
  </section>;
 }

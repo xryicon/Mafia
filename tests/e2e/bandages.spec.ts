@@ -1,0 +1,21 @@
+import {test,expect} from "@playwright/test";
+import {cookie,token} from "../fixtures/identity.mjs";
+test("bandages show matching art and heal from inventory and the Medical slot",async({page,context,request})=>{
+ test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture");
+ const headers={Authorization:"Bearer "+token};
+ await request.post("http://127.0.0.1:54329/__reset_world",{headers});
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{bandages:true}});
+ await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);
+ await page.goto("/inventory");await page.locator(".inv-slot .inv-item").filter({hasText:"Bandages"}).click();
+ await expect(page.locator(".inv-selected")).toContainText("Health: 65 / 100");
+ const art=page.locator('.inv-detail-art img[src*="/art/medical/bandages"]');
+ await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+ await page.getByRole("button",{name:"Use bandage",exact:true}).click();
+ await expect(page.locator(".inv-selected")).toContainText("Health: 85 / 100");
+ await page.getByRole("button",{name:"Equip Medical",exact:false}).click();await page.getByRole("button",{name:"Confirm equipment"}).click();
+ await page.getByRole("button",{name:"Medical: Bandages",exact:true}).click();await page.getByRole("button",{name:"Use bandage",exact:true}).click();
+ await expect(page.getByRole("button",{name:"Medical, empty",exact:true})).toBeVisible();
+ await page.locator(".inv-slot .inv-item").filter({hasText:"Bandages"}).click();await expect(page.getByRole("button",{name:"Use bandage",exact:true})).toBeDisabled();
+ await expect(page.locator(".inv-selected")).toContainText("Health: 100 / 100");
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

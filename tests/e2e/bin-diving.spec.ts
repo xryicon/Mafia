@@ -13,14 +13,14 @@ test("dashboard entry, find a pickaxe, equip it and mine with the same equipment
  await page.getByRole("button",{name:"Equip pickaxe",exact:false}).click();await expect(page.locator(".bin-equipment")).toContainText("100 condition remaining");
  await page.getByRole("link",{name:"Explore Mines & Quarries"}).click();await expect(page.locator(".mine-equipment")).toContainText("100 condition remaining");
 });
-test("cash and both blueprints persist, with one cooldown across districts",async({page,request})=>{
+test("cash and all blueprints persist, with one cooldown across districts",async({page,request})=>{
  await page.goto("/bin-diving?district=the-waterfront");await expect(page.locator(".bin-search>header")).toContainText("The Waterfront");
- for(const [item,label] of [["cash","$75"],["pistol_blueprint","Homemade pistol blueprint"],["bullet_blueprint","Homemade bullet blueprint"],["nothing","Nothing this time."]]){
+ for(const [item,label] of [["cash","$75"],["pistol_blueprint","Homemade pistol blueprint"],["bullet_blueprint","Homemade bullet blueprint"],["bandages_blueprint","Bandages blueprint"],["nothing","Nothing this time."]]){
   await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{next:item,ready:true}});
   await page.getByRole("button",{name:"Refresh bin diving"}).click();await searchBin(page);await expect(page.locator(".bin-result")).toContainText(label);
   await page.locator(".bin-district-list").getByRole("button",{name:/Old Town/}).click();await enterStreet(page);await expect(page.getByRole("button",{name:/Next search in/})).toBeDisabled();
  }
- await page.reload();await expect(page.locator(".bin-stash")).toContainText("Homemade pistol blueprint");await expect(page.locator(".bin-history li")).toHaveCount(4);
+ await page.reload();await expect(page.locator(".bin-stash")).toContainText("Homemade pistol blueprint");await expect(page.locator(".bin-history li")).toHaveCount(5);
 });
 test("district openings refresh automatically and mobile layout fits",async({page,request})=>{
  await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");
@@ -56,13 +56,13 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await grant.getByLabel("Item",{exact:true}).selectOption(item);await grant.getByLabel("Quantity",{exact:true}).fill("1");await grant.getByLabel("Reason",{exact:true}).fill("Reward a city founder");
   await grant.getByRole("button",{name:"Save asset grant"}).click();await expect(page.locator(".game-notice")).toContainText("Saved");await expect(grant.getByRole("button",{name:"Save asset grant"})).toBeEnabled();
  }
- await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1"]);
- await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===3&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
+ await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);
+ await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===4&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
  await capture(page,"bin-loot-desktop");
  await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
  const ticket=page.locator(".market-ticket");
  await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByLabel("Price per unit ($)",{exact:true}).fill("150");await ticket.getByRole("button",{name:"Post market offer"}).click();await expect(page.locator(".market-notice")).toContainText("Offer posted");
- await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
+ await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
  await page.goto("/market?view=mine&good=pickaxe");await page.getByRole("button",{name:"Withdraw",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Offer withdrawn");
  for(const item of ["pistol_blueprint","bullet_blueprint"]){
   await ticket.getByLabel("Commodity").selectOption(item);await ticket.getByRole("button",{name:"Auction",exact:true}).click();await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByRole("button",{name:"Start auction",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Auction opened");
@@ -70,7 +70,7 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await page.locator(".market-commodities").getByRole("button").filter({hasText:item==="pistol_blueprint"?"Homemade pistol blueprint":"Homemade bullet blueprint"}).click();
   await page.getByRole("button",{name:"Withdraw auction",exact:true}).click();await expect(ticket.locator(".market-stock-note")).toContainText("1 units available");
  }
- await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-mobile-details");await page.locator(".bin-stash").scrollIntoViewIfNeeded();await capture(page,"bin-stash-mobile");
+ await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-mobile-details");await page.locator(".bin-stash").scrollIntoViewIfNeeded();await capture(page,"bin-stash-mobile");
  await page.goto("/refineries");
  for(const id of ["iron-ingot","copper-ingot"]){await page.getByLabel("Refining recipe").selectOption(id.replace("-ingot",""));const art=page.locator('img[src*="/art/resources/'+id+'"]').first();await art.scrollIntoViewIfNeeded();await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
 });
