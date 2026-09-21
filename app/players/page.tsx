@@ -8,5 +8,5 @@ export default async function Players({searchParams}:{searchParams:Promise<{onli
  await requireUser("/players");const online=(await searchParams).online==="1";
  const {data,error}=await (await createClient()).rpc("player_directory",{p_search:"",p_online:online,p_offset:0});
  if(error||!data)throw new Error("Players could not be loaded.");
- return <PlayerDirectory initial={data as DirectoryState} initialOnline={online}/>;
+ return <PlayerDirectory key={online?"online":"all"} initial={data as DirectoryState} initialOnline={online}/>;
 }

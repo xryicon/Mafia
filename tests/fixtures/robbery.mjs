@@ -12,6 +12,6 @@ export function robberyWorld(game){
   history.unshift({id:"robbery-1",created_at:new Date().toISOString(),succeeded:true,cash:250,bullets:3,attacking:true,other_name:t.handle});
   const result={message:"Mugging succeeded. Stole $250. Used 3 bullets.",cash:250,bullets:3,succeeded:true};requests.set(p.request_id,{key,result});return result;
  };
- const setup=p=>{weapon={id:"robbery-pistol",name:"Homemade pistol",good_id:"homemade-pistol",condition:100,condition_max:100,wear_per_shot:1,ammo:p.ammo??100,ammo_good_id:"homemade-bullets"};targets=[{id:"robbery-target",handle:"HarborJack",power:450,chance:63.5,avatar_url:null,protected_until:p.protected?new Date(Date.now()+1800000).toISOString():null}];};
+ const setup=p=>{weapon={id:"robbery-pistol",name:"Homemade pistol",good_id:"homemade-pistol",condition:100,condition_max:100,wear_per_shot:1,ammo:p.ammo??100,ammo_good_id:"homemade-bullets"};targets=[{id:"33333333-3333-4333-8333-333333333333",handle:"HarborJack",power:450,chance:63.5,avatar_url:null,protected_until:p.protected?new Date(Date.now()+1800000).toISOString():null}];};
  return {read,action,setup};
 }

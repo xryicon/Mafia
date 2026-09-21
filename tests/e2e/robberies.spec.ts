@@ -25,3 +25,12 @@ test("Scavenging no longer exposes mugging",async({page,request})=>{
  await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await expect(page.getByRole("button",{name:/Mugging|Players ·/})).toHaveCount(0);
 });
+
+test("online links and player-row Mug buttons open the selected player",async({page,request})=>{
+ await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/players");
+ await page.getByRole("link",{name:"View online players",exact:true}).click();await expect(page).toHaveURL(/players\?online=1/);await expect(page.getByLabel("Online only",{exact:true})).toBeChecked();await expect(page.getByRole("link",{name:"IronRose",exact:true})).toHaveCount(0);
+ await page.getByRole("button",{name:"Mug HarborJack",exact:true}).click();const dialog=page.getByRole("dialog",{name:"Mugging",exact:true});await expect(dialog.getByRole("heading",{name:"Mug HarborJack?",exact:true})).toBeVisible();
+ await dialog.getByRole("button",{name:"Close mugging panel"}).click();await page.getByRole("button",{name:"Mug HarborJack",exact:true}).click();await expect(dialog).toBeVisible();await dialog.getByRole("button",{name:"Close mugging panel"}).click();
+ await page.getByLabel("Online only",{exact:true}).uncheck();await expect(page.getByRole("link",{name:"IronRose",exact:true})).toBeVisible();await page.getByRole("button",{name:"Show online players",exact:true}).click();await expect(page.getByRole("link",{name:"IronRose",exact:true})).toHaveCount(0);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:"test-results/mugging-player-buttons-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
