@@ -10,7 +10,8 @@ do $$declare u uuid;d uuid;s uuid:=game_private.current_season();i integer;begin
   u:=('eeeeeeee-7000-4000-8000-00000000000'||i)::uuid;
   insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
   insert into public.game_inventory_gear(season_id,player_id,good_id,quantity,location,equipment_slot) values(s,u,'homemade-pistol',1,'equipped','secondary'),(s,u,'homemade-bullets',100,'equipped','ammo');
-  perform public.scavenging_action('enter',jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid()));perform public.bin_diving_state();
+  insert into auth.sessions(id,user_id,created_at) values(u,u,clock_timestamp());
+  insert into game_private.player_presence(player_id,session_id,last_seen_at) values(u,u,clock_timestamp());
  end loop;
 end$$;
 SQL

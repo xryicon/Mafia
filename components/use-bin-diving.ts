@@ -29,7 +29,7 @@ export function useBinDiving(initial?:BinState){
   const request={action,payload:{...payload,season_id:payload.season_id??data.season.id,request_id:payload.request_id??crypto.randomUUID()}};
   let uncertain=true;
   try{
-   const r=await createClient().rpc(action.startsWith("rob_")?"robbery_action":action.startsWith("scav_")?"scavenging_action":"bin_diving_action",{p_action:action.replace(/^(scav_|rob_)/,""),p_payload:request.payload});
+   const r=await createClient().rpc(action.startsWith("scav_")?"scavenging_action":"bin_diving_action",{p_action:action.replace(/^scav_/,""),p_payload:request.payload});
    if(r.error)throw new Error("The response was interrupted. Retry the same request to safely confirm the result.");
    uncertain=false;setRetry(null);if(r.data?.error)throw new Error(r.data.error);
    if(r.data?.caught)router.replace(PRISON_PATH);
