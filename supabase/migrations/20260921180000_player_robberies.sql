@@ -107,7 +107,7 @@ begin
  'history',(select coalesce(jsonb_agg(x order by x.created_at desc),'[]') from(select a.id,a.created_at,a.succeeded,a.cash,a.bullets,a.attacker_id=u attacking,
   case when a.attacker_id=u then v.handle else p.handle end other_name from game_private.robbery_attempts a join public.game_players p on p.id=a.attacker_id join public.game_players v on v.id=a.victim_id
   where a.season_id=s and u in(a.attacker_id,a.victim_id) order by a.created_at desc,a.id desc limit 20)x),
- 'management',case when game_private.has_permission('robbery.manage') then jsonb_build_object('gear',(select coalesce(jsonb_agg(x order by x.name),'[]') from(select g.id,g.name,coalesce(r.attack,0) attack,coalesce(r.defense,0) defense,coalesce(r.condition_max,100) condition_max,coalesce(r.version,0) version from public.game_goods g left join game_private.robbery_gear_rules r on r.good_id=g.id where g.equipment_slots&&array['primary','secondary','armor','utility'])x)) end);
+ 'management',case when game_private.has_permission('robbery.manage') then jsonb_build_object('gear',(select coalesce(jsonb_agg(x order by x.name),'[]') from(select g.id,g.name,coalesce(gr.attack,0) attack,coalesce(gr.defense,0) defense,coalesce(gr.condition_max,100) condition_max,coalesce(gr.version,0) version from public.game_goods g left join game_private.robbery_gear_rules gr on gr.good_id=g.id where g.equipment_slots&&array['primary','secondary','armor','utility'])x)) end);
 end$$;
 create function public.robbery_state() returns jsonb language sql security invoker set search_path='' as $$select game_private.robbery_state(false)$$;
 alter function game_private.bin_state() rename to bin_state_before_robberies;
@@ -119,7 +119,7 @@ end$$;
 
 create function public.robbery_action(p_action text,p_payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
 declare s uuid;u uuid:=auth.uid();target uuid;nonce uuid;prior game_private.robbery_attempts;r game_private.robbery_rules;d uuid;t timestamptz;weapon jsonb;a jsonb;b jsonb;
- chance numeric;shots integer;percentage integer;amount bigint:=0;wallet bigint;won boolean;result jsonb;id uuid:=gen_random_uuid();reason text;old_version integer;payload_rules jsonb;next_r game_private.robbery_rules;guard game_private.robbery_protection;
+ chance numeric;shots integer;percentage integer;amount bigint:=0;wallet bigint;won boolean;result jsonb;attempt_id uuid:=gen_random_uuid();reason text;old_version integer;payload_rules jsonb;next_r game_private.robbery_rules;guard game_private.robbery_protection;
 begin
  perform game_private.require_active();if not game_private.rate('actions',game_private.setting('actions_per_minute')) then return jsonb_build_object('error','Too many actions. Try again in a minute.');end if;
  begin
@@ -172,7 +172,7 @@ begin
   -- All eligibility checks precede random rolls; every valid attempt is committed, including failure.
   shots:=r.bullet_min+floor(random()*(r.bullet_max-r.bullet_min+1))::integer;won:=random()*100<chance;
   percentage:=r.steal_min+floor(random()*(r.steal_max-r.steal_min+1))::integer;
-  perform set_config('game.reason','Robbery: '||id,true);perform set_config('game.inventory_request',nonce::text,true);
+  perform set_config('game.reason','Robbery: '||attempt_id,true);perform set_config('game.inventory_request',nonce::text,true);
   if shots>0 then
    update public.game_inventory_gear set quantity=quantity-shots,location=case when quantity=shots then 'retired' else location end,equipment_slot=case when quantity=shots then null else equipment_slot end
     where id=(weapon->>'ammo_id')::uuid and season_id=s and player_id=u and location='equipped' and quantity>=shots;
@@ -182,13 +182,13 @@ begin
   end if;
   if won then
    amount:=least(floor(wallet::numeric*r.steal_max/100),greatest(ceil(wallet::numeric*r.steal_min/100),floor(wallet::numeric*percentage/100)))::bigint;
-   perform game_private.district_wallet(target,-amount,'Robbery loss: '||id);perform game_private.district_wallet(u,amount,'Robbery proceeds: '||id);
+   perform game_private.district_wallet(target,-amount,'Robbery loss: '||attempt_id);perform game_private.district_wallet(u,amount,'Robbery proceeds: '||attempt_id);
   end if;
   insert into game_private.robbery_protection(season_id,player_id,ready_at) values(s,u,t+make_interval(secs=>r.attacker_cooldown_seconds)) on conflict(season_id,player_id) do update set ready_at=excluded.ready_at;
   insert into game_private.robbery_protection(season_id,player_id,protected_until) values(s,target,t+make_interval(secs=>r.victim_cooldown_seconds)) on conflict(season_id,player_id) do update set protected_until=excluded.protected_until;
   result:=jsonb_build_object('message',case when won then 'Robbery succeeded. Stole $'||amount||'.' else 'Robbery failed. No cash was taken.' end||' Used '||shots||' bullets.','succeeded',won,'cash',amount,'bullets',shots,'chance',chance,'ready_at',t+make_interval(secs=>r.attacker_cooldown_seconds),'protected_until',t+make_interval(secs=>r.victim_cooldown_seconds));
   insert into game_private.robbery_attempts(id,season_id,attacker_id,victim_id,district_id,request_id,payload,result,succeeded,chance,bullets,cash,weapon_id,factors,rule_snapshot,created_at)
-   values(id,s,u,target,d,nonce,p_payload,result,won,chance,shots,amount,(weapon->>'id')::uuid,jsonb_build_object('attacker',a,'defender',b),to_jsonb(r),t);
+   values(attempt_id,s,u,target,d,nonce,p_payload,result,won,chance,shots,amount,(weapon->>'id')::uuid,jsonb_build_object('attacker',a,'defender',b),to_jsonb(r),t);
   insert into public.game_events(player_id,description,cash_delta) values(u,result->>'message',amount),(target,case when won then 'Robbed by '||(select handle from public.game_players where id=u)||'. Lost $'||amount||' carried cash.' else 'You defended against a robbery by '||(select handle from public.game_players where id=u)||'.' end||' Protected for '||r.victim_cooldown_seconds/60||' minutes.',-amount);
   perform game_private.inventory_sync(s,u);return result;
  exception when invalid_text_representation or numeric_value_out_of_range or check_violation or not_null_violation then return jsonb_build_object('error','Check the robbery values and refresh the streets.');
