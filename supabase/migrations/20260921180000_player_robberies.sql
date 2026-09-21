@@ -89,7 +89,8 @@ $$;
 create function game_private.robbery_state(touch_presence boolean default false) returns jsonb language plpgsql security definer set search_path='' as $$
 declare s uuid;u uuid:=auth.uid();d uuid;t timestamptz:=clock_timestamp();r game_private.robbery_rules;f jsonb;
 begin
- perform game_private.require_active();s:=game_private.season_guard(false);select * into strict r from game_private.robbery_rules;
+ perform game_private.require_active();if not game_private.rate('robbery_read',120) then raise exception 'Too many street updates. Wait a moment.';end if;
+ s:=game_private.season_guard(false);select * into strict r from game_private.robbery_rules;
  select district_id into d from game_private.scav_sessions where season_id=s and player_id=u;
  if touch_presence and d is not null then
   insert into game_private.robbery_presence values(s,u,d,t) on conflict(season_id,player_id) do update set district_id=excluded.district_id,last_seen_at=excluded.last_seen_at;
@@ -102,7 +103,7 @@ begin
   guard.protected_until,game_private.robbery_chance(f,game_private.robbery_factors(s,p.id),r) chance
   from game_private.robbery_presence pr join public.game_players p on p.id=pr.player_id and p.season_id=s
   left join game_private.robbery_protection guard on guard.season_id=s and guard.player_id=p.id
-  where pr.season_id=s and pr.district_id=d and p.id<>u and game_private.robbery_available(s,p.id,d,t)
+  where pr.season_id=s and pr.district_id=d and pr.last_seen_at>t-make_interval(secs=>r.presence_seconds) and p.id<>u and game_private.robbery_available(s,p.id,d,t)
   order by p.handle,p.id limit 100)x),
  'history',(select coalesce(jsonb_agg(x order by x.created_at desc),'[]') from(select a.id,a.created_at,a.succeeded,a.cash,a.bullets,a.attacker_id=u attacking,
   case when a.attacker_id=u then v.handle else p.handle end other_name from game_private.robbery_attempts a join public.game_players p on p.id=a.attacker_id join public.game_players v on v.id=a.victim_id

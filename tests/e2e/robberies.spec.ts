@@ -5,10 +5,10 @@ test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTU
 test("robbery panel shows cost, odds, result and protection on desktop and mobile",async({page,request})=>{
  await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await page.getByRole("button",{name:/Players ·/}).click();const dialog=page.getByRole("dialog",{name:"Players & robbery"});await expect(dialog).toBeVisible();
- await expect(dialog).toContainText("0–100");await expect(dialog).toContainText("100 compatible bullets equipped");await dialog.getByRole("button",{name:/HarborJack/}).click();await expect(dialog).toContainText("63.5%");
+ await expect(dialog).toContainText("0–100");await expect(dialog).toContainText("100 compatible bullets equipped");await dialog.getByRole("button",{name:/HarborJack/}).click();await expect(dialog).toContainText("63.5%");await page.screenshot({path:"test-results/robbery-desktop.png"});
  await dialog.getByRole("button",{name:"Attempt robbery"}).click();await expect(dialog.locator(".robbery-history")).toContainText("Stole $250");await expect(dialog).toContainText("97 compatible bullets equipped");await expect(dialog.getByRole("button",{name:/HarborJack/})).toBeDisabled();
  for(const width of [1448,768,390,360]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(await dialog.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);}
- await dialog.getByRole("button",{name:"Close robbery panel"}).click();await expect(dialog).not.toBeVisible();
+ await page.screenshot({path:"test-results/robbery-mobile.png"});await dialog.getByRole("button",{name:"Close robbery panel"}).click();await expect(dialog).not.toBeVisible();
 });
 test("interrupted robbery response can retry outside the dialog without repeating the attempt",async({page,request})=>{
  await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
