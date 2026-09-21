@@ -11,8 +11,8 @@ export const loot=[
  {id:"cash",name:"Loose cash",icon:"coins",description:"A little forgotten money. Straight into your wallet."},
  {id:"pickaxe",name:"Pickaxe",icon:"pickaxe",description:"Equip it and work a public site in Mines & Quarries."},
  {id:"lockpick",name:"Lockpick",icon:"lock",description:"Use one on a parked car or for a Blackwater Island prison-break attempt."},
- {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."},
- {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"Trade this collectible or keep it for a future workshop."}
+ {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"Learn it for this season, then craft at your property station."},
+ {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"Learn it for this season, then craft at your property station."}
  ,{id:"bandages_blueprint",name:"Bandages blueprint",icon:"blueprint",description:"Learn it for this season, then craft bandages at your property station."}
 ] as const;
 export const emptyChance=(r:BinRules)=>Math.max(0,Math.round((100-r.cash_chance-r.pickaxe_chance-r.lockpick_chance-r.pistol_blueprint_chance-r.bullet_blueprint_chance-r.bandages_blueprint_chance)*100)/100);

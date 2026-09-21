@@ -160,7 +160,9 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/vitals.sql
 
       - name: Bandage discovery, crafting and secure healing
-        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/bandages.sql
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/bandages.sql
+          bash supabase/tests/bandage_races.sh
 
       - name: Equipment stacking and ammunition quantities
         run: |
