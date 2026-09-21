@@ -6,9 +6,11 @@ import {GameIcon} from "./game-icon";
 import type {RobberyState} from "@/lib/robbery";
 import "./robbery.css";
 const countdown=(until:string|null,now:number)=>{const seconds=until?Math.max(0,Math.ceil((Date.parse(until)-now)/1000)):0;return seconds?`${Math.floor(seconds/60)}m ${seconds%60}s`:"";};
-export function RobberyPanel({data,now,busy,blocked,act}:{data?:RobberyState;now:number;busy:boolean;blocked:boolean;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>}){
+export function RobberyPanel({selection,data,now,busy,blocked,act}:{selection?:{id:string;key:number};data?:RobberyState;now:number;busy:boolean;blocked:boolean;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>}){
  const [open,setOpen]=useState(false),[selected,setSelected]=useState(""),[notice,setNotice]=useState("");const dialog=useRef<HTMLDialogElement>(null);
  useEffect(()=>{if(open)dialog.current?.showModal();else dialog.current?.close();},[open]);
+ const openedSelection=useRef<number|null>(null);
+ useEffect(()=>{if(selection&&data&&!busy&&openedSelection.current!==selection.key){openedSelection.current=selection.key;setSelected(data.targets.some(t=>t.id===selection.id)?selection.id:"");setNotice(data.targets.some(t=>t.id===selection.id)?"":"This player is no longer available. Choose an online player.");setOpen(true);}},[selection,data,busy]);
  if(!data)return null;
  const r=data.rules,w=data.weapon,target=data.targets.find(t=>t.id===selected),cooldown=countdown(data.ready_at,now),protection=countdown(data.protected_until,now);
  const ready=!blocked&&!busy&&data.available&&r.enabled&&!cooldown&&!!w&&w.ammo>=r.bullet_max;

@@ -13,15 +13,24 @@ test("online mugging panel shows cost, odds, result and protection on desktop an
 test("interrupted robbery response can retry outside the dialog without repeating the attempt",async({page,request})=>{
  await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/players");
  let body="",calls=0;await page.route("**/rest/v1/rpc/robbery_action",async route=>{calls++;if(calls===1){body=route.request().postData()??"";await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(body);await route.continue();}});
- await page.getByRole("button",{name:/Mugging — online players/}).click();await page.getByRole("button",{name:/HarborJack/}).click();await page.getByRole("button",{name:"Attempt mugging"}).click();await expect(page.getByRole("dialog")).not.toBeVisible();await page.getByRole("button",{name:"Retry safely",exact:true}).click();
+ await page.getByRole("button",{name:/Mugging — online players/}).click();await page.getByRole("dialog",{name:"Mugging",exact:true}).getByRole("button",{name:/HarborJack/}).click();await page.getByRole("button",{name:"Attempt mugging"}).click();await expect(page.getByRole("dialog")).not.toBeVisible();await page.getByRole("button",{name:"Retry safely",exact:true}).click();
  await expect(page.locator(".mugging-notice")).toContainText("Stole $250");await page.getByRole("button",{name:/Mugging — online players/}).click();await expect(page.locator(".robbery-history article")).toHaveCount(1);
 });
 test("insufficient ammunition blocks attempts and Owner can change bullet ranges",async({page,request})=>{
- await request.post(base+"/__robbery_setup",{headers,data:{ammo:20}});await page.goto("/players");await page.getByRole("button",{name:/Mugging — online players/}).click();await page.getByRole("button",{name:/HarborJack/}).click();await expect(page.getByRole("button",{name:"Attempt mugging"})).toBeDisabled();
+ await request.post(base+"/__robbery_setup",{headers,data:{ammo:20}});await page.goto("/players");await page.getByRole("button",{name:/Mugging — online players/}).click();await page.getByRole("dialog",{name:"Mugging",exact:true}).getByRole("button",{name:/HarborJack/}).click();await expect(page.getByRole("button",{name:"Attempt mugging"})).toBeDisabled();
  await page.goto("/owner?section=robberies");await page.getByLabel("Minimum bullets used",{exact:true}).fill("2");await page.getByLabel("Maximum bullets used",{exact:true}).fill("10");await page.locator(".robbery-owner form").first().getByLabel("Audit reason").fill("Reduce robbery ammunition range");await page.getByRole("button",{name:"Save mugging rules"}).click();await expect(page.getByRole("status")).toContainText("settings saved");await page.reload();await expect(page.getByLabel("Maximum bullets used",{exact:true})).toHaveValue("10");
 });
 
 test("Scavenging no longer exposes mugging",async({page,request})=>{
  await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await expect(page.getByRole("button",{name:/Mugging|Players ·/})).toHaveCount(0);
+});
+
+test("online links and player-row Mug buttons open the selected player",async({page,request})=>{
+ await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/players");
+ await page.getByRole("link",{name:"View online players",exact:true}).click();await expect(page).toHaveURL(/players\?online=1/);await expect(page.getByLabel("Online only",{exact:true})).toBeChecked();await expect(page.getByRole("link",{name:/IronRose/})).toHaveCount(0);
+ await page.getByRole("button",{name:"Mug HarborJack",exact:true}).click();const dialog=page.getByRole("dialog",{name:"Mugging",exact:true});await expect(dialog.getByRole("heading",{name:"Mug HarborJack?",exact:true})).toBeVisible();
+ await dialog.getByRole("button",{name:"Close mugging panel"}).click();await page.getByRole("button",{name:"Mug HarborJack",exact:true}).click();await expect(dialog).toBeVisible();await dialog.getByRole("button",{name:"Close mugging panel"}).click();
+ await page.getByLabel("Online only",{exact:true}).uncheck();await expect(page.getByRole("link",{name:/IronRose/})).toBeVisible();await page.getByRole("button",{name:"Show online players",exact:true}).click();await expect(page.getByRole("link",{name:/IronRose/})).toHaveCount(0);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:"test-results/mugging-player-buttons-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

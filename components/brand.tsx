@@ -1,3 +1,8 @@
 import Link from "next/link";
 import type {ReactNode} from "react";
-export function Brand({className="",href="/",status}:{className?:string;href?:string;status?:ReactNode}){return <Link href={href} className={"bw-brand "+className} aria-label="Blackwater Mafia home"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 2 45 14v28L24 54 3 42V14Z" fill="none" stroke="currentColor"/><path d="M11 18h9c9 0 9 10 1 10h-9m0-10v21h10c10 0 10-11-1-11m7-9 4 18 5-18" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M17 9h14M17 47h14" stroke="currentColor"/></svg><span>BLACKWATER<small>MAFIA</small>{status&&<span className="brand-online">{status}</span>}</span></Link>;}
+export function Brand({className="",href="/",status,statusHref}:{className?:string;href?:string;status?:ReactNode;statusHref?:string}){
+ const mark=<svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 2 45 14v28L24 54 3 42V14Z" fill="none" stroke="currentColor"/><path d="M11 18h9c9 0 9 10 1 10h-9m0-10v21h10c10 0 10-11-1-11m7-9 4 18 5-18" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M17 9h14M17 47h14" stroke="currentColor"/></svg>;
+ const name=<>BLACKWATER<small>MAFIA</small></>;
+ if(statusHref)return <span className={"bw-brand "+className}>{mark}<span><Link href={href} aria-label="Blackwater Mafia home">{name}</Link><Link href={statusHref} className="brand-online" aria-label="View online players">{status}</Link></span></span>;
+ return <Link href={href} className={"bw-brand "+className} aria-label="Blackwater Mafia home">{mark}<span>{name}{status&&<span className="brand-online">{status}</span>}</span></Link>;
+}
