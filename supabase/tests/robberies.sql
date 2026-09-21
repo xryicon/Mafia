@@ -45,7 +45,7 @@ begin
  delete from auth.sessions where id=b;
  r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Signed-out target accepted');
  insert into auth.sessions(id,user_id,created_at) values(b,b,clock_timestamp());
- insert into game_private.player_presence(player_id,session_id,last_seen_at) values(b,b,clock_timestamp()) on conflict(player_id,session_id) do update set last_seen_at=excluded.last_seen_at;
+ insert into game_private.player_presence(player_id,session_id,last_seen_at) values(b,b,clock_timestamp()) on conflict on constraint player_presence_pkey do update set last_seen_at=excluded.last_seen_at;
  update game_private.player_presence set last_seen_at=clock_timestamp()-interval '10 minutes' where player_id=a;
  r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Offline attacker accepted');
  update game_private.player_presence set last_seen_at=clock_timestamp() where player_id=a;
