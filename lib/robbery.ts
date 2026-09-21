@@ -4,7 +4,7 @@ export type RobberyState={season_id:string;server_time:string;district_id:string
 export const robberyRuleFields:[Exclude<keyof RobberyRules,"enabled"|"version">,string,number,number][]=[
  ["bullet_min","Minimum bullets used",0,100],["bullet_max","Maximum bullets used",0,100],
  ["steal_min","Minimum cash stolen (%)",1,80],["steal_max","Maximum cash stolen (%)",1,80],
- ["victim_cooldown_seconds","Victim protection (seconds)",60,86400],["attacker_cooldown_seconds","Attacker cooldown (seconds)",1,86400],["presence_seconds","Street presence window (seconds)",20,300],
+ ["victim_cooldown_seconds","Victim protection (seconds)",60,86400],["attacker_cooldown_seconds","Attacker cooldown (seconds)",1,86400],
  ["base_chance","Base success chance (%)",0,100],["min_chance","Minimum success chance (%)",0,100],["max_chance","Maximum success chance (%)",0,100],
  ["skill_weight","Sharpshooting influence",0,100],["accuracy_weight","Advanced accuracy influence",0,100],["power_weight","Power influence",0,100],["gear_weight","Equipped gear influence",0,100]
 ];

@@ -1,6 +1,6 @@
-# Player robberies
+# Mugging
 
-Open **Scavenging → enter a district → Players**. Players must both have recently polled that district’s Scavenging view and be stationary, outside searches, active range sessions and prison. An equipped, working gun is required. The matching ammunition must be equipped in Ammo. All checks repeat on the server under the existing season/economy/custody lock order.
+Open **Players → Mugging — online players**. Players may be online anywhere in Blackwater; Scavenging, district and movement do not affect eligibility. The same validated-session presence window as the global online player list applies. Offline, signed-out, revoked, banned, imprisoned and active range players cannot be targeted. An equipped, working gun and compatible equipped ammunition are required. All checks repeat on the server under the existing season/economy/custody lock order.
 
 ## Default rules
 
@@ -12,7 +12,7 @@ Open **Scavenging → enter a district → Players**. Players must both have rec
 - Existing guns start with attack/defense 20/10 for the homemade pistol and 35/20 for the M4. Future equippable items can receive bonuses through Owner controls. No new items are created.
 - No direct health damage, XP reward, stolen gear or new police behavior is introduced.
 
-**Owner → Player robberies** manages enablement, bullet ranges, theft percentages (always within 1–80%), both cooldowns, presence window, chance factors and equipment bonuses. Changes require an audit reason and version check. Moderator access is not automatic.
+**Owner → Mugging** manages enablement, bullet ranges, theft percentages (always within 1–80%), both cooldowns, chance factors and equipment bonuses. Changes require an audit reason and version check. Moderator access is not automatic. The online window follows the existing global `presence_window_seconds` setting; the legacy street presence setting is retained only for compatibility.
 
 ## Accounting and security
 
@@ -20,4 +20,4 @@ Cash transfer, ammunition, wear, history and cooldowns commit in one transaction
 
 All records are seasonal; old outcomes are immutable and retained. New seasons naturally start with no robbery cooldown or current-season history. Existing wallets, bank deposits and gear are not changed by installing the feature.
 
-Database tests cover authorization, stale rules, eligibility, bank isolation, cash conservation, retries, rollback, ammunition, weapon wear, factors and concurrent attackers. Browser tests cover confirmation, responsive layout, insufficient ammunition, Owner settings and interrupted replies.
+Database tests cover authorization, stale rules, online/offline and revoked session eligibility, cross-district and no-Scavenging eligibility, bank isolation, cash conservation, retries, rollback, ammunition, weapon wear, factors and concurrent attackers. Browser tests cover confirmation, responsive layout, insufficient ammunition, Owner settings and interrupted replies.
