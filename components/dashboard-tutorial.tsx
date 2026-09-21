@@ -41,7 +41,7 @@ export function DashboardTutorial({playerId}:{playerId:string}){
    <div className="tutorial-audio"><button onClick={()=>setMuted(!muted)} aria-pressed={muted}>{muted?"Unmute narration":"Mute narration"}</button><button onClick={replay}>Replay voice</button><span>AI narrator</span></div>
    {audioError&&<p role="status">Narration could not play. You can read every instruction above.</p>}
    {storageError&&<p role="status">Progress cannot be saved in this browser.</p>}
-   {step===steps.length-1&&<nav className="tutorial-destinations" aria-label="Choose your first move"><Link href="/bin-diving" onClick={()=>close(true)}>Bin diving</Link><Link href="/districts" onClick={()=>close(true)}>Explore districts</Link><Link href="/inventory" onClick={()=>close(true)}>Inventory</Link></nav>}
+   {step===steps.length-1&&<nav className="tutorial-destinations" aria-label="Choose your first move"><Link href="/bin-diving" onClick={()=>close(true)}>Scavenging</Link><Link href="/districts" onClick={()=>close(true)}>Explore districts</Link><Link href="/inventory" onClick={()=>close(true)}>Inventory</Link></nav>}
    <footer><button className="command-button" disabled={step===0} onClick={()=>save(step-1)}>Back</button><progress aria-label="Tutorial progress" value={step+1} max={steps.length}/><button className="command-button" onClick={()=>step===steps.length-1?close(true):save(step+1)}>{step===steps.length-1?"Finish tutorial":"Next"}</button></footer>
   </dialog>}
  </>;

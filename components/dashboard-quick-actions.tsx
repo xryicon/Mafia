@@ -6,7 +6,7 @@ const actions=[
  {id:"operations",label:"Plan an Operation",icon:"operations",dialog:"jobs"},
  {id:"range",label:"Shooting Range",icon:"target",href:"/shooting-range"},
  {id:"resources",label:"Explore Resources",icon:"pickaxe",href:"/districts/mines-and-quarries"},
- {id:"bins",label:"Bin Diving",icon:"bin",href:"/bin-diving"},
+ {id:"bins",label:"Scavenging",icon:"bin",href:"/bin-diving"},
  {id:"refineries",label:"Refineries",icon:"production",href:"/refineries"},
  {id:"production",label:"Production",icon:"tools",dialog:"production"},
  {id:"jobs",label:"Find a Job",icon:"briefcase",dialog:"jobs"},

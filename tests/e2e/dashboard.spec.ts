@@ -115,11 +115,11 @@ test("personal health supports future overheal without stock counters",async({pa
 test("quick actions can be selected, reordered, saved and reset",async({page})=>{
  await page.goto('/dashboard');const quick=page.getByRole('region',{name:'Quick actions',exact:true});
  await quick.getByRole('button',{name:'Customize',exact:true}).click();
- await quick.getByRole('checkbox',{name:'Bin Diving',exact:true}).uncheck();
+ await quick.getByRole('checkbox',{name:'Scavenging',exact:true}).uncheck();
  await quick.getByRole('checkbox',{name:'Inventory',exact:true}).check();
  await quick.getByRole('button',{name:'Move Inventory up',exact:true}).click();
  await quick.getByRole('button',{name:'Save shortcuts',exact:true}).click();
- await expect(quick.getByRole('link',{name:'Bin Diving',exact:true})).toHaveCount(0);
+ await expect(quick.getByRole('link',{name:'Scavenging',exact:true})).toHaveCount(0);
  await expect(quick.getByRole('link',{name:'Inventory',exact:true})).toHaveAttribute('href','/inventory');
  await page.reload();await expect(quick.locator(':scope > .command-button').nth(5)).toHaveText('Inventory');
  await quick.getByRole('button',{name:'Customize',exact:true}).click();
