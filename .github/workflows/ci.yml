@@ -164,6 +164,11 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bandages.sql
           bash supabase/tests/bandage_races.sh
 
+      - name: Player robbery security and cash-only transfers
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/robberies.sql
+          bash supabase/tests/robbery_races.sh
+
       - name: Equipment stacking and ammunition quantities
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/equipment_stacking.sql
