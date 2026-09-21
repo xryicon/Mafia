@@ -23,7 +23,10 @@ begin
  w:=(r->'weapon'->>'id')::uuid;ammo:=(game_private.robbery_weapon(s,a)->>'ammo_id')::uuid;
  q:=jsonb_build_object('season_id',s,'target_id',b,'weapon_id',w,'rules_version',1,'request_id',gen_random_uuid(),'chance',100,'cash',9999999,'bullets',0);
  r:=public.robbery_action('configure',jsonb_build_object('season_id',s,'version',1,'rules','{"bullet_min":3,"bullet_max":3}'::jsonb,'reason','Adjust robbery test rules'));perform pg_temp.verify(r?'error','Player changed rules');
+ update public.game_user_roles set role_id='moderator' where player_id=a;
+ r:=public.robbery_action('configure',jsonb_build_object('season_id',s,'version',1,'rules','{"bullet_min":0,"bullet_max":0}'::jsonb,'reason','Attempt moderator economy edit'));perform pg_temp.verify(r?'error','Moderator automatically changed robbery rules');
  update public.game_user_roles set role_id='owner' where player_id=a;
+ r:=public.robbery_action('configure',jsonb_build_object('season_id',s,'version',1,'rules','{"steal_max":81}'::jsonb,'reason','Attempt out of range cash theft'));perform pg_temp.verify(r?'error','Owner exceeded 80 percent theft cap');
  r:=public.robbery_action('configure',jsonb_build_object('season_id',s,'version',1,'rules','{"bullet_min":3,"bullet_max":3,"min_chance":100,"max_chance":100}'::jsonb,'reason','Guarantee test robbery success'));perform pg_temp.verify(not r?'error','Owner edit failed '||r::text);
  update public.game_user_roles set role_id='player' where player_id=a;
  r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Stale rule version accepted');q:=q||'{"rules_version":2}';
@@ -34,6 +37,11 @@ begin
  r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Cross district robbery accepted');update game_private.scav_sessions set district_id=d where player_id=b;
  update game_private.scav_sessions set arrives_at=clock_timestamp()+interval '1 minute' where player_id=a;
  r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Robbed while travelling');update game_private.scav_sessions set arrives_at=clock_timestamp() where player_id=a;
+ update public.game_inventory_gear set condition=0 where id=w;
+ r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Broken gun accepted');update public.game_inventory_gear set condition=100 where id=w;
+ update public.game_inventory_gear set quantity=2 where id=ammo;
+ r:=public.robbery_action('attempt',q);perform pg_temp.verify(r?'error','Insufficient ammunition accepted');update public.game_inventory_gear set quantity=200 where id=ammo;
+ perform pg_temp.verify(not exists(select 1 from game_private.robbery_attempts where attacker_id=a),'Invalid request created an outcome');
  select cash into cash_before from public.game_players where id=a;
  set local role authenticated;
  first:=public.robbery_action('attempt',q);perform pg_temp.verify(not first?'error' and (first->>'succeeded')::boolean,'Attempt failed '||first::text);
@@ -66,6 +74,12 @@ begin
  update game_private.robbery_rules set bullet_min=0,bullet_max=0,version=5;
  q:=q||jsonb_build_object('rules_version',5,'request_id',gen_random_uuid());r:=public.robbery_action('attempt',q);perform pg_temp.verify(not r?'error' and (r->>'bullets')::int=0,'Zero-bullet threat failed');
  perform pg_temp.verify((select quantity from public.game_inventory_gear where id=ammo)=194,'Zero-cost threat used bullets');
+ -- Random ammunition is bounded by the saved range and the exact roll is consumed.
+ update game_private.robbery_protection set protected_until=null,ready_at=null where season_id=s;
+ update game_private.robbery_rules set bullet_min=2,bullet_max=4,version=6;
+ q:=q||jsonb_build_object('rules_version',6,'request_id',gen_random_uuid());r:=public.robbery_action('attempt',q);
+ perform pg_temp.verify(not r?'error' and (r->>'bullets')::integer between 2 and 4,'Random ammunition out of range '||r::text);
+ perform pg_temp.verify((select quantity from public.game_inventory_gear where id=ammo)=194-(r->>'bullets')::integer,'Random rolled ammunition consumption differed');
  -- Every factor, including condition-adjusted worn equipment, changes relative odds.
  update game_private.robbery_rules set min_chance=0,max_chance=100,base_chance=50;select * into rules from game_private.robbery_rules;
  f:=game_private.robbery_factors(s,a);g:=game_private.robbery_factors(s,b);
