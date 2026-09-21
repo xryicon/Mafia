@@ -50,7 +50,7 @@ alter table game_private.robbery_attempts enable row level security;
 revoke all on game_private.robbery_rules,game_private.robbery_gear_rules,game_private.robbery_presence,game_private.robbery_protection,game_private.robbery_attempts from public,anon,authenticated;
 
 create function game_private.robbery_factors(s uuid,u uuid) returns jsonb language sql stable security definer set search_path='' as $$
- select jsonb_build_object('power',p.xp,'level',game_private.skill_level(coalesce((select sum(delta) from game_private.skill_xp_ledger where season_id=s and player_id=u and skill_id='sharpshooting'),0),d.xp_to_20),
+ select jsonb_build_object('power',p.xp,'level',game_private.skill_level(coalesce((select sum(delta) from game_private.skill_xp_ledger where season_id=s and player_id=u and skill_id='sharpshooting'),0)::bigint,d.xp_to_20),
  'accuracy',coalesce((select round(sum(a.total)/nullif(sum(r.shots),0),2) from public.game_range_sessions r cross join lateral(select sum(accuracy_percent) as total from game_private.range_shot_precision where session_id=r.id)a where r.season_id=s and r.player_id=u and r.difficulty='advanced' and r.status<>'active' and r.shots>0),0),
  'attack',coalesce(g.attack,0),'defense',coalesce(g.defense,0))
  from public.game_players p cross join public.game_skill_definitions d
