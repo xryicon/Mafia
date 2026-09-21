@@ -1,4 +1,5 @@
 "use client";
+import {powerText} from "@/lib/power-text";
 import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "@/lib/supabase/client";
@@ -23,7 +24,7 @@ function ProfileEditor({data,onSave,onPicture,close}:{data:PlayerProfile;onSave:
  </dialog>;
 }
 function RankingRows({rows,seasonId}:{rows:PlayerProfile["current"];seasonId?:string}){
- return <div className="pp-ranking-rows">{rows.map((r,i)=><Link key={String(r.season_id)+String(r.metric)+i} href={"/seasons?season="+encodeURIComponent(r.season_id??seasonId??"")+"&metric="+encodeURIComponent(r.metric??"respect")}><span>{r.label}</span><strong>#{profileNumber(r.rank)}</strong><small>{profileNumber(r.score)}</small><GameIcon name="arrow" size={14}/></Link>)}</div>;
+ return <div className="pp-ranking-rows">{rows.map((r,i)=><Link key={String(r.season_id)+String(r.metric)+i} href={"/seasons?season="+encodeURIComponent(r.season_id??seasonId??"")+"&metric="+encodeURIComponent(r.metric??"respect")}><span>{powerText(r.label)}</span><strong>#{profileNumber(r.rank)}</strong><small>{profileNumber(r.score)}</small><GameIcon name="arrow" size={14}/></Link>)}</div>;
 }
 export function PlayerProfileView({initial}:{initial:PlayerProfile}){
  const [data,setData]=useState(initial),[editing,setEditing]=useState(false),[notice,setNotice]=useState(""),[showAll,setShowAll]=useState(false);
@@ -41,7 +42,7 @@ export function PlayerProfileView({initial}:{initial:PlayerProfile}){
  <div className="pp-identity"><div className="pp-presence"><i className={data.online?"online":""}/>{data.online?"ONLINE":"OFFLINE"}{data.is_self&&<span>YOUR PROFILE</span>}</div>
  <h1>{data.handle}</h1><div className="pp-title"><em>{data.title}</em><span>·</span>{data.gang?<Link href="/gangs">{data.gang.name}</Link>:<span>Independent</span>}{data.role!=="player"&&<b>{data.role}</b>}</div>
  <div className={"pp-description "+(!data.description?"empty":"")}>{data.description||"This player hasn’t added a description yet."}</div>
- <div className="pp-power-strip"><div><GameIcon name="respect" size={22}/><span>Power <small>Respect score</small></span><strong>{profileNumber(data.respect)}</strong></div><div><GameIcon name="ledger" size={22}/><span>Season rank <small>By respect</small></span><strong>{data.respect_rank?"#"+profileNumber(data.respect_rank):"—"}</strong></div><div><GameIcon name="clock" size={22}/><span>Previous season <small>By respect</small></span><strong>{previousRespect?"#"+profileNumber(previousRespect.rank):"—"}</strong></div></div>
+ <div className="pp-power-strip"><div><GameIcon name="respect" size={22}/><span>Power <small>Power score</small></span><strong>{profileNumber(data.respect)}</strong></div><div><GameIcon name="ledger" size={22}/><span>Season rank <small>By power</small></span><strong>{data.respect_rank?"#"+profileNumber(data.respect_rank):"—"}</strong></div><div><GameIcon name="clock" size={22}/><span>Previous season <small>By power</small></span><strong>{previousRespect?"#"+profileNumber(previousRespect.rank):"—"}</strong></div></div>
  </div>
  <div className="pp-actions"><p>POWER<br/>MOVES<br/>PEOPLE.</p>{data.is_self?<><button className="pp-gold" onClick={()=>setEditing(true)}><GameIcon name="gear" size={17}/>Edit profile</button><Link className="pp-outline" href="/account"><GameIcon name="shield" size={16}/>Account settings</Link></>:<><Link className="pp-gold" href={"/telegrams?to="+encodeURIComponent(data.handle)}><GameIcon name="mail" size={17}/>Send Telegram</Link><Link className="pp-outline" href="/players"><GameIcon name="people" size={16}/>Player directory</Link></>}<Link className="pp-text-link" href="/seasons">Season leaderboards <GameIcon name="arrow" size={14}/></Link></div>
  </section>

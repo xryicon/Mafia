@@ -23,7 +23,7 @@ test("command dashboard uses real game actions and district destinations",async(
  const modal=page.getByRole("dialog");await expect(modal).toBeVisible();
  await modal.getByRole("button",{name:"Start operation",exact:true}).first().click();
  await expect(page.locator(".command-player-stats")).toContainText("$10,250");
- await expect(modal).toContainText("+10 respect");
+ await expect(modal).toContainText("+10 power");
  await expect(modal.locator(".command-job .command-button").first()).toBeDisabled();
  await modal.getByRole("button",{name:"Close actions"}).click();
  await page.getByRole("button",{name:"Production",exact:true}).click();

@@ -21,7 +21,7 @@ test("reference navigation removes chat and retains account destinations",async(
  await expect(page.locator(".estate-brand .brand-online")).toContainText("2 online");
  await page.getByLabel("Player menu",{exact:true}).click();
  const menu=page.locator(".estate-account-menu");
- for(const name of ["Players & respect","Leaderboards","Seasons","Support","Owner panel"])await expect(menu.getByRole("link",{name,exact:true})).toBeVisible();
+ for(const name of ["Players & power","Leaderboards","Seasons","Support","Owner panel"])await expect(menu.getByRole("link",{name,exact:true})).toBeVisible();
  await menu.getByRole("link",{name:"Owner panel",exact:true}).click();await expect(page.getByRole("heading",{name:"Owner panel",exact:true})).toBeVisible();
  await page.setViewportSize({width:375,height:812});await page.goto("/support");await expect(page.getByLabel("Message the city")).toHaveCount(0);
  await expect(nav.getByRole("link")).toHaveCount(7);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);

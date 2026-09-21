@@ -21,7 +21,7 @@ tts.generate_from_ids=async(input_ids)=>{
  return new RawAudio(waveform.data,24000);
 };
 await mkdir(new URL('public/audio/tutorial/',root),{recursive:true});
-for(const step of steps){
+for(const step of steps.filter(step=>!process.argv[2]||step.id===process.argv[2])){
  const audio=await tts.generate(step.text,{voice:'am_michael',speed:0.98});
  await audio.save(fileURLToPath(new URL('public/audio/tutorial/'+step.id+'.wav',root)));
  console.log(step.id,(audio.audio.length/audio.sampling_rate).toFixed(2),'seconds');
