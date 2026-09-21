@@ -5,11 +5,11 @@ import steps from "@/lib/tutorial-steps.json";
 
 export function DashboardTutorial({playerId}:{playerId:string}){
  const key="blackwater:tutorial:v1:"+playerId;
- const [ready,setReady]=useState(false),[open,setOpen]=useState(false),[step,setStep]=useState(0),[complete,setComplete]=useState(false),[muted,setMuted]=useState(false),[audioError,setAudioError]=useState(false),[storageError,setStorageError]=useState(false);
+ const [hidden,setHidden]=useState(false),[ready,setReady]=useState(false),[open,setOpen]=useState(false),[step,setStep]=useState(0),[complete,setComplete]=useState(false),[muted,setMuted]=useState(false),[audioError,setAudioError]=useState(false),[storageError,setStorageError]=useState(false);
  const dialog=useRef<HTMLDialogElement>(null),audio=useRef<HTMLAudioElement>(null),trigger=useRef<HTMLButtonElement>(null);
  const current=steps[step];
  useEffect(()=>{
-  try{const saved=JSON.parse(localStorage.getItem(key)||"null");if(saved&&Number.isInteger(saved.step)&&saved.step>=0&&saved.step<steps.length){setStep(saved.step);setComplete(saved.complete===true);}}
+  try{const saved=JSON.parse(localStorage.getItem(key)||"null");if(saved&&Number.isInteger(saved.step)&&saved.step>=0&&saved.step<steps.length){setStep(saved.step);setComplete(saved.complete===true);setHidden(saved.complete===true&&saved.hidden===true);}}
   catch{setStorageError(true);}setReady(true);
  },[key]);
  function save(next:number,done=false){setStep(next);setComplete(done);try{localStorage.setItem(key,JSON.stringify({step:next,complete:done}));}catch{setStorageError(true);}}
@@ -30,8 +30,10 @@ export function DashboardTutorial({playerId}:{playerId:string}){
   return()=>element.pause();
  },[open,step,muted]);
  function replay(){const element=audio.current;if(!element)return;setMuted(false);setAudioError(false);element.currentTime=0;void element.play().catch(()=>setAudioError(true));}
+ function hide(){if(!complete)return;try{localStorage.setItem(key,JSON.stringify({step,complete:true,hidden:true}));setHidden(true);}catch{setStorageError(true);}}
+ if(!ready||hidden)return null;
  return <>
-  <section className="tutorial-invite command-panel" aria-label="New player tutorial"><div><p className="eyebrow">A WORD FROM YOUR MENTOR</p><h2>{complete?"The city is yours to explore":"New to Blackwater?"}</h2><p>A guided introduction to your dashboard, the city, and warehouses.</p></div><button ref={trigger} className="command-button" disabled={!ready} onClick={()=>{if(complete)save(0);setOpen(true);}}>{complete?"Replay tutorial":step?"Resume tutorial":"Start tutorial"}</button></section>
+  <section className="tutorial-invite command-panel" aria-label="New player tutorial"><div><p className="eyebrow">A WORD FROM YOUR MENTOR</p><h2>{complete?"The city is yours to explore":"New to Blackwater?"}</h2><p>A guided introduction to your dashboard, the city, and warehouses.</p></div><button ref={trigger} className="command-button" disabled={!ready} onClick={()=>{if(complete)save(0);setOpen(true);}}>{complete?"Replay tutorial":step?"Resume tutorial":"Start tutorial"}</button>{complete&&<button className="command-button" onClick={hide}>Hide tutorial</button>}{storageError&&<p role="status">Your preference could not be saved in this browser.</p>}</section>
   {open&&<dialog ref={dialog} className="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-text" onCancel={event=>{event.preventDefault();close();}}>
    <div className="tutorial-top"><span>BLACKWATER · THE INTRODUCTION</span><button onClick={()=>close()} aria-label="Skip tutorial">Skip ×</button></div>
    <div aria-live="polite" aria-atomic="true"><p className="eyebrow">STEP {step+1} OF {steps.length}</p><h2 id="tutorial-title">{current.title}</h2><p id="tutorial-text">{current.text}</p></div>

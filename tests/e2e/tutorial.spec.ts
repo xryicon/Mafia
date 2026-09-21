@@ -20,8 +20,16 @@ test('tutorial saves progress, explains warehouses, and can be replayed',async({
  await expect(dialog.getByRole('heading')).toHaveText('Give your operation room');
  for(let i=0;i<3;i++)await dialog.getByRole('button',{name:'Next',exact:true}).click();
  await dialog.getByRole('button',{name:'Finish tutorial',exact:true}).click();
- await page.reload();await page.getByRole('button',{name:'Replay tutorial',exact:true}).click();
+ await page.reload();await expect(page.getByRole('button',{name:'Hide tutorial',exact:true})).toBeVisible();await page.getByRole('button',{name:'Replay tutorial',exact:true}).click();
  await expect(dialog.getByRole('heading')).toHaveText('Welcome to Blackwater');
+ await expect(page.getByRole('button',{name:'Hide tutorial',exact:true})).toHaveCount(0);
+ for(let i=0;i<7;i++)await dialog.getByRole('button',{name:'Next',exact:true}).click();
+ await dialog.getByRole('button',{name:'Finish tutorial',exact:true}).click();
+ await page.getByRole('button',{name:'Hide tutorial',exact:true}).click();
+ await expect(page.getByRole('region',{name:'New player tutorial'})).toHaveCount(0);
+ await page.reload();
+ await expect(page.getByRole('heading',{name:'BLACKWATER',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:/Start tutorial|Replay tutorial|Resume tutorial/})).toHaveCount(0);
 });
 test('mobile tutorial fits screen and audio assets load',async({page,request})=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/dashboard');
