@@ -1,6 +1,8 @@
 import {GameIcon} from "@/components/game-icon";
 
 const commodityArt:Record<string,string>={
+ bandages:"/art/medical/bandages",
+ bandages_blueprint:"/art/medical/bandages-blueprint",
  "m4-carbine":"/art/weapons/m4-carbine",
  "556x45mm-ammo":"/art/weapons/556x45mm-ammo",
  "homemade-pistol":"/art/crafting/homemade-pistol",

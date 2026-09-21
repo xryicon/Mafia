@@ -5,7 +5,7 @@ import {useBinDiving} from "@/components/use-bin-diving";
 import {loot,emptyChance,type BinRules} from "@/lib/bin-diving";
 function RulesForm({initial,busy,save}:{initial:BinRules;busy:boolean;save:(rules:BinRules,reason:string)=>Promise<boolean>}){
  const [rules,setRules]=useState(initial),[reason,setReason]=useState("");
- const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance;
+ const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance+rules.bandages_blueprint_chance;
  const number=(key:keyof BinRules,value:string)=>setRules(r=>({...r,[key]:Number(value)}));
  return <form className="bin-rules-form" onSubmit={async e=>{e.preventDefault();if(await save(rules,reason.trim()||"Updated city-wide bin diving rules"))setReason("");}}>
  <label className="bin-enabled"><input type="checkbox" checked={rules.enabled} onChange={e=>setRules(r=>({...r,enabled:e.target.checked}))}/> Open bin diving across the city</label>
