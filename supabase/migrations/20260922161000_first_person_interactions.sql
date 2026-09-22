@@ -64,7 +64,7 @@ begin
     if session.arrives_at>stamp then raise exception 'Reach the location before searching.';end if;
     select m.targets into v_targets from game_private.scav_maps m where season_id=s and player_id=u and district_id=d.id for update;
     select x into target from jsonb_array_elements(v_targets)x where x->>'id'=p_payload->>'target_id';
-    if target is null or game_private.scav_route_length(jsonb_build_array(session.route_points->(jsonb_array_length(session.route_points)-1),jsonb_build_array((target->>'node')::int%5,(target->>'node')::int/5)))>game_private.setting('scavenging_interaction_radius_percent')/100 then raise exception 'Walk to this location first.';end if;
+    if target is null or game_private.scav_route_length(jsonb_build_array(session.route_points->(jsonb_array_length(session.route_points)-1),jsonb_build_array((target->>'node')::int%5,(target->>'node')::int/5)))>game_private.setting('scavenging_interaction_radius_percent')/100.0 then raise exception 'Walk to this location first.';end if;
     if (target->>'ready_at')::timestamptz>stamp then raise exception 'This location has already been searched. Return later.';end if;
     select max(ready_at) into ready from public.game_bin_dives where season_id=s and player_id=u;
     if ready>stamp then raise exception 'Catch your breath. The search cooldown applies across the city.';end if;

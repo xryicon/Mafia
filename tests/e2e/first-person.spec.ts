@@ -17,6 +17,6 @@ test('3D streets render, movement sends directions only, and nearby bins use exi
  await page.getByRole('button',{name:'Exit street view'}).click();await expect(page.locator('.scav-map')).toBeVisible();
 });
 test('devices without WebGL keep a usable aerial map',async({page})=>{
- await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type:string,...args:unknown[]){if(type==='webgl2')return null;return original.apply(this,[type,...args] as Parameters<typeof original>);} as typeof original;});
+ await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){if(type==='webgl2')return null;return original.apply(this,[type,...args] as Parameters<typeof original>);} as typeof original;});
  await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Return to aerial map'})).toBeVisible();await page.getByRole('button',{name:'Return to aerial map'}).click();await expect(page.locator('.scav-map')).toBeVisible();
 });

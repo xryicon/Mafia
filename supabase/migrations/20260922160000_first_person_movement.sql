@@ -27,7 +27,7 @@ declare magnitude double precision:=greatest(1,sqrt(dx*dx+dy*dy));distance doubl
 end$$;
 alter function game_private.scav_route(jsonb,jsonb) rename to scav_center_route;
 create function game_private.scav_route(a jsonb,b jsonb) returns jsonb language plpgsql stable security definer set search_path='' as $$
-declare width numeric:=game_private.setting('scavenging_foot_road_half_percent')/100;pa jsonb;pb jsonb;begin
+declare width numeric:=game_private.setting('scavenging_foot_road_half_percent')/100.0;pa jsonb;pb jsonb;begin
  if ((a->>0)::numeric=round((a->>0)::numeric) or (a->>1)::numeric=round((a->>1)::numeric)) and ((b->>0)::numeric=round((b->>0)::numeric) or (b->>1)::numeric=round((b->>1)::numeric)) then return game_private.scav_center_route(a,b);end if;
  if game_private.foot_clear(a,b,width) then return jsonb_build_array(a,b);end if;
  pa:=case when abs((a->>0)::numeric-round((a->>0)::numeric))<abs((a->>1)::numeric-round((a->>1)::numeric)) then jsonb_build_array(round((a->>0)::numeric),a->1) else jsonb_build_array(a->0,round((a->>1)::numeric)) end;
@@ -67,7 +67,7 @@ declare s uuid;u uuid:=auth.uid();v game_private.scav_sessions;stamp timestamptz
    speed:=game_private.setting('scavenging_foot_walk_seconds');
    if coalesce((p_payload->>'sprint')::boolean,false) then speed:=speed*100/game_private.setting('scavenging_foot_sprint_percent');end if;
    if v.pursuit->>'vehicle_id' is not null then speed:=(v.pursuit#>>'{rules,scavenging_getaway_seconds_per_block}')::double precision;end if;
-   lease:=game_private.setting('scavenging_input_lease_ms')/1000;width:=game_private.setting('scavenging_foot_road_half_percent')/100;
+   lease:=game_private.setting('scavenging_input_lease_ms')/1000.0;width:=game_private.setting('scavenging_foot_road_half_percent')/100.0;
    goal:=game_private.foot_step(origin,dx,dy,lease,speed,width);
    update game_private.scav_sessions set walk_sequence=seq,node=round((goal->>1)::numeric)::int*5+round((goal->>0)::numeric)::int,path=jsonb_build_array(round((goal->>1)::numeric)::int*5+round((goal->>0)::numeric)::int),route_points=jsonb_build_array(origin,goal),departed_at=stamp,arrives_at=case when goal=origin then stamp else stamp+make_interval(secs=>lease) end where season_id=s and player_id=u;
    if v.pursuit is not null then perform game_private.street_pursuer(s,u);end if;

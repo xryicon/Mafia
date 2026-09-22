@@ -36,7 +36,7 @@ declare v game_private.scav_sessions;t timestamptz:=clock_timestamp();patrol jso
   select x into patrol from jsonb_array_elements(v.pursuit->'patrols')x order by game_private.scav_route_length(jsonb_build_array(game_private.street_patrol_position(x,t),actual)) limit 1;
  end if;
  if patrol is null then return;end if;point:=game_private.street_patrol_position(patrol,t);
- seen:=game_private.scav_route_length(jsonb_build_array(point,actual))<=coalesce((v.pursuit#>>'{rules,scavenging_police_vision_percent}')::numeric,90)/100 and game_private.foot_clear(point,actual,game_private.setting('scavenging_foot_road_half_percent')/100);
+ seen:=game_private.scav_route_length(jsonb_build_array(point,actual))<=coalesce((v.pursuit#>>'{rules,scavenging_police_vision_percent}')::numeric,90)/100 and game_private.foot_clear(point,actual,game_private.setting('scavenging_foot_road_half_percent')/100.0);
  destination:=case when seen then actual else coalesce(v.pursuit->'last_seen_point',actual) end;
  route:=game_private.scav_route(point,destination);
  if game_private.scav_route_length(route)<.001 then
@@ -141,7 +141,7 @@ begin
    else
     select * into event from game_private.street_events where id=(p_payload->>'event_id')::uuid and season_id=s and player_id=u and district_id=d.id and expires_at>t and started_at is null for update;
     if not found or event.kind not in('satchel','cache') then raise exception 'This street opportunity has expired or was already used.';end if;
-    if game_private.scav_route_length(jsonb_build_array(v.route_points->-1,jsonb_build_array(event.node%5,event.node/5)))>game_private.setting('scavenging_interaction_radius_percent')/100 then raise exception 'Walk to the street event first.';end if;
+    if game_private.scav_route_length(jsonb_build_array(v.route_points->-1,jsonb_build_array(event.node%5,event.node/5)))>game_private.setting('scavenging_interaction_radius_percent')/100.0 then raise exception 'Walk to the street event first.';end if;
     update game_private.street_events set started_at=t where id=event.id;
     v_pending:=jsonb_build_object('id',nonce,'target_id',event.id,'kind','bin','mode','event','event_kind',event.kind,'cash_multiplier',game_private.setting('scavenging_event_cash_multiplier'),'started_at',t,'ready_at',t+make_interval(secs=>game_private.setting('scavenging_search_seconds')),'patrols',game_private.scav_patrols(d.id),'xp',0);
     result:=jsonb_build_object('message','Investigating the street opportunity. Keep an eye on patrols.');
@@ -176,7 +176,7 @@ begin
    if v.pursuit is null then raise exception 'No police pursuit is active.';end if;
    rules:=v.pursuit->'rules';
    if p_action='escape' then
-    if v.arrives_at>t or game_private.scav_route_length(jsonb_build_array(v.route_points->-1,'[0,0]'::jsonb))>game_private.setting('scavenging_interaction_radius_percent')/100 or t<(v.pursuit->>'started_at')::timestamptz+make_interval(secs=>(rules->>'scavenging_escape_min_seconds')::int) then raise exception 'Reach the escape marker and wait for a clear exit.';end if;
+    if v.arrives_at>t or game_private.scav_route_length(jsonb_build_array(v.route_points->-1,'[0,0]'::jsonb))>game_private.setting('scavenging_interaction_radius_percent')/100.0 or t<(v.pursuit->>'started_at')::timestamptz+make_interval(secs=>(rules->>'scavenging_escape_min_seconds')::int) then raise exception 'Reach the escape marker and wait for a clear exit.';end if;
     result:=game_private.street_settle(s,u,'escaped');
    elsif p_action='abandon' then result:=game_private.street_settle(s,u,'abandoned');
    else
