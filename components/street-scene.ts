@@ -24,10 +24,12 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
  function cylinder(parent:THREE.Object3D,x:number,y:number,z:number,r:number,h:number,m:THREE.Material,segments=10){const geo=new THREE.CylinderGeometry(r,r,h,segments);geometries.push(geo);const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);parent.add(o);return o;}
  function label(text:string,x:number,y:number,z:number,width=6){const c=document.createElement('canvas');c.width=768;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#111c20';ctx.fillRect(0,0,768,128);ctx.strokeStyle='#ac8959';ctx.lineWidth=5;ctx.strokeRect(5,5,758,118);ctx.fillStyle='#dfd0b4';ctx.font='36px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text.toUpperCase(),384,64,730);const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);const material=new THREE.SpriteMaterial({map:texture});materials.push(material);const o=new THREE.Sprite(material);o.position.set(x,y,z);o.scale.set(width,width/6,1);scene.add(o);return o;}
  scene.add(new THREE.HemisphereLight('#c2d4e1','#383a36',2.3));const moon=new THREE.DirectionalLight('#bdd0e2',2);moon.position.set(-40,85,30);scene.add(moon);
- const road=mat('#30373a',.55,.12),walk=mat('#6c6c64',.84),line=mat('#b2a58b');box(scene,84,-.3,42,215,.5,130,road);
+ const road=mat('#989fa0',.65,.08),walk=mat('#6c6c64',.84),line=mat('#b2a58b');box(scene,84,-.3,42,215,.5,130,road);
+ const roadTexture=new THREE.TextureLoader().load('/art/scavenging/materials/dockside-asphalt.webp',()=>{if(disposed)roadTexture.dispose();});roadTexture.colorSpace=THREE.SRGBColorSpace;roadTexture.wrapS=roadTexture.wrapT=THREE.RepeatWrapping;roadTexture.repeat.set(36,22);roadTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());textures.push(roadTexture);road.map=roadTexture;road.bumpMap=roadTexture;road.bumpScale=.06;road.needsUpdate=true;
  const wallTexture=new THREE.TextureLoader().load('/art/scavenging/materials/warehouse-brick.webp',()=>{if(disposed)wallTexture.dispose();});wallTexture.colorSpace=THREE.SRGBColorSpace;wallTexture.wrapS=wallTexture.wrapT=THREE.RepeatWrapping;wallTexture.repeat.set(5,3);wallTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());textures.push(wallTexture);
  const wall=new THREE.MeshStandardMaterial({color:'#aaa49a',map:wallTexture,roughness:.9});materials.push(wall);
  const roof=mat('#383e40',.7,.2),windowDark=mat('#22333b',.32,.5),windowLight=mat('#bca172',.6,0,'#ac7840');
+ const lampPositions:THREE.Vector3[]=[];
  const M=STREET_METRES,r=options.width*M;
  for(let row=0;row<2;row++)for(let col=0;col<4;col++){
   const cx=(col+.5)*M,cz=(row+.5)*M,size=M-r*2,height=11+((col*7+row*3)%5)*2.4;
@@ -49,9 +51,10 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
  for(let x=0;x<=4;x++)for(let y=0;y<2;y++)for(let n=0;n<6;n++)box(scene,x*M,.001,y*M+8+n*5,.07,.02,.9,line);
  for(let y=0;y<=2;y++)for(let x=0;x<=4;x++){
   const px=x*M+(x===4?-1:1)*(r-.45),pz=y*M+(y===2?-1:1)*(r-.45);cylinder(scene,px,2.7,pz,.08,5.4,iron);box(scene,px,5.6,pz,.52,.55,.52,lamp);box(scene,px,5.95,pz,.75,.16,.75,iron);
-  if(x%2===1&&y===1){const glow=new THREE.PointLight('#efb36e',15,13,1.5);glow.position.set(px,5,pz);scene.add(glow);}
+  lampPositions.push(new THREE.Vector3(px,4.8,pz));
   if(x===1)label(options.state.streets[y]??options.district,px,3.7,pz,5);
  }
+ const nearbyLights=Array.from({length:4},()=>{const light=new THREE.PointLight('#efa65c',35,17,1.4);scene.add(light);return light;});
  // The harbour and distant skyline frame the playable streets without inventing accessible districts.
  const water=mat('#203b47',.15,.65);box(scene,84,-1.25,-34,300,.15,45,water);
  for(let i=0;i<24;i++){const h=12+(i*13%29);box(scene,-60+i*13,h/2,-90,7+(i%3)*3,h,7,iron);if(i%3===0)box(scene,-60+i*13,h+2,-90,1.2,4,1.2,stone);}
@@ -66,7 +69,7 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
  let targetKey='';function populate(){const key=state.targets.map(t=>t.id).join('|');if(key===targetKey)return;targetKey=key;targets.clear();for(const t of state.targets){const g=t.kind==='car'?vehicle():new THREE.Group();if(t.kind==='bin'){cylinder(g,0,.58,0,.42,1.1,iron,12);cylinder(g,0,1.16,0,.47,.09,iron,12);box(g,0,1.25,0,.19,.09,.09,gold);for(let i=0;i<8;i++){const a=i*Math.PI/4;box(g,Math.cos(a)*.4,.57,Math.sin(a)*.4,.04,.95,.04,stone);}}g.position.set((t.node%5+.035)*M,0,(Math.floor(t.node/5)+.035)*M);if(t.node%5===4)g.position.x-=.07*M;if(t.node>=10)g.position.z-=.07*M;g.userData.target=t.id;const hint=label(t.vehicle?.name??(t.kind==='car'?'Parked car':'Street bin'),0,2.4,0,3.4);hint.name='target-hint';g.add(hint);targets.add(g);}}
  populate();
  const eventGroup=new THREE.Group();scene.add(eventGroup);box(eventGroup,0,.45,0,.9,.8,.65,wood);const eventLabel=label('Street opportunity',0,2.4,0,4);eventGroup.add(eventLabel);
- const normalFog=scene.fog;
+ const normalFog=scene.fog;lamp.emissiveIntensity=.75;windowLight.emissiveIntensity=.35;
  const playerMarker=cylinder(scene,0,1,0,.9,1,mat('#b8cca5',.5,0,'#638976'));playerMarker.visible=false;
  const exit=label('District exit',0,3.8,0,5);
  const onLock=()=>{locked=true;touchMode=false;options.locked(true);},onUnlock=()=>{locked=false;keys.clear();options.locked(touchMode);};controls.addEventListener('lock',onLock);controls.addEventListener('unlock',onUnlock);
@@ -82,6 +85,7 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
   const patrols=state.operations?.pursuit?.patrols??state.patrols??[];for(const [id,g] of patrolMeshes)if(!patrols.some(p=>p.id===id)){scene.remove(g);patrolMeshes.delete(id);}for(const patrol of patrols){let g=patrolMeshes.get(patrol.id);if(!g){g=vehicle(true);patrolMeshes.set(patrol.id,g);scene.add(g);}const a=patrolPosition(patrol,now),b=patrolPosition(patrol,now+150);g.position.set(a[0]*M,0,a[1]*M);if(Math.hypot(b[0]-a[0],b[1]-a[1])>.001)g.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1]);g.getObjectByName('beacon')!.visible=Math.sin(elapsed*10)>-.2;}
   for(const g of targets.children){const hint=g.getObjectByName('target-hint');if(hint)hint.visible=overview||Math.hypot(g.position.x-p[0]*M,g.position.z-p[1]*M)<24;}
   const event=state.operations?.event;eventGroup.visible=!!event;if(event)eventGroup.position.set(event.node%5*M-.7,0,Math.floor(event.node/5)*M-.7);
+  const nearestLamps=[...lampPositions].sort((a,b)=>a.distanceToSquared(camera.position)-b.distanceToSquared(camera.position));nearbyLights.forEach((light,i)=>light.position.copy(nearestLamps[i]));
   scene.fog=overview?null:normalFog;
   if(!document.hidden)renderer.render(scene,overview?overhead:camera);
  }

@@ -27,3 +27,8 @@ Three.js is dynamically imported only on entering street view. Static architectu
 ## Verification
 
 GitHub runs unit collision/speed checks, PostgreSQL input authority/proximity/pursuit/custody checks, browser rendering and keyboard interaction tests, graphics fallback checks, and the full existing game regression suite. Legacy immediate-arrest tests explicitly retain their old configured mode; new tests enable and verify chase mode. Local app execution is not required.
+
+
+The companion `public/art/scavenging/materials/dockside-asphalt.webp` uses this built-in image-generation prompt:
+
+> Create a square seamless repeating game environment ALBEDO MATERIAL texture, perfectly flat orthographic straight down, edge to edge only surface, no perspective, no scene. A weathered 1930s industrial dockside street in Blackwater Mafia: very fine dark blue-charcoal asphalt with subtle old stone aggregate, small worn cobble repairs, cracks and rain-damp uneven patches. Photorealistic microtexture at human scale. Muted iron-gray and charcoal with restrained brown dirt in cracks, subtle lighter middle-dark variation. Diffuse neutral even lighting for use under real 3D lights, NO baked reflections, NO puddle reflections, NO lamps, NO shadows, NO painted road markings, NO objects, NO text, NO borders. Tile seamless on all four edges. Enough visible detailed material variation to make a real 3D street feel tactile. 1024 by 1024 square.
