@@ -24,6 +24,9 @@ export function useBinDiving(initial?:BinState){
   window.addEventListener("blackwater:game",poll);
   return()=>{alive.current=false;sequence.current++;clearInterval(tick);clearInterval(timer);window.removeEventListener("focus",poll);document.removeEventListener("visibilitychange",poll);window.removeEventListener("blackwater:game",poll);channel?.close();};
  },[refresh,initial]);
+ const autoCollected=useRef<string|null>(null);
+ const autoFinish=useRef<()=>void>(()=>{});
+ useEffect(()=>{const pending=data?.scavenging?.session?.pending;if(!pending){autoCollected.current=null;return;}if(!document.hidden&&!busy&&!retry&&!lock.current&&now>=Date.parse(pending.ready_at)&&pending.mode!=="theft"&&autoCollected.current!==pending.id){autoCollected.current=pending.id;autoFinish.current();}},[data,now,busy,retry]);
  const run=async(action:string,payload:Record<string,unknown>={}):Promise<boolean>=>{
   if(lock.current||!data)return false;lock.current=true;++sequence.current;setBusy(true);setNotice("");setFailed(false);
   const request={action,payload:{...payload,season_id:payload.season_id??data.season.id,request_id:payload.request_id??crypto.randomUUID()}};
@@ -41,6 +44,7 @@ export function useBinDiving(initial?:BinState){
   }catch(e){setFailed(true);setNotice(e instanceof Error?e.message:"Could not finish this action.");if(uncertain)setRetry(request);return false;}
   finally{lock.current=false;setBusy(false);}
  };
+ autoFinish.current=()=>{const pending=data?.scavenging?.session?.pending;if(pending)void run('scav_finish',{attempt_id:pending.id});};
  return {data,now,busy:busy||!!retry,working:busy,notice,failed,retry,result,
   act:(action:string,payload:Record<string,unknown>={})=>retry?Promise.resolve(false):run(action,payload),
   retryAction:()=>retry?run(retry.action,retry.payload):Promise.resolve(false),
