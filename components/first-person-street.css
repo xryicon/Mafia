@@ -16,3 +16,5 @@
 
 .fp-mobile-label{display:none}
 @media(max-width:700px){.fp-toolbar{flex-wrap:wrap;gap:5px;align-items:center}.fp-toolbar>div:first-child{max-width:none;flex:1 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px}.fp-toolbar>div:first-child .eyebrow{font-size:8px;max-width:170px}.fp-toolbar strong{white-space:nowrap;font-size:16px}.fp-toolbar .fp-tools{flex:1 0 100%;width:100%;flex-wrap:nowrap;justify-content:space-between;gap:4px}.fp-toolbar .fp-tools label{margin:0}.fp-desktop-label{display:none}.fp-mobile-label{display:inline}.fp-tools .fp-fullscreen{padding:4px 7px;min-width:30px}.fp-fullscreen .fp-mobile-label{font-size:20px}.fp-quality select{width:74px}.fp-audio input{width:43px}.fp-objective.exploring{padding:8px 10px}.fp-objective.exploring h3{font-size:13px;line-height:1.35}.fp-objective.exploring .eyebrow{font-size:9px}}
+
+@media(max-width:700px){.fp-objective.exploring{left:126px;right:10px;bottom:128px;width:auto;max-width:none;max-height:calc(100% - 162px);overflow-y:auto}.fp-objective.exploring h3{font-size:12px}.fp-objective.exploring .eyebrow{font-size:8px;letter-spacing:.8px}}
