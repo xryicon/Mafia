@@ -36,6 +36,8 @@ jobs:
           path: |
             test-results/first-person-*.jpg
             test-results/first-person-*/error-context.md
+            test-results/street-latency-*/error-context.md
+            test-results/street-equipment-*/error-context.md
           if-no-files-found: ignore
           retention-days: 7
       - uses: actions/upload-artifact@v4
