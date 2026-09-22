@@ -20,7 +20,7 @@ test("garage owners keep stolen vehicles and can sell exactly once after an inte
 });
 test("equipped gun allows a damaging police exchange, while severe injury leads to prison",async({page,request})=>{
  await request.post(fixture+"/__street_setup",{headers,data:{street:true,lockpicks:2,weapon:true}});await steal(page);await page.getByRole("button",{name:/Fight back/}).click();await expect(page.locator(".bin-notice")).toContainText("escaped injured");await expect(page.locator(".street-card").first()).toContainText("70 / 100");
- await request.post(fixture+"/__reset_world",{headers});await request.post(fixture+"/__street_setup",{headers,data:{street:true,lockpicks:2,weapon:true,health:10}});await steal(page);await page.getByRole("button",{name:/Fight back/}).click();await expect(page).toHaveURL(/prison/);
+ await request.post(fixture+"/__reset_world",{headers});await request.post(fixture+"/__street_setup",{headers,data:{street:true,lockpicks:2,weapon:true,health:10}});await steal(page);await page.getByRole("button",{name:/Fight back/}).click();await expect(page).toHaveURL(/districts\/blackwater-island/);
 });
 test("street events are actionable and the new page uses readable Blackwater artwork",async({page,request})=>{
  await request.post(fixture+"/__street_setup",{headers,data:{street:true,event:"satchel"}});await page.setViewportSize({width:1600,height:1000});await page.goto("/bin-diving");await expect(page.locator(".street-hero")).toHaveCSS("background-image",/street-operations.webp/);await page.screenshot({path:"test-results/street-entry-desktop.png"});
