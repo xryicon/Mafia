@@ -13,7 +13,7 @@ async function equipM4(request:APIRequestContext,n=35){
 }
 async function start(page:Page){await page.goto("/shooting-range");await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-intro")).toHaveCount(0);await expect(page.locator(".range-action-state")).toHaveText("Ready to fire");}
 async function aim(page:Page,lane:number){const el=page.getByRole("button",{name:"Shooting lane",exact:true});await el.scrollIntoViewIfNeeded();const b=await el.boundingBox();const t=await page.locator(`[data-lane="${lane}"]`).getAttribute("transform");const xy=t!.match(/[\d.]+/g)!.map(Number);await page.mouse.click(b!.x+xy[0]/1000*b!.width,b!.y+xy[1]/600*b!.height);}
-test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixtures");await request.post(base+"/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
+test.beforeEach(async({context,request})=>{await context.addInitScript(()=>localStorage.setItem("blackwater:range-view","2d"));test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixtures");await request.post(base+"/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
 
 test("range shares game HUD, requires equipment and is reachable from dashboard",async({page})=>{
  await page.goto("/dashboard");await page.locator(".command-quick").getByRole("link",{name:/Shooting Range/i}).click();await expect(page).toHaveURL(/shooting-range/);
