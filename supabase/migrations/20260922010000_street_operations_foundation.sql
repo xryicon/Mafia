@@ -169,7 +169,7 @@ begin
   insert into game_private.bin_requests(season_id,player_id,request_id,action,payload,result) values(s,uid,nonce,p_action,p_payload,result);
   return result;
  exception
-  when check_violation or not_null_violation or numeric_value_out_of_range or invalid_text_representation then return jsonb_build_object('error','Check the values: chances must total at most 100%, cash must be a valid range, and cooldown must be 1â€“86,400 seconds.');
+  when check_violation or not_null_violation or numeric_value_out_of_range or invalid_text_representation then return jsonb_build_object('error','Check the values: chances must total at most 100%, cash must be a valid range, and cooldown must be 1-86,400 seconds.');
   when raise_exception then return jsonb_build_object('error',SQLERRM);
  end;
 end $$;
