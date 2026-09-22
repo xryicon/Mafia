@@ -6,7 +6,7 @@ async function capture(page:Page,name:string){const shot=await page.screenshot({
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture only");await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("dashboard entry, find a pickaxe, equip it and mine with the same equipment",async({page})=>{
  await page.setViewportSize({width:1600,height:1100});await page.goto("/dashboard");await page.getByRole("link",{name:"Scavenging",exact:true}).click();await expect(page).toHaveURL(/bin-diving/);await expect(page.locator(".command-city")).toBeVisible();
- await expect(page.getByRole("heading",{name:"Scavenging",exact:true})).toBeVisible();await expect(page.locator(".bin-district-intel")).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Scavenging",exact:true})).toBeVisible();await expect(page.locator(".street-district-bar")).toBeVisible();
  for(const width of [1920,1448,1366,1280,1024,850,768,390,360,1600]){await page.setViewportSize({width,height:1100});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Bin diving overflow at "+width).toBe(true);}
  await capture(page,"bin-desktop");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-details");
  await searchBin(page);await expect(page.locator(".bin-result")).toContainText("Pickaxe");await enterStreet(page);await expect(page.getByRole("button",{name:/Next search in/})).toBeDisabled();
@@ -14,11 +14,11 @@ test("dashboard entry, find a pickaxe, equip it and mine with the same equipment
  await page.getByRole("link",{name:"Explore Mines & Quarries"}).click();await expect(page.locator(".mine-equipment")).toContainText("100 condition remaining");
 });
 test("cash and all blueprints persist, with one cooldown across districts",async({page,request})=>{
- await page.goto("/bin-diving?district=the-waterfront");await expect(page.locator(".bin-search>header")).toContainText("The Waterfront");
+ await page.goto("/bin-diving?district=the-waterfront");await expect(page.locator(".street-district-bar")).toContainText("The Waterfront");
  for(const [item,label] of [["cash","$75"],["pistol_blueprint","Homemade pistol blueprint"],["bullet_blueprint","Homemade bullet blueprint"],["bandages_blueprint","Bandages blueprint"],["nothing","Nothing this time."]]){
   await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{next:item,ready:true}});
   await page.getByRole("button",{name:"Refresh bin diving"}).click();await searchBin(page);await expect(page.locator(".bin-result")).toContainText(label);
-  await page.locator(".bin-district-list").getByRole("button",{name:/Old Town/}).click();await enterStreet(page);await expect(page.getByRole("button",{name:/Next search in/})).toBeDisabled();
+  await page.getByLabel("District",{exact:true}).selectOption({label:"Old Town"});await enterStreet(page);await expect(page.getByRole("button",{name:/Next search in/})).toBeDisabled();
  }
  await page.reload();await expect(page.locator(".bin-stash")).toContainText("Homemade pistol blueprint");await expect(page.locator(".bin-history li")).toHaveCount(5);
 });
@@ -26,7 +26,7 @@ test("district openings refresh automatically and mobile layout fits",async({pag
  await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");
  await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{addDistrict:true,lockdown:true}});
  await page.getByRole("button",{name:"Refresh bin diving"}).click();await expect(page.getByLabel("District",{exact:true}).locator("option")).toContainText(["Select a district","Mines and Quarries"]);
- await page.getByLabel("District",{exact:true}).selectOption("new-district");await expect(page.locator(".bin-search>header")).toContainText("New District");
+ await page.getByLabel("District",{exact:true}).selectOption("new-district");await expect(page.locator(".street-district-bar")).toContainText("New District");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await capture(page,"bin-mobile");await page.getByLabel("District",{exact:true}).selectOption("district-0");await expect(page.getByRole("button",{name:/^Enter /})).toBeDisabled();
 });

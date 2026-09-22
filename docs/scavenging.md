@@ -17,3 +17,20 @@ Owner → Bin diving & loot controls the shared loot chances and city cooldown. 
 All mutations use the existing economic transaction lock, active-player and season guards, and idempotency receipts. Cash uses the existing ledger; inventory capacity and XP use existing systems. The old public direct-dive action rejects calls, while private reward-engine regression tests continue to exercise the underlying loot logic. New PostgreSQL tests cover the public scavenging interface.
 
 Apply `20260920140000_scavenging.sql` before deploying this interface. This migration does not delete or reset existing money, items, skill XP or history. GitHub CI supplies build, browser, database and regression validation; the app is not run locally.
+
+
+## Street operations
+
+Scavenging now has timed courier/supply opportunities and police sweeps, plus three configurable parked-vehicle models. Car lockpicking still searches for the established loot; **Steal vehicle** spends one lockpick and attempts an ignition bypass instead. A successful theft awards configured Lockpicking XP and starts a persistent pursuit. Walking normally remains safe.
+
+A responding police unit follows the player's street destination. Both patrol and player movement are swept over the complete elapsed interval, including route corners. Reloading, leaving the page or polling less often cannot erase the pursuit. Reach the marked exit after the minimum escape time, fight back with compatible equipped ammunition, or abandon the car. The cordon deadline leads to prison and seizure. Combat consumes ammunition, wears the gun, applies return fire to armour then health, and can escape, continue or arrest an incapacitated player.
+
+A successful getaway stores the vehicle in an accessible player-owned or leased garage with an empty vehicle bay. Without space, including a lease expiring mid-pursuit, it sells immediately through the cash ledger. Garage vehicles remain private to their player, can be sold from the garage or Scavenging, and retain their acquisition-time resale value. Former tenants' vehicles can still be recovered by sale and do not occupy a new tenant's bays. Vehicles currently provide storage and resale, not general-world driving. All vehicle and operation records retain their season; next-season queries start a fresh collection while history remains retained.
+
+Blackwater Island has separate patrol count/speed/radius, pursuing-unit speed, sentence length and cash multiplier settings. Base item percentages remain controlled by the existing loot rules. Opportunity cash multipliers combine with the island cash multiplier. All new balance settings are under Owner → Economy (`scavenging_*`); vehicle availability and resale prices are in Owner → Bin diving & loot. Owner changes are audited and active operations retain their risk snapshots.
+
+Two migrations introduce private vehicle/event/history state, guarded actions and a private garage collection RPC. No direct browser table access is granted. Tests cover early completion, proximity, tools, duplicate requests, ledger credits, vehicle ownership, equipment consumption, armour/health, custody, island rewards and swept collisions. Browser tests exercise events, responsive pursuit controls, no-garage sale, garage storage and uncertain-response retry.
+
+### Artwork
+
+`public/art/scavenging/street-operations.webp` was generated for this feature with ImageGen and optimized to WebP. Final art direction: cinematic landscape 1930s Blackwater backstreet at night, wet cobblestones, deep blue-black and charcoal, muted copper/gold streetlights, unbranded period sedan on the right, bins on the left, distant police patrol, dark readable space on the left; no text, logos or modern objects. The established overhead street artwork and navigable road coordinates remain aligned.

@@ -6,6 +6,8 @@ begin
  insert into auth.users(id) values(u);perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
  select id into d from public.game_districts where slug='the-waterfront';
  perform set_config('game.reason','CI police patrol tests',true);
+ update public.game_settings set value=2 where key='scavenging_patrol_count';
+ update public.game_settings set value=0 where key='scavenging_event_chance';
  patrols:=jsonb_build_array(jsonb_build_object('id','test-patrol','route_points','[[0,0],[4,0],[0,0]]'::jsonb,'epoch',extract(epoch from t),'seconds_per_block',1,'radius',0.2));
  perform pg_temp.check_patrol(game_private.scav_patrol_contact(patrols,'[2,0]',t,t+interval '4 seconds')='test-patrol','Patrol crossing between polls was missed');
  perform pg_temp.check_patrol(game_private.scav_patrol_contact(patrols,'[2,1]',t,t+interval '20 seconds') is null,'Patrol caught an out-of-range player');
