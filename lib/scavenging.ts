@@ -1,8 +1,9 @@
-export type StreetTarget={id:string;node:number;kind:"bin"|"car";ready_at:string|null};
+import type {VehicleModel,StreetOperations} from "./street-operations";
+export type StreetTarget={id:string;node:number;kind:"bin"|"car";ready_at:string|null;vehicle?:VehicleModel|null};
 export type StreetPosition=[number,number];
 export type PolicePatrol={id:string;route_points:StreetPosition[];epoch:number;seconds_per_block:number;radius:number};
-export type StreetSession={district_id:string;node:number;path:number[];route_points?:StreetPosition[];departed_at:string;arrives_at:string;pending:null|{id:string;target_id:string;kind:"bin"|"car";started_at:string;ready_at:string;success_percent:number;xp:number}};
-export type ScavengingState={session:StreetSession|null;targets:StreetTarget[];streets:string[];settings:Record<string,number>;patrols?:PolicePatrol[];caught?:boolean;recent:{kind:string;opened:boolean;xp:number;created_at:string}[]};
+export type StreetSession={district_id:string;node:number;path:number[];route_points?:StreetPosition[];departed_at:string;arrives_at:string;pending:null|{id:string;target_id:string;kind:"bin"|"car";started_at:string;ready_at:string;success_percent:number;xp:number;mode?:"theft"|"event";vehicle?:VehicleModel;event_kind?:string}};
+export type ScavengingState={session:StreetSession|null;targets:StreetTarget[];streets:string[];settings:Record<string,number>;patrols?:PolicePatrol[];caught?:boolean;operations?:StreetOperations;recent:{kind:string;opened:boolean;xp:number;created_at:string}[]};
 // Presentation coordinates aligned to the overhead artwork. Server node IDs and travel rules are unchanged.
 export const STREET_COLUMNS=[73,289,497,711,928] as const;
 export const STREET_ROWS=[114,344,607] as const;

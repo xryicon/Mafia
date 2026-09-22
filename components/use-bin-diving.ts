@@ -6,14 +6,14 @@ import {createClient} from "@/lib/supabase/client";
 import type {BinState,BinReceipt} from "@/lib/bin-diving";
 type Request={action:string;payload:Record<string,unknown>};
 export function useBinDiving(initial?:BinState){
- const router=useRouter(),searching=useRef(!!initial?.scavenging?.session?.pending),lastPoll=useRef(0);
+ const router=useRouter(),searching=useRef(!!(initial?.scavenging?.session?.pending||initial?.scavenging?.operations?.pursuit)),lastPoll=useRef(0);
  const [data,setData]=useState(initial),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[failed,setFailed]=useState(false),[retry,setRetry]=useState<Request|null>(null),[result,setResult]=useState<BinReceipt|null>(null);
  const lock=useRef(false),sequence=useRef(0),alive=useRef(true),offset=useRef(initial?Date.parse(initial.server_time)-Date.now():0);
  const [now,setNow]=useState(initial?Date.parse(initial.server_time):Date.now());
  const refresh=useCallback(async()=>{
   const version=++sequence.current;const r=await createClient().rpc("bin_diving_state");
   if(r.error||!r.data)throw new Error("The streets could not refresh. Try again.");
-  if(alive.current&&version===sequence.current){setData(r.data);searching.current=!!r.data.scavenging?.session?.pending;offset.current=Date.parse(r.data.server_time)-Date.now();setNow(Date.now()+offset.current);if(r.data.scavenging?.caught)router.replace(PRISON_PATH);}
+  if(alive.current&&version===sequence.current){setData(r.data);searching.current=!!(r.data.scavenging?.session?.pending||r.data.scavenging?.operations?.pursuit);offset.current=Date.parse(r.data.server_time)-Date.now();setNow(Date.now()+offset.current);if(r.data.scavenging?.caught)router.replace(PRISON_PATH);}
  },[router]);
  useEffect(()=>{alive.current=true;void refresh().catch(e=>{setFailed(true);setNotice(e.message);});
   const tick=setInterval(()=>setNow(Date.now()+offset.current),1000);

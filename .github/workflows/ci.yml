@@ -94,6 +94,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging_patrols.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/tradable_loot.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/refineries.sql
+      - name: Street theft, garage ownership and police combat
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/street_operations.sql
+
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh
 
