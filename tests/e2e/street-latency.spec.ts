@@ -83,6 +83,8 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
  expect(actions.filter(action=>action==="search").length).toBe(searches+1);
 
  await page.getByRole("button",{name:"Walk the streets",exact:true}).click();
+ // Mouse capture is asynchronous; movement keys sent before its lock event are ignored.
+ await expect(page.locator(".fp-crosshair")).toBeVisible();
  const exitCount=steps.length;
  await page.keyboard.down("KeyW");
  await expect.poll(()=>steps.slice(exitCount).some(moving)).toBe(true);
