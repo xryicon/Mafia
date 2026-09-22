@@ -6,8 +6,16 @@ export function onStreet([x,y]:StreetPosition,width=FOOT_ROAD_HALF_WIDTH){
  return Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&x<=4&&y>=0&&y<=2&&(Math.abs(x-Math.round(x))<=width||Math.abs(y-Math.round(y))<=width);
 }
 export function streetSight(a:StreetPosition,b:StreetPosition,width=FOOT_ROAD_HALF_WIDTH){
- const steps=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.025));
- for(let i=0;i<=steps;i++)if(!onStreet([a[0]+(b[0]-a[0])*i/steps,a[1]+(b[1]-a[1])*i/steps],width))return false;
+ if(!onStreet(a,width)||!onStreet(b,width))return false;
+ // Exact segment/rectangle clipping: a tiny diagonal across a corner must not escape sampling.
+ for(let x=0;x<4;x++)for(let y=0;y<2;y++){
+  let lo=0,hi=1,miss=false;
+  for(const axis of [0,1] as const){const min=(axis===0?x:y)+width,max=(axis===0?x:y)+1-width,d=b[axis]-a[axis];
+   if(Math.abs(d)<1e-12){if(a[axis]<=min||a[axis]>=max){miss=true;break;}}
+   else{const t0=(min-a[axis])/d,t1=(max-a[axis])/d;lo=Math.max(lo,Math.min(t0,t1));hi=Math.min(hi,Math.max(t0,t1));}
+  }
+  if(!miss&&hi>lo+1e-12)return false;
+ }
  return true;
 }
 export function footStep(origin:StreetPosition,dx:number,dy:number,seconds:number,secondsPerBlock:number,width=FOOT_ROAD_HALF_WIDTH):StreetPosition{

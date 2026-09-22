@@ -21,6 +21,7 @@ do $$declare u uuid:=gen_random_uuid();s uuid:=game_private.current_season();d u
  r:=public.street_motion('step',q||'{"sequence":3,"dx":0,"dy":0}'::jsonb);select * into v from game_private.scav_sessions where player_id=u;
  perform pg_temp.fp_check(v.arrives_at=v.departed_at,'Key release failed to stop');
  perform pg_temp.fp_check(game_private.scav_position(before_row.route_points,before_row.departed_at,before_row.arrives_at,clock_timestamp()+interval '1 hour')=before_row.route_points->-1,'Disconnected input lease continued forever');
+ perform pg_temp.fp_check(not game_private.foot_clear('[0.129,0.135]','[0.135,0.129]',.13),'Tiny corner clipping bypassed walls');
  point:=game_private.foot_step('[0,0]',1,1,.5,10,.13);perform pg_temp.fp_check(abs(sqrt((point->>0)::numeric^2+(point->>1)::numeric^2)-.05)<.00001,'Diagonal input speeds up travel');
  perform pg_temp.fp_check(not game_private.foot_clear('[0,0.5]','[1,0.5]',.13),'Building does not block sight');
  select x into site from jsonb_array_elements(public.bin_diving_state()#>'{scavenging,targets}')x where x->>'kind'='bin' limit 1;

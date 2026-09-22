@@ -9,8 +9,18 @@ create function game_private.foot_walkable(p jsonb,width numeric) returns boolea
  select (p->>0)::numeric between 0 and 4 and (p->>1)::numeric between 0 and 2 and (abs((p->>0)::numeric-round((p->>0)::numeric))<=width or abs((p->>1)::numeric-round((p->>1)::numeric))<=width);
 $$;
 create function game_private.foot_clear(a jsonb,b jsonb,width numeric) returns boolean language plpgsql immutable set search_path='' as $$
-declare steps integer:=greatest(1,ceil(sqrt(((b->>0)::numeric-(a->>0)::numeric)^2+((b->>1)::numeric-(a->>1)::numeric)^2)/.025));i integer;begin
- for i in 0..steps loop if not game_private.foot_walkable(jsonb_build_array((a->>0)::numeric+((b->>0)::numeric-(a->>0)::numeric)*i/steps,(a->>1)::numeric+((b->>1)::numeric-(a->>1)::numeric)*i/steps),width) then return false;end if;end loop;return true;
+declare x integer;y integer;axis integer;lo numeric;hi numeric;miss boolean;minimum numeric;maximum numeric;delta numeric;t0 numeric;t1 numeric;begin
+ if not game_private.foot_walkable(a,width) or not game_private.foot_walkable(b,width) then return false;end if;
+ for x in 0..3 loop for y in 0..1 loop
+  lo:=0;hi:=1;miss:=false;
+  for axis in 0..1 loop
+   minimum:=(case when axis=0 then x else y end)+width;maximum:=minimum+1-2*width;delta:=(b->>axis)::numeric-(a->>axis)::numeric;
+   if abs(delta)<.000000000001 then
+    if (a->>axis)::numeric<=minimum or (a->>axis)::numeric>=maximum then miss:=true;exit;end if;
+   else t0:=(minimum-(a->>axis)::numeric)/delta;t1:=(maximum-(a->>axis)::numeric)/delta;lo:=greatest(lo,least(t0,t1));hi:=least(hi,greatest(t0,t1));end if;
+  end loop;
+  if not miss and hi>lo+.000000000001 then return false;end if;
+ end loop;end loop;return true;
 end$$;
 create function game_private.foot_step(origin jsonb,dx double precision,dy double precision,seconds double precision,speed double precision,width numeric) returns jsonb language plpgsql immutable set search_path='' as $$
 declare magnitude double precision:=greatest(1,sqrt(dx*dx+dy*dy));distance double precision:=greatest(0,least(.8,seconds))/greatest(1,speed);steps integer;i integer;point jsonb:=origin;x double precision;y double precision;begin

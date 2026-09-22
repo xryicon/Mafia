@@ -6,6 +6,6 @@ test('walking stays inside the district and slides along buildings without cross
 });
 test('diagonal movement does not make a player faster and building blocks obscure sight',()=>{
  const a=footStep([0,0],1,0,.5,10),b=footStep([0,0],1,1,.5,10);assert.ok(Math.abs(Math.hypot(...a)-Math.hypot(...b))<1e-9);
- assert.equal(streetSight([0,0],[4,0]),true);assert.equal(streetSight([0,.5],[1,.5]),false);
+ assert.equal(streetSight([.129,.135],[.135,.129]),false);assert.equal(streetSight([0,0],[4,0]),true);assert.equal(streetSight([0,.5],[1,.5]),false);
  assert.deepEqual(footStep([0,0],-1,-1,10,10),[0,0]);assert.deepEqual(footStep([0,0],0,0,.5,10),[0,0]);
 });
