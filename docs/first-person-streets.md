@@ -32,3 +32,19 @@ GitHub runs unit collision/speed checks, PostgreSQL input authority/proximity/pu
 The companion `public/art/scavenging/materials/dockside-asphalt.webp` uses this built-in image-generation prompt:
 
 > Create a square seamless repeating game environment ALBEDO MATERIAL texture, perfectly flat orthographic straight down, edge to edge only surface, no perspective, no scene. A weathered 1930s industrial dockside street in Blackwater Mafia: very fine dark blue-charcoal asphalt with subtle old stone aggregate, small worn cobble repairs, cracks and rain-damp uneven patches. Photorealistic microtexture at human scale. Muted iron-gray and charcoal with restrained brown dirt in cracks, subtle lighter middle-dark variation. Diffuse neutral even lighting for use under real 3D lights, NO baked reflections, NO puddle reflections, NO lamps, NO shadows, NO painted road markings, NO objects, NO text, NO borders. Tile seamless on all four edges. Enough visible detailed material variation to make a real 3D street feel tactile. 1024 by 1024 square.
+
+
+## Graphics and responsiveness update
+
+The dockside scene now uses varied adjoining façades, warehouse signs, pitched roofs, shared bevelled period-car geometry, wet pavement and a detailed panoramic harbor. Geometry is instanced by both material and geometry, including lamp posts and vehicles. GPU resources are released when targets retire or the street view closes.
+
+Graphics defaults to Auto, which bounds rendered pixels and adapts to sustained frame times. High and Performance can be selected and persist on the device. Decorative rain respects reduced motion; Performance reduces light effects. Graphics preferences never change movement speed, patrol rules or rewards.
+
+New generated artwork: `public/art/scavenging/materials/blackwater-harbor-panorama.webp` (202 KB). Built-in image generation; the original is preserved at `C:/Users/dylut/.codex/generated_images/01a08d05-4e6d-7f32-8946-ab91e935d80a/exec-8d2fd88b-0ed1-450a-ad22-43c7ef6d64cc.png`.
+
+Prompt: Production game asset for Blackwater Mafia first-person browser streets: a cinematic seamless horizontal 360-degree 2:1 equirectangular panorama of a dark 1930s industrial waterfront at human eye height. Distant art deco skyscrapers, domed and peaked warehouses, cranes, smokestacks and cargo ships, warm amber windows reflected in blue-black water, layered moonlit charcoal clouds. Refined realistic crime-film atmosphere; desaturated slate and iron blue, copper highlights and clear architectural detail. Level horizon at vertical center, matching left/right edges, lower quarter dark water only. No nearby foreground objects, text, labels, logos, people, modern cars or interface.
+
+
+The street HUD includes a six-slot equipment strip using the authenticated existing inventory read. Slots inspect the current loadout and link to Inventory; they do not create a second equipment authority. Camera-space gloves and sleeves show unarmed hands or the server-selected equipped weapon. Movement, sound and hands stop on pause, exit or hidden tabs. Actual movement drives footfalls, so pushing against a building does not keep the walking loop running. Sound and volume preferences are device-local; audio starts only after player interaction. Recorded asset sources and licenses are documented in `audio-streets.md`.
+
+Connection handling serializes inputs, discards intermediate queued directions, predicts within the accepted movement lease, reconciles without smoothing through buildings, and sends a final stop when leaving. Browser regressions cover delayed replies, stopping, touch controls, equipment inspection, fullscreen and saved preferences.
