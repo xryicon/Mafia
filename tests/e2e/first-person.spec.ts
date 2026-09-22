@@ -20,3 +20,16 @@ test('devices without WebGL keep a usable aerial map',async({page})=>{
  await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){if(type==='webgl2')return null;return original.apply(this,[type,...args] as Parameters<typeof original>);} as typeof original;});
  await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Return to aerial map'})).toBeVisible();await page.getByRole('button',{name:'Return to aerial map'}).click();await expect(page.locator('.scav-map')).toBeVisible();
 });
+
+test.describe('touch streets',()=>{
+ test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ test('touch movement, release and viewport controls',async({page})=>{
+  await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.getByLabel('Movement pad')).toBeVisible();
+  const pad=await page.getByLabel('Movement pad').boundingBox();if(!pad)throw new Error('Missing touch controls');const x=pad.x+pad.width/2,y=pad.y+pad.height/2,cdp=await page.context().newCDPSession(page);
+  const moved=page.waitForRequest(r=>r.url().includes('/rpc/street_motion')&&r.postDataJSON().p_action==='step'&&r.postDataJSON().p_payload.dx>.1);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-30}]});await moved;
+  const stopped=page.waitForRequest(r=>r.url().includes('/rpc/street_motion')&&r.postDataJSON().p_action==='step'&&r.postDataJSON().p_payload.dx===0&&r.postDataJSON().p_payload.dy===0);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await stopped;
+  expect(await page.evaluate(()=>{const bounds=document.querySelector('.fp-street')!.getBoundingClientRect(),header=document.querySelector('.estate-header')!.getBoundingClientRect();return bounds.top>=header.bottom-2&&bounds.bottom<=innerHeight+2&&document.documentElement.scrollWidth<=innerWidth;})).toBe(true);
+  await page.screenshot({path:'test-results/first-person-touch.jpg',type:'jpeg',quality:85});await page.getByRole('button',{name:'Exit street view'}).click();await expect(page.locator('.scav-map')).toBeVisible();
+ });
+});
