@@ -5,7 +5,7 @@ type Context={scene:THREE.Scene;width:number;streets:string[];district:string;ma
 export function createStreetEnvironment(c:Context){
  const {scene,box,cylinder,mat,materials,textures,geometries}=c,M=STREET_METRES,r=c.width*M;
  let disposed=false,loaded=0;const loader=new THREE.TextureLoader();
- const texture=(url:string,repeatX=1,repeatY=1)=>{const t=loader.load(url,()=>{loaded++;for(const other of textures)if(other.source===t.source)other.needsUpdate=true;if(disposed)t.dispose();});t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeatX,repeatY);t.anisotropy=c.anisotropy;textures.push(t);return t;};
+ const texture=(url:string,repeatX=1,repeatY=1)=>{const t=loader.load(url,()=>{loaded++;for(const other of textures)if(other.source===t.source)other.needsUpdate=true;if(disposed)t.dispose();},undefined,()=>{loaded++;});t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeatX,repeatY);t.anisotropy=c.anisotropy;textures.push(t);return t;};
  const sky=texture('/art/scavenging/materials/blackwater-harbor-panorama.webp');sky.mapping=THREE.EquirectangularReflectionMapping;scene.background=sky;scene.environment=sky;scene.environmentIntensity=.28;scene.backgroundIntensity=.75;
  scene.fog=new THREE.FogExp2('#263039',.0038);
  scene.add(new THREE.HemisphereLight('#a9bccd','#302820',1.6));const moon=new THREE.DirectionalLight('#b8c5dd',1.25);moon.position.set(-35,75,-30);scene.add(moon);

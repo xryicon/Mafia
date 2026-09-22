@@ -2,21 +2,21 @@ import {test,expect} from '@playwright/test';
 import {cookie,token} from '../fixtures/identity.mjs';
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=='1','Isolated fixture only');await request.post('http://127.0.0.1:54329/__reset_world',{headers:{Authorization:'Bearer '+token}});await context.addCookies([{name:'sb-127-auth-token',value:cookie,domain:'localhost',path:'/',sameSite:'Lax'}]);});
 test('walk to cars, require a tool, consume it once and award Lockpicking XP',async({page,request})=>{
- await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await expect(page.getByRole('group',{name:/scavenging street map/})).toBeVisible();
  await page.locator('.scav-target[aria-label^="Car"]').first().click();await expect(page.getByRole('button',{name:'Lockpick required'})).toBeDisabled();
  // Acquire the real tool through the existing loot fixture rather than fake UI balances.
  await request.post('http://127.0.0.1:54329/__bin_setup',{headers:{Authorization:'Bearer '+token},data:{next:'lockpick',ready:true}});
- await page.locator('.scav-target[aria-label^="Bin"]').first().click();await page.getByRole('button',{name:'Search the bins',exact:true}).click();await page.getByRole('button',{name:'Collect search'}).click();
+ await page.locator('.scav-target[aria-label^="Bin"]').first().click();await page.getByRole('button',{name:'Search the bins',exact:true}).click();await page.waitForResponse(r=>r.url().includes("/rpc/scavenging_action")&&r.request().postDataJSON().p_action==="finish");
  await request.post('http://127.0.0.1:54329/__bin_setup',{headers:{Authorization:'Bearer '+token},data:{next:'cash',ready:true}});await page.getByRole('button',{name:'Refresh bin diving'}).click();
  await page.locator('.scav-target[aria-label^="Car"]').first().click();await page.getByRole('button',{name:'Lockpick car',exact:true}).click();
  await expect(page.locator('.scav-desk-actions')).toContainText('0 lockpicks carried');
- await page.reload();await expect(page.getByRole('button',{name:'Collect search'})).toBeVisible();await page.getByRole('button',{name:'Collect search'}).click();
+ await page.reload();await page.waitForResponse(r=>r.url().includes("/rpc/scavenging_action")&&r.request().postDataJSON().p_action==="finish");
  await expect(page.locator('.bin-notice')).toContainText('+25 Lockpicking XP');await expect(page.locator('.scav-target.searched')).toHaveCount(2);
  await page.goto('/skills');await expect(page.locator('.skills-workspace')).toContainText('Lockpicking');await expect(page.locator('.skill-card.scavenging')).toContainText('20 XP earned');await page.getByRole('tab',{name:/Scavenging/}).click();await expect(page.getByRole('link',{name:'Go scavenging'})).toHaveAttribute('href','/bin-diving');
 });
 test('named streets, keyboard movement, map zoom and phone layout',async({page})=>{
- await page.setViewportSize({width:1440,height:1000});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await page.setViewportSize({width:1440,height:1000});await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await expect(page.locator('.scav-map')).toContainText('Harbor Road');
  await expect(page.locator('.scav-map-art')).toHaveAttribute('href','/art/scavenging/blackwater-streets.webp');
  await expect.poll(()=>page.evaluate(async()=>{const image=new Image();image.src='/art/scavenging/blackwater-streets.webp';await image.decode();return image.naturalWidth;})).toBeGreaterThan(1000);
@@ -30,7 +30,7 @@ test('named streets, keyboard movement, map zoom and phone layout',async({page})
  if(process.env.VISUAL_REVIEW==='1'){const b=image.toString('base64');for(let n=0;n<b.length;n+=12000)console.log('VISUAL_REVIEW_scavenging-mobile_'+Math.floor(n/12000)+':'+b.slice(n,n+12000));}
 });
 test('free street clicks send fractional destinations and street activity can be paused',async({page})=>{
- await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  const map=page.locator('.scav-map');await expect(map).toBeVisible();
  const box=await map.boundingBox();if(!box)throw new Error('Map not visible');
  const request=page.waitForRequest(r=>r.url().includes('/rpc/scavenging_action')&&r.postDataJSON().p_action==='move');
@@ -46,7 +46,7 @@ test('free street clicks send fractional destinations and street activity can be
 
 test('police patrols leave walking players alone and send caught searches to prison',async({page,request})=>{
  await request.post('http://127.0.0.1:54329/__patrol_setup',{headers:{Authorization:'Bearer '+token},data:{enabled:true,catchSearch:true}});
- await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await expect(page.getByRole('group',{name:'1 police patrols',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Street activity',exact:true}).click();await expect(page.locator('.scav-police')).toBeVisible();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();await expect(page.getByRole('button',{name:'Search the bins',exact:true})).toBeEnabled();
@@ -59,7 +59,7 @@ test('police patrols leave walking players alone and send caught searches to pri
 test('entering a district fits the entire map and search button on screen',async({page,request})=>{
  await request.post('http://127.0.0.1:54329/__patrol_setup',{headers:{Authorization:'Bearer '+token},data:{enabled:true}});
  for(const viewport of [{width:1440,height:900},{width:1366,height:768},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.goto('/bin-diving?district=the-waterfront');const enter=page.getByRole('button',{name:'Enter The Waterfront'});if(await enter.count())await enter.click();
+  await page.setViewportSize(viewport);await page.goto('/bin-diving?view=aerial&district=the-waterfront');const enter=page.getByRole('button',{name:'Enter The Waterfront'});if(await enter.count())await enter.click();
   await expect(page.locator('.scav-map')).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>{const map=document.querySelector('.scav-map')!.getBoundingClientRect(),desk=document.querySelector('.scav-action-desk')!.getBoundingClientRect(),header=document.querySelector('.estate-header')!.getBoundingClientRect();return map.top>=header.bottom-1&&map.bottom<=innerHeight&&desk.bottom<=innerHeight;})).toBe(true);
   expect(await page.locator('.scav-map-scroll').evaluate(el=>el.scrollHeight<=el.clientHeight+1&&el.scrollWidth<=el.clientWidth+1)).toBe(true);

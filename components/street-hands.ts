@@ -13,6 +13,7 @@ export type StreetHandsFrame={
 export type StreetHands={
  update:(frame:StreetHandsFrame)=>void;
  shot:()=>void;
+ punch:()=>void;
  dispose:()=>void;
 };
 
@@ -64,6 +65,7 @@ export function createStreetHands(camera:THREE.Camera):StreetHands{
   rifle:{left:[-.18,-.41,-.59,-.06],right:[.2,-.43,-.51,.1],weapon:[.035,-.13,-.61]},
  };
  const target=new THREE.Vector3();pistol.position.set(...poses.pistol.weapon);rifle.position.set(...poses.rifle.weapon);
+ let punchTime=0;
  let disposed=false,recoil=0,motion=0,reduced=false,mode:WeaponMode='none';
  const armPose=(group:THREE.Group,values:[number,number,number,number],amount:number)=>{group.position.lerp(target.set(values[0],values[1],values[2]),amount);group.rotation.z+=(values[3]-group.rotation.z)*amount;};
  const setMode=(next:WeaponMode)=>{mode=next;pistol.visible=next==='pistol';rifle.visible=next==='rifle';};
@@ -71,13 +73,16 @@ export function createStreetHands(camera:THREE.Camera):StreetHands{
  return {
   update:({moving,sprinting,time,dt,weaponName,visible,reducedMotion})=>{
    if(disposed)return;root.visible=visible;if(!visible){motion=0;return;}
-   const next:WeaponMode=!weaponName?'none':/(rifle|carbine)/i.test(weaponName)?'rifle':'pistol';if(next!==mode)setMode(next);
+   punchTime=Math.max(0,punchTime-dt);
+   const next:WeaponMode=punchTime>0?'none':!weaponName?'none':/(rifle|carbine)/i.test(weaponName)?'rifle':'pistol';if(next!==mode)setMode(next);
    reduced=reducedMotion;const step=Math.max(0,Math.min(.1,dt)),blend=1-Math.exp(-step*11);motion+=(Math.max(0,Math.min(1,moving))-motion)*blend;recoil*=Math.exp(-step*16);
    const pace=sprinting?11:8,amplitude=reducedMotion?0:.0065*motion*(sprinting?1.55:1),side=Math.sin(time*pace)*amplitude,drop=Math.abs(Math.cos(time*pace)) * amplitude;
    root.position.set(side,-drop,recoil*.035);root.rotation.set(recoil*-.07,0,-side*.55);
    const pose=poses[mode];armPose(leftArm,pose.left,blend);armPose(rightArm,pose.right,blend);
+   if(punchTime>0){const strike=Math.sin((1-punchTime/.38)*Math.PI);rightArm.position.z-=strike*.36;rightArm.position.y+=strike*.16;rightArm.rotation.x=-strike*.6;}else rightArm.rotation.x=0;
    const weapon=mode==='rifle'?rifle:pistol;if(mode!=='none'){weapon.position.lerp(target.set(...pose.weapon),blend);weapon.rotation.x=-recoil*(mode==='rifle'?.055:.11);weapon.rotation.z=side*.45;}
   },
+  punch:()=>{if(!disposed&&root.visible&&punchTime===0)punchTime=.38;},
   shot:()=>{if(!disposed&&!reduced&&root.visible)recoil=1;},
   dispose:()=>{if(disposed)return;disposed=true;camera.remove(root);geometries.forEach(value=>value.dispose());materials.forEach(value=>value.dispose());root.clear();}
  };

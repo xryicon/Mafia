@@ -34,7 +34,7 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
  // This scenario measures transport, not GPU throughput; visual coverage uses larger viewports.
  await page.setViewportSize({width:800,height:600});
  await page.addInitScript(()=>localStorage.setItem("blackwater:street-quality","performance"));
- await page.goto("/bin-diving?district=the-waterfront");
+ await page.goto("/bin-diving?view=aerial&district=the-waterfront");
  await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();
  await expect(page.getByRole("button",{name:"Search the bins",exact:true})).toBeEnabled();
