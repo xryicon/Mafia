@@ -46,7 +46,8 @@ test.describe('touch streets',()=>{
 
 test('graphics preferences persist and fullscreen keeps the street controls in view',async({page})=>{
  test.setTimeout(90000);
- await page.setViewportSize({width:1440,height:900});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
+ // Full-resolution screenshots are covered above; keep this control test light on software WebGL.
+ await page.setViewportSize({width:960,height:640});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
  const canvas=page.locator('.fp-canvas canvas'),quality=page.getByLabel('Street graphics quality');
  await quality.selectOption('performance');await expect(canvas).toHaveAttribute('data-quality','performance');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeLessThanOrEqual(.8);
  await quality.selectOption('high');await expect(canvas).toHaveAttribute('data-quality','high');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeGreaterThan(.8);
@@ -54,7 +55,7 @@ test('graphics preferences persist and fullscreen keeps the street controls in v
  // Software WebGL has verified High; exercise the remaining controls at bounded resolution.
  await quality.selectOption('performance');
  await page.getByRole('button',{name:'Full screen',exact:true}).click();await expect(page.getByRole('button',{name:'Exit full screen',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.fullscreenElement?.classList.contains('fp-street'))).toBe(true);
- const bounds=await page.locator('.fp-street').boundingBox();expect(bounds!.width).toBeGreaterThanOrEqual(1438);await page.getByRole('button',{name:'Exit full screen',exact:true}).click();
+ const bounds=await page.locator('.fp-street').boundingBox();expect(bounds!.width).toBeGreaterThanOrEqual(958);await page.getByRole('button',{name:'Exit full screen',exact:true}).click();
  await page.getByRole('button',{name:'Mute street sound',exact:true}).click();await page.getByLabel('Street sound volume').focus();await page.getByLabel('Street sound volume').press('Home');await page.getByLabel('Street sound volume').press('ArrowRight');
  await quality.selectOption('performance');await page.getByRole('button',{name:'Exit street view',exact:true}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(quality).toHaveValue('performance');await expect(canvas).toHaveAttribute('data-quality','performance');await expect(page.getByRole('button',{name:'Enable street sound',exact:true})).toBeVisible();await expect(page.getByLabel('Street sound volume')).toHaveValue('1');
  console.log('STREET_RENDER_BUDGET',JSON.stringify({calls:await canvas.getAttribute('data-draw-calls'),triangles:await canvas.getAttribute('data-triangles'),pixelRatio:await canvas.getAttribute('data-pixel-ratio')}));
