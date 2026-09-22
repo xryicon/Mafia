@@ -25,7 +25,14 @@ test('devices without WebGL keep a usable aerial map',async({page})=>{
 
 test.describe('touch streets',()=>{
  test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
- test('touch movement, release and viewport controls',async({page})=>{
+ test('pursuit controls leave the mobile movement pad touchable',async({page,request})=>{
+  test.setTimeout(90000);await request.post('http://127.0.0.1:54329/__street_setup',{headers:{Authorization:'Bearer '+token},data:{street:true,lockpicks:2}});
+  await page.goto('/bin-diving');await page.getByRole('button',{name:/^Enter /}).click();await page.locator('.scav-target[aria-label^="Car"]').first().click();await page.getByRole('button',{name:/^Steal vehicle/}).click();await page.getByRole('button',{name:'Start getaway',exact:true}).click();
+  await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.locator('.fp-objective')).toHaveClass(/wanted/);const pad=page.getByLabel('Movement pad');await expect(pad).toBeVisible();
+  expect(await pad.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.fp-stick')===el;})).toBe(true);
+  const stick=await pad.boundingBox(),panel=await page.locator('.fp-objective').boundingBox();expect(stick!.x+stick!.width).toBeLessThan(panel!.x);await page.screenshot({path:'test-results/first-person-pursuit-touch.jpg',type:'jpeg',quality:80});
+ });
+ test('touch movement, release and viewport controls' ,async({page})=>{
   await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.getByLabel('Movement pad')).toBeVisible();
   const pad=await page.getByLabel('Movement pad').boundingBox();if(!pad)throw new Error('Missing touch controls');const x=pad.x+pad.width/2,y=pad.y+pad.height/2,cdp=await page.context().newCDPSession(page);
   const moved=page.waitForRequest(r=>r.url().includes('/rpc/street_motion')&&r.postDataJSON().p_action==='step'&&r.postDataJSON().p_payload.dx>.1);

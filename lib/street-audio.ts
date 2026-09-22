@@ -47,13 +47,14 @@ export function createStreetAudio(options:StreetAudioOptions={}):StreetAudioEngi
  const ambience=create(STREET_AUDIO.ambience),footsteps=create(STREET_AUDIO.footsteps),siren=create(STREET_AUDIO.siren),loops=[ambience,footsteps,siren];
  let enabled=true,started=false,suspended=false,disposed=false,volume=1;
  let frame:StreetAudioFrame={moving:false,sprinting:false,pursuit:false,policeDistance:null,locked:false,deltaSeconds:0};
- const shots=new Set<HTMLAudioElement>(),pending=new Map<HTMLAudioElement,Promise<boolean>>(),shotReleases=new Map<HTMLAudioElement,()=>void>();
+ const shots=new Set<HTMLAudioElement>(),pending=new Map<HTMLAudioElement,{promise:Promise<boolean>;epoch:number}>(),epochs=new Map<HTMLAudioElement,number>(),blocked=new Set<HTMLAudioElement>(),primed=new Set<HTMLAudioElement>(),priming=new Set<HTMLAudioElement>(),shotReleases=new Map<HTMLAudioElement,()=>void>();
  for(const audio of loops){audio.preload="auto";audio.loop=true;audio.volume=0;}
  footsteps.playbackRate=.92;
 
  const canPlay=()=>!disposed&&started&&enabled&&!suspended&&volume>0&&frame.locked&&!doc?.hidden;
- const play=(audio:HTMLAudioElement)=>{if(!audio.paused)return Promise.resolve(true);const existing=pending.get(audio);if(existing)return existing;const request=(async()=>{try{await audio.play();return true;}catch{if(loops.includes(audio))suspended=true;return false;}finally{pending.delete(audio);}})();pending.set(audio,request);return request;};
- const stop=(audio:HTMLAudioElement,rewind=false)=>{audio.pause();if(rewind)try{audio.currentTime=0;}catch{}};
+ const settleStopped=(audio:HTMLAudioElement,rewind=false)=>{if(!audio.paused)audio.pause();if(rewind&&audio.currentTime!==0)try{audio.currentTime=0;}catch{}};
+ const play=(audio:HTMLAudioElement)=>{if(blocked.has(audio))return Promise.resolve(false);if(!audio.paused)return Promise.resolve(true);const existing=pending.get(audio);if(existing)return existing.promise;const epoch=epochs.get(audio)??0,entry:{promise:Promise<boolean>;epoch:number}={promise:Promise.resolve(false),epoch};let raw:Promise<void>;try{raw=audio.play();}catch(error){raw=Promise.reject(error);}entry.promise=Promise.resolve(raw).then(()=>{if(disposed||(epochs.get(audio)??0)!==epoch){settleStopped(audio,audio!==ambience);return false;}return true;},()=>{if((epochs.get(audio)??0)===epoch&&loops.includes(audio))blocked.add(audio);return false;}).finally(()=>{if(pending.get(audio)===entry)pending.delete(audio);});pending.set(audio,entry);return entry.promise;};
+ const stop=(audio:HTMLAudioElement,rewind=false)=>{const epoch=epochs.get(audio)??0,pendingWanted=pending.get(audio)?.epoch===epoch;if(!audio.paused||pendingWanted){epochs.set(audio,epoch+1);audio.pause();}if(rewind&&audio.currentTime!==0)try{audio.currentTime=0;}catch{}};
  const stopLoops=()=>{stop(ambience);stop(footsteps,true);stop(siren,true);};
  const applyLevels=(immediate=false)=>{
   const stepTarget=frame.moving?(frame.sprinting?.27:.19):0,sirenTarget=streetSirenLevel(frame.pursuit,frame.policeDistance),seconds=clamp(frame.deltaSeconds,0,.25),blend=immediate?1:1-Math.exp(-seconds*5);
@@ -67,17 +68,15 @@ export function createStreetAudio(options:StreetAudioOptions={}):StreetAudioEngi
   applyLevels();
   if(!canPlay()){stopLoops();return;}
   void play(ambience);
-  if(frame.moving)void play(footsteps);else stop(footsteps,true);
-  if(frame.pursuit)void play(siren);else stop(siren,true);
+  if(frame.moving)void play(footsteps);else if(!priming.has(footsteps))stop(footsteps,true);
+  if(frame.pursuit)void play(siren);else if(!priming.has(siren))stop(siren,true);
  };
  const activate=async()=>{
-   if(disposed)return false;started=true;suspended=false;applyLevels(true);
+   if(disposed)return false;started=true;suspended=false;blocked.clear();applyLevels(true);
   if(!enabled||!volume||doc?.hidden){stopLoops();return true;}
-  if(!frame.locked){
-   const primed=await Promise.all(loops.map(async audio=>{const muted=audio.muted;audio.muted=true;const played=await play(audio);stop(audio,true);audio.muted=muted;return played;}));applyLevels(true);if(frame.locked)sync();return primed.every(Boolean);
-  }
-   const wanted=[ambience,...(frame.moving?[footsteps]:[]),...(frame.pursuit?[siren]:[])];
-   return (await Promise.all(wanted.map(play))).every(Boolean);
+  const wanted=frame.locked?[ambience,...(frame.moving?[footsteps]:[]),...(frame.pursuit?[siren]:[])]:[];
+  const results=await Promise.all(loops.map(async audio=>{if(wanted.includes(audio)){const played=await play(audio);if(played)primed.add(audio);return played;}if(primed.has(audio))return true;const muted=audio.muted;audio.muted=true;priming.add(audio);try{const played=await play(audio);if(played)primed.add(audio);return played;}finally{priming.delete(audio);stop(audio,true);audio.muted=muted;}}));
+  applyLevels(true);if(frame.locked)sync();return results.every(Boolean);
   };
  const pause=()=>{suspended=true;stopLoops();for(const shot of shots)stop(shot);};
  const visibility=()=>{if(doc?.hidden)pause();};
@@ -100,7 +99,7 @@ export function createStreetAudio(options:StreetAudioOptions={}):StreetAudioEngi
   },
   dispose(){
    if(disposed)return;disposed=true;doc?.removeEventListener("visibilitychange",visibility);win?.removeEventListener("blur",blur);stopLoops();
-   for(const release of [...shotReleases.values()])release();for(const audio of loops){stop(audio,true);audio.removeAttribute("src");audio.load();}pending.clear();
+   for(const release of [...shotReleases.values()])release();for(const audio of loops){stop(audio,true);audio.removeAttribute("src");audio.load();}pending.clear();blocked.clear();primed.clear();priming.clear();
   },
  };
 }

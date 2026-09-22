@@ -21,8 +21,8 @@ class FakeEvents{
  fire(type:string){for(const listener of this.listeners.get(type)??[])typeof listener==="function"?listener(new Event(type)):listener.handleEvent(new Event(type));}
 }
 class DelayedAudio extends FakeAudio{
- finish:()=>void=()=>{};
- override play(){this.playCalls++;return new Promise<void>(resolve=>{this.finish=()=>{this.paused=false;resolve();};});}
+ finish:()=>void=()=>{};fail:(error?:unknown)=>void=()=>{};
+ override play(){this.playCalls++;return new Promise<void>((resolve,reject)=>{this.finish=()=>{this.paused=false;resolve();};this.fail=error=>{this.paused=true;reject(error);};});}
 }
 
 test("recorded street sounds are bounded, self-hosted MP3 assets with source documentation",()=>{
@@ -40,10 +40,10 @@ test("street audio follows actual movement and pursuit distance, then releases r
  const nodes:FakeAudio[]=[],doc=new FakeEvents(),win=new FakeEvents();
  const engine=createStreetAudio({createAudio:source=>{const audio=new FakeAudio(source);nodes.push(audio);return audio as unknown as HTMLAudioElement;},document:doc as unknown as StreetAudioOptions["document"],window:win as unknown as StreetAudioOptions["window"]});
  const [ambience,steps,siren]=nodes;
- engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});assert.equal(await engine.start(),true);assert.equal(ambience.playCalls,1);assert.equal(steps.playCalls,0);
- engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.25});assert.equal(steps.playCalls,1);assert.equal(steps.playbackRate,.92);
+ engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});assert.equal(await engine.start(),true);assert.equal(ambience.playCalls,1);assert.equal(steps.playCalls,1);assert.equal(steps.paused,true);assert.equal(siren.playCalls,1);assert.equal(siren.paused,true);
+ engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.25});assert.equal(steps.playCalls,2);assert.equal(steps.playbackRate,.92);
  engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});assert.equal(steps.paused,true);assert.equal(steps.currentTime,0);
- engine.update({moving:false,sprinting:false,pursuit:true,policeDistance:0,locked:true,deltaSeconds:.25});const nearby=siren.volume;assert.equal(siren.playCalls,1);
+ engine.update({moving:false,sprinting:false,pursuit:true,policeDistance:0,locked:true,deltaSeconds:.25});const nearby=siren.volume;assert.equal(siren.playCalls,2);
  engine.update({moving:false,sprinting:false,pursuit:true,policeDistance:4,locked:true,deltaSeconds:.25});assert.ok(siren.volume<nearby);assert.ok(streetSirenLevel(true,0)>streetSirenLevel(true,4));
  engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});assert.equal(siren.paused,true);
  assert.equal(await engine.playConfirmedGunshot(),true);assert.equal(nodes.length,4);
@@ -66,5 +66,29 @@ test("construction never autoplays and frame updates share an in-flight play req
  assert.ok(nodes.every(node=>node.playCalls===0));
  engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});
  const starting=engine.start();engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});
- assert.equal(nodes[0].playCalls,1);nodes[0].finish();assert.equal(await starting,true);engine.dispose();
+ assert.ok(nodes.every(node=>node.playCalls===1));for(const node of nodes)node.finish();assert.equal(await starting,true);engine.dispose();
+});
+
+test("an intentionally aborted play can restart without silencing other channels",async()=>{
+ const nodes:DelayedAudio[]=[];const engine=createStreetAudio({createAudio:source=>{const audio=new DelayedAudio(source);nodes.push(audio);return audio as unknown as HTMLAudioElement;}});
+ engine.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});const starting=engine.start();assert.ok(nodes.every(node=>node.playCalls===1));
+ engine.update({moving:false,sprinting:false,pursuit:false,locked:false,deltaSeconds:.016});const pauses=nodes[0].pauseCalls;
+ engine.update({moving:false,sprinting:false,pursuit:false,locked:false,deltaSeconds:.016});assert.equal(nodes[0].pauseCalls,pauses);
+ for(const node of nodes)node.fail(new DOMException("interrupted","AbortError"));assert.equal(await starting,false);
+ engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});const restarting=engine.start();assert.ok(nodes.every(node=>node.playCalls===2));
+ for(const node of nodes)node.finish();assert.equal(await restarting,true);assert.equal(nodes[0].paused,false);assert.equal(nodes[1].paused,false);assert.equal(nodes[2].paused,true);engine.dispose();
+});
+
+test("late play completion after pause or disposal remains stopped",async()=>{
+ const pausedNodes:DelayedAudio[]=[];const paused=createStreetAudio({createAudio:source=>{const audio=new DelayedAudio(source);pausedNodes.push(audio);return audio as unknown as HTMLAudioElement;}});
+ paused.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});const pausing=paused.start();paused.pause();for(const node of pausedNodes)node.finish();assert.equal(await pausing,false);assert.ok(pausedNodes.every(node=>node.paused));paused.dispose();
+ const disposedNodes:DelayedAudio[]=[];const disposed=createStreetAudio({createAudio:source=>{const audio=new DelayedAudio(source);disposedNodes.push(audio);return audio as unknown as HTMLAudioElement;}});
+ disposed.update({moving:false,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});const disposing=disposed.start();disposed.dispose();for(const node of disposedNodes)node.finish();assert.equal(await disposing,false);assert.ok(disposedNodes.every(node=>node.paused&&node.src===""));
+});
+
+test("one failed channel waits for the next gesture without muting healthy ambience",async()=>{
+ const nodes:DelayedAudio[]=[];const engine=createStreetAudio({createAudio:source=>{const audio=new DelayedAudio(source);nodes.push(audio);return audio as unknown as HTMLAudioElement;}});
+ engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});const starting=engine.start();nodes[0].finish();nodes[1].fail(new Error("missing footsteps"));nodes[2].finish();assert.equal(await starting,false);assert.equal(nodes[0].paused,false);
+ engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});engine.update({moving:true,sprinting:false,pursuit:false,locked:true,deltaSeconds:.016});assert.equal(nodes[1].playCalls,1);assert.equal(nodes[0].paused,false);
+ const retrying=engine.resume();assert.equal(nodes[1].playCalls,2);nodes[1].finish();assert.equal(await retrying,true);engine.dispose();
 });
