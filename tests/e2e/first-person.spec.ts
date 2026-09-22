@@ -50,6 +50,8 @@ test('graphics preferences persist and fullscreen keeps the street controls in v
  await quality.selectOption('performance');await expect(canvas).toHaveAttribute('data-quality','performance');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeLessThanOrEqual(.8);
  await quality.selectOption('high');await expect(canvas).toHaveAttribute('data-quality','high');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeGreaterThan(.8);
  await expect(canvas).toHaveAttribute('data-draw-calls',/^[1-9][0-9]*$/);expect(Number(await canvas.getAttribute('data-draw-calls'))).toBeLessThan(260);
+ // Software WebGL has verified High; exercise the remaining controls at bounded resolution.
+ await quality.selectOption('performance');
  await page.getByRole('button',{name:'Full screen',exact:true}).click();await expect(page.getByRole('button',{name:'Exit full screen',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.fullscreenElement?.classList.contains('fp-street'))).toBe(true);
  const bounds=await page.locator('.fp-street').boundingBox();expect(bounds!.width).toBeGreaterThanOrEqual(1438);await page.getByRole('button',{name:'Exit full screen',exact:true}).click();
  await page.getByRole('button',{name:'Mute street sound',exact:true}).click();await page.getByLabel('Street sound volume').focus();await page.getByLabel('Street sound volume').press('Home');await page.getByLabel('Street sound volume').press('ArrowRight');

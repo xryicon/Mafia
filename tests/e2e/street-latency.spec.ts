@@ -13,7 +13,8 @@ test.beforeEach(async({context,request})=>{
 test("delayed movement replies keep the latest input, restart from idle, and stop on exit",async({page})=>{
  test.setTimeout(90_000);
  const steps:StepPayload[]=[],actions:string[]=[];
- let concurrent=0,maxConcurrent=0,leaving=false;
+ let concurrent=0,maxConcurrent=0,leaving=false,holdFirst=true,releaseFirst=()=>{};
+ const firstReply=new Promise<void>(resolve=>{releaseFirst=resolve;});
  page.on("request",request=>{
   if(request.url().includes("/rpc/scavenging_action"))actions.push(request.postDataJSON().p_action);
  });
@@ -24,8 +25,9 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
   try{
    const response=await route.fetch();
    await new Promise(resolve=>setTimeout(resolve,180));
+   if(holdFirst&&body.p_action==='step'&&moving(body.p_payload)){holdFirst=false;await firstReply;}
    await route.fulfill({response});
-  }catch(error){if(!leaving)throw error;}
+  }catch(error){if(!leaving&&!page.isClosed())throw error;}
   finally{concurrent--;}
  });
 
@@ -50,6 +52,9 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
  await page.keyboard.down("KeyD");
  await page.waitForTimeout(40);
  await page.keyboard.up("KeyD");
+ // Hold the reply until two rendered frames have consumed the released keys.
+ await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+ releaseFirst();
  await expect.poll(()=>steps.some(step=>step.sequence>first.sequence&&!moving(step))).toBe(true);
  const firstStop=steps.find(step=>step.sequence>first.sequence&&!moving(step))!;
  expect(steps.filter(step=>step.sequence>first.sequence&&step.sequence<=firstStop.sequence).every(step=>!moving(step))).toBe(true);
