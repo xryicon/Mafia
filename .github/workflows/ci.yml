@@ -32,6 +32,15 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: first-person-visuals
+          path: |
+            test-results/first-person-*.jpg
+            test-results/first-person-*/error-context.md
+          if-no-files-found: ignore
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: browser-checks
           path: test-results/
           retention-days: 7
