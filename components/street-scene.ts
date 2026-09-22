@@ -52,7 +52,7 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
  for(let y=0;y<=2;y++)for(let x=0;x<=4;x++){
   const px=x*M+(x===4?-1:1)*(r-.45),pz=y*M+(y===2?-1:1)*(r-.45);cylinder(scene,px,2.7,pz,.08,5.4,iron);box(scene,px,5.6,pz,.52,.55,.52,lamp);box(scene,px,5.95,pz,.75,.16,.75,iron);
   lampPositions.push(new THREE.Vector3(px,4.8,pz));
-  if(x===1)label(options.state.streets[y]??options.district,px,3.7,pz,5);
+  if(x===1)label(options.state.streets[y]??options.district,px,3.7,pz,3);
  }
  const nearbyLights=Array.from({length:4},()=>{const light=new THREE.PointLight('#efa65c',35,17,1.4);scene.add(light);return light;});
  // The harbour and distant skyline frame the playable streets without inventing accessible districts.
@@ -66,7 +66,7 @@ export function createStreetScene(host:HTMLDivElement,options:Options):StreetSce
  function vehicle(police=false){const g=new THREE.Group(),paint=police?iron:mat(['#30494c','#3e3232','#5a594d'][targets.children.length%3],.35,.45);box(g,0,.65,0,1.65,.6,3.7,paint);box(g,0,1.22,-.15,1.4,.8,1.8,paint);box(g,0,1.36,.78,1.21,.45,.04,glass);box(g,0,1.36,-1.08,1.21,.45,.04,glass);box(g,0,.9,1.55,1.4,.35,.65,paint);box(g,0,.45,1.95,1.85,.12,.12,cream);
   for(const x of [-.85,.85])for(const z of [-1.2,1.25]){const tyre=cylinder(g,x,.44,z,.4,.18,rubber,14);tyre.rotation.z=Math.PI/2;const hub=cylinder(g,x*1.03,.44,z,.18,.2,iron,12);hub.rotation.z=Math.PI/2;}
   for(const x of [-.55,.55])box(g,x,.79,1.93,.25,.24,.1,lamp);if(police){box(g,0,1.78,0,.6,.12,.28,cream);const beacon=cylinder(g,0,1.9,0,.13,.22,mat('#ac392a',.3,0,'#c73320'));beacon.name='beacon';}return g;}
- let targetKey='';function populate(){const key=state.targets.map(t=>t.id).join('|');if(key===targetKey)return;targetKey=key;targets.clear();for(const t of state.targets){const g=t.kind==='car'?vehicle():new THREE.Group();if(t.kind==='bin'){cylinder(g,0,.58,0,.42,1.1,iron,12);cylinder(g,0,1.16,0,.47,.09,iron,12);box(g,0,1.25,0,.19,.09,.09,gold);for(let i=0;i<8;i++){const a=i*Math.PI/4;box(g,Math.cos(a)*.4,.57,Math.sin(a)*.4,.04,.95,.04,stone);}}g.position.set((t.node%5+.035)*M,0,(Math.floor(t.node/5)+.035)*M);if(t.node%5===4)g.position.x-=.07*M;if(t.node>=10)g.position.z-=.07*M;g.userData.target=t.id;const hint=label(t.vehicle?.name??(t.kind==='car'?'Parked car':'Street bin'),0,2.4,0,3.4);hint.name='target-hint';g.add(hint);targets.add(g);}}
+ let targetKey='';function populate(){const key=state.targets.map(t=>t.id).join('|');if(key===targetKey)return;targetKey=key;targets.clear();for(const t of state.targets){const g=t.kind==='car'?vehicle():new THREE.Group();if(t.kind==='bin'){cylinder(g,0,.58,0,.42,1.1,iron,12);cylinder(g,0,1.16,0,.47,.09,iron,12);box(g,0,1.25,0,.19,.09,.09,gold);for(let i=0;i<8;i++){const a=i*Math.PI/4;box(g,Math.cos(a)*.4,.57,Math.sin(a)*.4,.04,.95,.04,stone);}}g.position.set((t.node%5+.035)*M,0,(Math.floor(t.node/5)+.035)*M);if(t.node%5===4)g.position.x-=.07*M;if(t.node>=10)g.position.z-=.07*M;g.userData.target=t.id;const hint=label(t.vehicle?.name??(t.kind==='car'?'Parked car':'Street bin'),0,2.1,0,1.6);hint.name='target-hint';g.add(hint);targets.add(g);}}
  populate();
  const eventGroup=new THREE.Group();scene.add(eventGroup);box(eventGroup,0,.45,0,.9,.8,.65,wood);const eventLabel=label('Street opportunity',0,2.4,0,4);eventGroup.add(eventLabel);
  const normalFog=scene.fog;lamp.emissiveIntensity=.75;windowLight.emissiveIntensity=.35;

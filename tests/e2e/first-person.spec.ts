@@ -2,6 +2,8 @@ import {test,expect} from '@playwright/test';
 import {cookie,token} from '../fixtures/identity.mjs';
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=='1','Isolated fixture only');await request.post('http://127.0.0.1:54329/__reset_world',{headers:{Authorization:'Bearer '+token}});await context.addCookies([{name:'sb-127-auth-token',value:cookie,domain:'localhost',path:'/',sameSite:'Lax'}]);});
 test('3D streets render, movement sends directions only, and nearby bins use existing loot actions',async({page})=>{
+ // CI uses software-rendered WebGL; this scenario also captures three viewport variants.
+ test.setTimeout(90000);
  await page.setViewportSize({width:1440,height:900});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();await expect(page.getByRole('button',{name:'Search the bins',exact:true})).toBeEnabled();
  await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
