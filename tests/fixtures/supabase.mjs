@@ -126,6 +126,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==='/rest/v1/rpc/robbery_state'){send(200,robberies.read());return;}
  if(url.pathname==='/rest/v1/rpc/robbery_action'){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');send(200,robberies.action(p.p_action,p.p_payload));return;}
  if(url.pathname==='/rest/v1/rpc/street_vehicle_state'){send(200,scavenging.vehicleRead());return;}
+ if(url.pathname==='/rest/v1/rpc/street_motion'){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');send(200,scavenging.motion(p.p_action,p.p_payload));return;}
  if(url.pathname==='/rest/v1/rpc/scavenging_action'){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');send(200,scavenging.action(p.p_action,p.p_payload));return;}
  if(url.pathname.startsWith('/rest/v1/rpc/bin_diving_')){let raw='';for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||'{}');send(200,url.pathname.endsWith('bin_diving_state')?{...bins.read(),scavenging:scavenging.read()}:bins.action(p.p_action,p.p_payload));return;}
  if(url.pathname==='/__bin_setup'&&process.env.GAME_TEST_FIXTURE==='1'){let raw='';for await(const chunk of req)raw+=chunk;bins.setup(JSON.parse(raw||'{}'));send(200,{ok:true});return;}
