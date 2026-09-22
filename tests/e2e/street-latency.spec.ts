@@ -31,7 +31,9 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
   finally{concurrent--;}
  });
 
- await page.setViewportSize({width:1280,height:800});
+ // This scenario measures transport, not GPU throughput; visual coverage uses larger viewports.
+ await page.setViewportSize({width:800,height:600});
+ await page.addInitScript(()=>localStorage.setItem("blackwater:street-quality","performance"));
  await page.goto("/bin-diving?district=the-waterfront");
  await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();
@@ -48,13 +50,14 @@ test("delayed movement replies keep the latest input, restart from idle, and sto
  const first=steps.slice(firstCount).find(moving)!;
  // Change direction and release while the first response is delayed. Only the latest
  // stopped state may follow it; an intermediate key must not be replayed.
- await page.keyboard.up("KeyW");
- await page.keyboard.down("KeyD");
- await page.waitForTimeout(40);
- await page.keyboard.up("KeyD");
- // Hold the reply until two rendered frames have consumed the released keys.
- await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
- releaseFirst();
+ // Dispatch this short burst in the browser: separate automation calls can take
+ // seconds under software WebGL and would accidentally test the 6s network timeout.
+ await page.evaluate(()=>new Promise<void>(resolve=>{
+  window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW',bubbles:true}));
+  window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyD',bubbles:true}));
+  requestAnimationFrame(()=>{window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyD',bubbles:true}));requestAnimationFrame(()=>resolve());});
+ }));
+ releaseFirst();await page.keyboard.up("KeyW");
  await expect.poll(()=>steps.some(step=>step.sequence>first.sequence&&!moving(step))).toBe(true);
  const firstStop=steps.find(step=>step.sequence>first.sequence&&!moving(step))!;
  expect(steps.filter(step=>step.sequence>first.sequence&&step.sequence<=firstStop.sequence).every(step=>!moving(step))).toBe(true);
