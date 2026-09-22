@@ -22,7 +22,7 @@ test("insufficient ammunition blocks attempts and Owner can change bullet ranges
 });
 
 test("Scavenging no longer exposes mugging",async({page,request})=>{
- await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
+ await request.post(base+"/__robbery_setup",{headers,data:{}});await page.goto("/bin-diving?view=aerial&district=the-waterfront");await page.getByRole("button",{name:"Enter The Waterfront"}).click();
  await expect(page.getByRole("button",{name:/Mugging|Players ·/})).toHaveCount(0);
 });
 

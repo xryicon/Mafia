@@ -1,11 +1,11 @@
 import {test,expect,type Page} from "@playwright/test";
 import {cookie,token} from "../fixtures/identity.mjs";
 async function enterStreet(page:Page){const enter=page.getByRole("button",{name:/^Enter /});if(await enter.count())await enter.click();await expect(page.locator(".scav-map")).toBeVisible();}
-async function searchBin(page:Page){await enterStreet(page);await page.locator('.scav-target[aria-label^="Bin"]:not(.searched)').first().click();await page.getByRole("button",{name:"Search the bins",exact:true}).click();await page.getByRole("button",{name:"Collect search",exact:true}).click();}
+async function searchBin(page:Page){await enterStreet(page);await page.locator('.scav-target[aria-label^="Bin"]:not(.searched)').first().click();await page.getByRole("button",{name:"Search the bins",exact:true}).click();await page.waitForResponse(r=>r.url().includes("/rpc/scavenging_action")&&r.request().postDataJSON().p_action==="finish");}
 async function capture(page:Page,name:string){const shot=await page.screenshot({path:"test-results/"+name+".jpg",type:"jpeg",quality:70});if(process.env.VISUAL_REVIEW==="1"){const b=shot.toString("base64");for(let n=0;n<b.length;n+=12000)console.log("VISUAL_REVIEW_"+name+"_"+Math.floor(n/12000)+":"+b.slice(n,n+12000));}}
 test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixture only");await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/",sameSite:"Lax"}]);});
 test("dashboard entry, find a pickaxe, equip it and mine with the same equipment",async({page})=>{
- await page.setViewportSize({width:1600,height:1100});await page.goto("/dashboard");await page.getByRole("link",{name:"Scavenging",exact:true}).click();await expect(page).toHaveURL(/bin-diving/);await expect(page.locator(".command-city")).toBeVisible();
+ await page.setViewportSize({width:1600,height:1100});await page.goto("/dashboard");await page.getByRole("link",{name:"Scavenging",exact:true}).click();await expect(page).toHaveURL(/bin-diving/);await page.goto("/bin-diving?view=aerial");await expect(page.locator(".command-city")).toBeVisible();
  await expect(page.getByRole("heading",{name:"Scavenging",exact:true})).toBeVisible();await expect(page.locator(".street-district-bar")).toBeVisible();
  for(const width of [1920,1448,1366,1280,1024,850,768,390,360,1600]){await page.setViewportSize({width,height:1100});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"Bin diving overflow at "+width).toBe(true);}
  await capture(page,"bin-desktop");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-details");
@@ -14,7 +14,7 @@ test("dashboard entry, find a pickaxe, equip it and mine with the same equipment
  await page.getByRole("link",{name:"Explore Mines & Quarries"}).click();await expect(page.locator(".mine-equipment")).toContainText("100 condition remaining");
 });
 test("cash and all blueprints persist, with one cooldown across districts",async({page,request})=>{
- await page.goto("/bin-diving?district=the-waterfront");await expect(page.locator(".street-district-bar")).toContainText("The Waterfront");
+ await page.goto("/bin-diving?view=aerial&district=the-waterfront");await expect(page.locator(".street-district-bar")).toContainText("The Waterfront");
  for(const [item,label] of [["cash","$75"],["pistol_blueprint","Homemade pistol blueprint"],["bullet_blueprint","Homemade bullet blueprint"],["bandages_blueprint","Bandages blueprint"],["nothing","Nothing this time."]]){
   await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{next:item,ready:true}});
   await page.getByRole("button",{name:"Refresh bin diving"}).click();await searchBin(page);await expect(page.locator(".bin-result")).toContainText(label);
@@ -23,7 +23,7 @@ test("cash and all blueprints persist, with one cooldown across districts",async
  await page.reload();await expect(page.locator(".bin-stash")).toContainText("Homemade pistol blueprint");await expect(page.locator(".bin-history li")).toHaveCount(5);
 });
 test("district openings refresh automatically and mobile layout fits",async({page,request})=>{
- await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");
+ await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving?view=aerial");
  await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{addDistrict:true,lockdown:true}});
  await page.getByRole("button",{name:"Refresh bin diving"}).click();await expect(page.getByLabel("District",{exact:true}).locator("option")).toContainText(["Select a district","Mines and Quarries"]);
  await page.getByLabel("District",{exact:true}).selectOption("new-district");await expect(page.locator(".street-district-bar")).toContainText("New District");
@@ -40,7 +40,7 @@ test("Owner can save percentages and ordinary players cannot edit them",async({p
  await request.post("http://127.0.0.1:54329/__bin_setup",{headers:{Authorization:"Bearer "+token},data:{player:true}});await page.reload();await expect(page.locator(".bin-owner")).toContainText("Owner permission required.");
 });
 test("an interrupted reward response retries the original request without duplicating loot",async({page})=>{
- await page.goto("/bin-diving");
+ await page.goto("/bin-diving?view=aerial");
  let original:string|undefined;let calls=0;
  await page.route("**/rest/v1/rpc/scavenging_action",async route=>{
   if(route.request().postDataJSON().p_action!=="finish"){await route.continue();return;}calls++;if(calls===1){original=route.request().postData()??"";await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(original);await route.continue();}
@@ -56,13 +56,13 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await grant.getByLabel("Item",{exact:true}).selectOption(item);await grant.getByLabel("Quantity",{exact:true}).fill("1");await grant.getByLabel("Reason",{exact:true}).fill("Reward a city founder");
   await grant.getByRole("button",{name:"Save asset grant"}).click();await expect(page.locator(".game-notice")).toContainText("Saved");await expect(grant.getByRole("button",{name:"Save asset grant"})).toBeEnabled();
  }
- await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);
+ await page.goto("/bin-diving?view=aerial");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);
  await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===4&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
  await capture(page,"bin-loot-desktop");
  await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
  const ticket=page.locator(".market-ticket");
  await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByLabel("Price per unit ($)",{exact:true}).fill("150");await ticket.getByRole("button",{name:"Post market offer"}).click();await expect(page.locator(".market-notice")).toContainText("Offer posted");
- await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
+ await page.goto("/bin-diving?view=aerial");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
  await page.goto("/market?view=mine&good=pickaxe");await page.getByRole("button",{name:"Withdraw",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Offer withdrawn");
  for(const item of ["pistol_blueprint","bullet_blueprint"]){
   await ticket.getByLabel("Commodity").selectOption(item);await ticket.getByRole("button",{name:"Auction",exact:true}).click();await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByRole("button",{name:"Start auction",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Auction opened");
@@ -70,7 +70,7 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await page.locator(".market-commodities").getByRole("button").filter({hasText:item==="pistol_blueprint"?"Homemade pistol blueprint":"Homemade bullet blueprint"}).click();
   await page.getByRole("button",{name:"Withdraw auction",exact:true}).click();await expect(ticket.locator(".market-stock-note")).toContainText("1 units available");
  }
- await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-mobile-details");await page.locator(".bin-stash").scrollIntoViewIfNeeded();await capture(page,"bin-stash-mobile");
+ await page.setViewportSize({width:390,height:844});await page.goto("/bin-diving?view=aerial");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"bin-loot-mobile");await page.locator(".bin-odds").scrollIntoViewIfNeeded();await capture(page,"bin-loot-mobile-details");await page.locator(".bin-stash").scrollIntoViewIfNeeded();await capture(page,"bin-stash-mobile");
  await page.goto("/refineries");
  for(const id of ["iron-ingot","copper-ingot"]){await page.getByLabel("Refining recipe").selectOption(id.replace("-ingot",""));const art=page.locator('img[src*="/art/resources/'+id+'"]').first();await art.scrollIntoViewIfNeeded();await expect.poll(()=>art.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);}
 });

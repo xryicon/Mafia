@@ -4,7 +4,7 @@ test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTU
 test('3D streets render, movement sends directions only, and nearby bins use existing loot actions',async({page})=>{
  // CI uses software-rendered WebGL; this scenario also captures three viewport variants.
  test.setTimeout(90000);
- await page.setViewportSize({width:1440,height:900});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
+ await page.setViewportSize({width:1440,height:900});await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();
  await page.locator('.scav-target[aria-label^="Bin"]').first().click();await expect(page.getByRole('button',{name:'Search the bins',exact:true})).toBeEnabled();
  await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
  await expect(page.locator('.fp-canvas canvas')).toBeVisible();await expect(page.locator('.fp-canvas canvas')).toHaveAttribute('data-environment-ready','true',{timeout:15000});await expect(page.getByRole('img',{name:'Your district position'})).toBeVisible();await page.locator('.fp-street').scrollIntoViewIfNeeded();
@@ -12,7 +12,7 @@ test('3D streets render, movement sends directions only, and nearby bins use exi
  const movement=page.waitForRequest(r=>r.url().includes('/rpc/street_motion')&&r.postDataJSON().p_action==='step'&&r.postDataJSON().p_payload.dx<0);
  await page.keyboard.down('KeyS');const request=(await movement).postDataJSON().p_payload;expect(request).not.toHaveProperty('x');expect(request).not.toHaveProperty('position');expect(request).not.toHaveProperty('speed');await page.keyboard.up('KeyS');
  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Search bin',exact:true}).click();await page.getByRole('button',{name:'Collect find',exact:true}).click();await expect(page.locator('.bin-notice')).toBeVisible();
+ await page.getByRole('button',{name:'Search bin',exact:true}).click();await page.waitForResponse(r=>r.url().includes("/rpc/scavenging_action")&&r.request().postDataJSON().p_action==="finish");await expect(page.locator('.bin-notice')).toBeVisible();
  await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.locator('.fp-canvas canvas')).toHaveAttribute('data-hands','unarmed');await page.screenshot({path:'test-results/first-person-streets-desktop.jpg',type:'jpeg',quality:85});await page.keyboard.press('Escape');
  await page.getByRole('button',{name:'Aerial view',exact:true}).click();await page.screenshot({path:'test-results/first-person-aerial.jpg',type:'jpeg',quality:80});
  await page.setViewportSize({width:390,height:844});await expect(page.locator('.fp-canvas canvas')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/first-person-mobile.jpg',type:'jpeg',quality:80});
@@ -20,20 +20,20 @@ test('3D streets render, movement sends directions only, and nearby bins use exi
 });
 test('devices without WebGL keep a usable aerial map',async({page})=>{
  await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,type:string,...args:unknown[]){if(type==='webgl2')return null;return original.apply(this,[type,...args] as Parameters<typeof original>);} as typeof original;});
- await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Return to aerial map'})).toBeVisible();await page.getByRole('button',{name:'Return to aerial map'}).click();await expect(page.locator('.scav-map')).toBeVisible();
+ await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Return to aerial map'})).toBeVisible();await page.getByRole('button',{name:'Return to aerial map'}).click();await expect(page.locator('.scav-map')).toBeVisible();
 });
 
 test.describe('touch streets',()=>{
  test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
  test('pursuit controls leave the mobile movement pad touchable',async({page,request})=>{
   test.setTimeout(90000);await request.post('http://127.0.0.1:54329/__street_setup',{headers:{Authorization:'Bearer '+token},data:{street:true,lockpicks:2}});
-  await page.goto('/bin-diving');await page.getByRole('button',{name:/^Enter /}).click();await page.locator('.scav-target[aria-label^="Car"]').first().click();await page.getByRole('button',{name:/^Steal vehicle/}).click();await page.getByRole('button',{name:'Start getaway',exact:true}).click();
+  await page.goto('/bin-diving?view=aerial');await page.getByRole('button',{name:/^Enter /}).click();await page.locator('.scav-target[aria-label^="Car"]').first().click();await page.getByRole('button',{name:/^Steal vehicle/}).click();await page.getByRole('button',{name:'Start getaway',exact:true}).click();
   await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.locator('.fp-objective')).toHaveClass(/wanted/);const pad=page.getByLabel('Movement pad');await expect(pad).toBeVisible();
   expect(await pad.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.fp-stick')===el;})).toBe(true);
   const stick=await pad.boundingBox(),panel=await page.locator('.fp-objective').boundingBox();expect(stick!.x+stick!.width).toBeLessThan(panel!.x);await page.screenshot({path:'test-results/first-person-pursuit-touch.jpg',type:'jpeg',quality:80});
  });
  test('touch movement, release and viewport controls' ,async({page})=>{
-  await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.getByLabel('Movement pad')).toBeVisible();
+  await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await page.getByRole('button',{name:'Walk the streets',exact:true}).click();await expect(page.getByLabel('Movement pad')).toBeVisible();
   expect(await page.getByLabel('Movement pad').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.fp-stick')===el;})).toBe(true);
   const pad=await page.getByLabel('Movement pad').boundingBox();if(!pad)throw new Error('Missing touch controls');const x=pad.x+pad.width/2,y=pad.y+pad.height/2,cdp=await page.context().newCDPSession(page);
   const moved=page.waitForRequest(r=>r.url().includes('/rpc/street_motion')&&r.postDataJSON().p_action==='step'&&r.postDataJSON().p_payload.dx>.1);
@@ -47,7 +47,7 @@ test.describe('touch streets',()=>{
 test('graphics preferences persist and fullscreen keeps the street controls in view',async({page})=>{
  test.setTimeout(90000);
  // Full-resolution screenshots are covered above; keep this control test light on software WebGL.
- await page.setViewportSize({width:960,height:640});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
+ await page.setViewportSize({width:960,height:640});await page.goto('/bin-diving?view=aerial&district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();await page.getByRole('button',{name:'First-person streets'}).click();await expect(page.getByRole('button',{name:'Walk the streets',exact:true})).toBeVisible({timeout:30000});
  const canvas=page.locator('.fp-canvas canvas'),quality=page.getByLabel('Street graphics quality');
  await quality.selectOption('performance');await expect(canvas).toHaveAttribute('data-quality','performance');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeLessThanOrEqual(.8);
  await quality.selectOption('high');await expect(canvas).toHaveAttribute('data-quality','high');expect(Number(await canvas.getAttribute('data-pixel-ratio'))).toBeGreaterThan(.8);

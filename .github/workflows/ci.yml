@@ -112,6 +112,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/first_person.sql
           bash supabase/tests/street_races.sh
 
+      - name: Street melee security and replay protection
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/street_melee.sql
       - name: Concurrent district purchase test
         run: bash supabase/tests/district_races.sh
 

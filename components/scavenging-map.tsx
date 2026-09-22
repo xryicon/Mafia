@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState,useRef} from "react";
+import {useSearchParams} from "next/navigation";
 import {FirstPersonStreet} from "./first-person-street";
 import {ScavengingPolice} from "./scavenging-police";
 import {ScavengingStreetLife} from "./scavenging-street-life";
@@ -13,7 +14,8 @@ import "./scavenging-map-art.css";
 
 type Props={season:string;state?:ScavengingState;district:{id:string;name:string;image_url:string}|undefined;now:number;busy:boolean;blocked:boolean;cooldown:number;lockpicks:number;act:(action:string,payload?:Record<string,unknown>)=>Promise<boolean>};
 export function ScavengingMap({season,state,district,now,busy,blocked,cooldown,lockpicks,act}:Props){
- const [firstPerson,setFirstPerson]=useState(false);
+ const query=useSearchParams();
+ const [firstPerson,setFirstPerson]=useState(query.get("view")!=="aerial");
  const [selected,setSelected]=useState<string|null>(null),[queued,setQueued]=useState<StreetPosition|null>(null),[frame,setFrame]=useState(now),[zoom,setZoom]=useState(1),[streetLife,setStreetLife]=useState(true);
  const session=state?.session,ops=state?.operations;
  const [garage,setGarage]=useState("");
@@ -22,6 +24,8 @@ export function ScavengingMap({season,state,district,now,busy,blocked,cooldown,l
  useEffect(()=>{const start=performance.now();let id:number;const tick=()=>{setFrame(now+performance.now()-start);id=requestAnimationFrame(tick);};id=requestAnimationFrame(tick);return()=>cancelAnimationFrame(id);},[now]);
  useEffect(()=>{setSelected(null);setQueued(null);setZoom(1);},[district?.id]);
  const entered=!!session&&session.district_id===district?.id;
+ const entryAttempt=useRef<string|null>(null);
+ useEffect(()=>{if(firstPerson&&!entered&&!busy&&!blocked&&district&&entryAttempt.current!==district.id){entryAttempt.current=district.id;void act("scav_enter",{district_id:district.id});}},[firstPerson,entered,busy,blocked,district,act]);
  useEffect(()=>{
   if(firstPerson||!entered||!workspace.current||!mapViewport.current)return;
   const root=workspace.current,viewport=mapViewport.current,header=document.querySelector('.estate-header'),toolbar=root.querySelector('.scav-map-toolbar'),desk=root.querySelector('.scav-action-desk');
