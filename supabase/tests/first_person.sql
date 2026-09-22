@@ -7,11 +7,11 @@ do $$declare u uuid:=gen_random_uuid();s uuid:=game_private.current_season();d u
  q:=jsonb_build_object('season_id',s,'district_id',d,'request_id',gen_random_uuid());r:=public.scavenging_action('enter',q);perform pg_temp.fp_check(not r?'error','Entry failed');
  q:=q||jsonb_build_object('controller',c);
  set local role authenticated;r:=public.street_motion('begin',q);reset role;
- perform pg_temp.fp_check(r?'session' and not r?'error','Authenticated movement unavailable: '||r);
+ perform pg_temp.fp_check(r?'session' and not r?'error','Authenticated movement unavailable: '||r::text);
  perform pg_temp.fp_check(not has_function_privilege('anon','public.street_motion(text,jsonb)','EXECUTE'),'Anonymous movement access');
  r:=public.street_motion('step',q||'{"sequence":1,"dx":1,"dy":1,"sprint":false,"x":4,"y":2,"speed":99999}'::jsonb);
  select * into v from game_private.scav_sessions where player_id=u;
- perform pg_temp.fp_check(not r?'error','Valid input failed: '||r);
+ perform pg_temp.fp_check(not r?'error','Valid input failed: '||r::text);
  perform pg_temp.fp_check(game_private.scav_route_length(v.route_points)<.08,'Forged speed or destination accepted');
  perform pg_temp.fp_check(abs(extract(epoch from v.arrives_at-v.departed_at)-.5)<.001,'Server lease duration changed');
  before_row:=v;r:=public.street_motion('step',q||'{"sequence":1,"dx":-1,"dy":-1}'::jsonb);select * into v from game_private.scav_sessions where player_id=u;
@@ -26,13 +26,13 @@ do $$declare u uuid:=gen_random_uuid();s uuid:=game_private.current_season();d u
  select x into site from jsonb_array_elements(public.bin_diving_state()#>'{scavenging,targets}')x where x->>'kind'='bin' limit 1;
  point:=jsonb_build_array((site->>'node')::int%5,((site->>'node')::int/5)::numeric+case when (site->>'node')::int/5=2 then -.04 else .04 end);
  update game_private.scav_sessions set route_points=jsonb_build_array(point),arrives_at=clock_timestamp(),departed_at=clock_timestamp() where player_id=u;
- nonce:=gen_random_uuid();r:=public.scavenging_action('search',q||jsonb_build_object('request_id',nonce,'target_id',site->>'id'));perform pg_temp.fp_check(not r?'error','Nearby search rejected: '||r);
+ nonce:=gen_random_uuid();r:=public.scavenging_action('search',q||jsonb_build_object('request_id',nonce,'target_id',site->>'id'));perform pg_temp.fp_check(not r?'error','Nearby search rejected: '||r::text);
  -- Detection starts a chase, cancels the search and never pays its loot. Walking alone was safe above.
  update public.game_settings set value=1 where key in('scavenging_search_chase_enabled','scavenging_patrol_enabled');
  t:=clock_timestamp();patrol:=jsonb_build_array(jsonb_build_object('id','test-detection','route_points',jsonb_build_array(point,jsonb_build_array(point->0,(point->>1)::numeric+case when (point->>1)::numeric>1 then -.5 else .5 end),point),'epoch',extract(epoch from t),'seconds_per_block',8,'radius',.22));
  update game_private.scav_sessions set pending=pending||jsonb_build_object('patrols',patrol,'patrol_sentence_minutes',5,'started_at',t,'ready_at',t+interval '10 seconds') where player_id=u;
  select cash into balance from public.game_players where id=u;r:=game_private.scav_resolve_patrol();
- perform pg_temp.fp_check((r->>'pursuit')::boolean and not coalesce((r->>'caught')::boolean,false),'Detection skipped warning and chase: '||r);
+ perform pg_temp.fp_check((r->>'pursuit')::boolean and not coalesce((r->>'caught')::boolean,false),'Detection skipped warning and chase: '||r::text);
  select * into v from game_private.scav_sessions where player_id=u;
  perform pg_temp.fp_check(v.pending is null and v.pursuit->>'kind'='foot','Search not converted to on-foot pursuit');
  perform pg_temp.fp_check(not (public.prison_state()->>'jailed')::boolean,'Warning phase already imprisoned player');

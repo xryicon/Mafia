@@ -57,7 +57,7 @@ begin
     origin:=game_private.scav_position(session.route_points,session.departed_at,session.arrives_at,stamp);
     route:=game_private.scav_route(origin,goal);distance:=game_private.scav_route_length(route);
     destination:=round(gy)::int*5+round(gx)::int;
-    update game_private.scav_sessions set node=destination,path=jsonb_build_array(destination),route_points=route,departed_at=stamp,arrives_at=stamp+make_interval(secs=>distance*game_private.setting('scavenging_walk_seconds')) where season_id=s and player_id=u;
+    update game_private.scav_sessions set walk_controller=null,node=destination,path=jsonb_build_array(destination),route_points=route,departed_at=stamp,arrives_at=stamp+make_interval(secs=>distance*game_private.setting('scavenging_walk_seconds')) where season_id=s and player_id=u;
     result:=jsonb_build_object('message',case when distance=0 then 'You are here.' else 'Walking to the selected street.' end);
    elsif p_action='search' then
     if session.pending is not null then raise exception 'A search is already in progress.';end if;
