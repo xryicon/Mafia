@@ -8,8 +8,16 @@ export function scavWorld(game,bins,skills,onArrest=()=>{}){
  const resolve=()=>{if(!session?.pending||!catchSearch)return false;session.pending=null;onArrest();return true;};
  const setup=p=>{if(p.street){config={...config,...p};if(p.garage)ops.garages=[{id:"test-garage",code:"W25",district_name:"The Waterfront"}];if(p.weapon)ops.weapon={name:"Homemade pistol",ammo:30,condition:100,good_id:"homemade-pistol"};if(p.health!==undefined)ops.vitals.health=p.health;if(p.event)ops.event={id:"street-event",kind:p.event,node:2,expires_at:new Date(Date.now()+600000).toISOString()};if(p.lockpicks){let item=game.inventory.find(i=>i.good_id==="lockpick");if(item)item.quantity+=p.lockpicks;else game.inventory.push({good_id:"lockpick",quantity:p.lockpicks});}return;}catchSearch=!!p.catchSearch;patrols=p.enabled?[{id:"police-1",route_points:[[0,0],[4,0],[4,2],[0,2],[0,0]],epoch:1700000000,seconds_per_block:8,radius:.22}]:[];};
  let session=null;const maps=new Map(),requests=new Map(),recent=[];
- const settings={scavenging_walk_seconds:1,scavenging_search_seconds:1,scavenging_lock_seconds:1,scavenging_restock_seconds:600,scavenging_car_success_percent:100,scavenging_lock_xp:25,scavenging_theft_success_percent:100,scavenging_combat_bullets:3,scavenging_escape_min_seconds:0};
+ const settings={scavenging_foot_walk_seconds:10,scavenging_foot_sprint_percent:150,scavenging_input_lease_ms:500,scavenging_interaction_radius_percent:8,scavenging_foot_road_half_percent:13,scavenging_walk_seconds:1,scavenging_search_seconds:1,scavenging_lock_seconds:1,scavenging_restock_seconds:600,scavenging_car_success_percent:100,scavenging_lock_xp:25,scavenging_theft_success_percent:100,scavenging_combat_bullets:3,scavenging_escape_min_seconds:0};
  const read=()=>{const caught=resolve();const district=bins().read().districts.find(d=>d.id===session?.district_id);ops.island=district?.slug==='blackwater-island';ops.cash_multiplier=ops.island?3:1;return {session,targets:maps.get(session?.district_id)??[],streets:['Harbor Road','Warehouse Row','Dockside Avenue'],settings,recent,patrols,caught,operations:ops};};
+ const motion=(action,p)=>{
+  if(!session||p.district_id!==session.district_id)return{error:'Enter the district.'};
+  const now=Date.now(),a=session.route_points[0],b=session.route_points.at(-1),duration=Date.parse(session.arrives_at)-Date.parse(session.departed_at),progress=duration>0?Math.max(0,Math.min(1,(now-Date.parse(session.departed_at))/duration)):1,origin=[a[0]+(b[0]-a[0])*progress,a[1]+(b[1]-a[1])*progress];
+  if(action==='begin'){session.walk_controller=p.controller;session.walk_sequence=0;session.route_points=[origin];session.departed_at=session.arrives_at=new Date(now).toISOString();}
+  else if(p.controller!==session.walk_controller)return{error:'Controller changed.'};
+  else if(p.sequence>session.walk_sequence){session.walk_sequence=p.sequence;const length=Math.max(1,Math.hypot(p.dx,p.dy)),speed=p.sprint?10/1.5:10;const end=[Math.max(0,Math.min(4,origin[0]+p.dx/length*.5/speed)),Math.max(0,Math.min(2,origin[1]+p.dy/length*.5/speed))];session.route_points=[origin,end];session.departed_at=new Date(now).toISOString();session.arrives_at=new Date(now+(p.dx||p.dy?500:0)).toISOString();}
+  return{server_time:new Date(now).toISOString(),session:{...session,pursuit:ops.pursuit},patrols};
+ };
  function action(action,p){
   if(resolve())return {caught:true,message:"Caught by a police patrol."};
   if(requests.has(p.request_id))return requests.get(p.request_id);
@@ -32,7 +40,7 @@ export function scavWorld(game,bins,skills,onArrest=()=>{}){
   }else if(action==='vehicle_model'){model.sale_value=p.sale_value;model.enabled=p.enabled;model.version++;result={message:'Vehicle model saved and audited.'};
   }else if(action==='search'||action==='steal'){
    const target=maps.get(session?.district_id)?.find(t=>t.id===p.target_id);
-   if(!target||(target.node%5!==session.route_points.at(-1)[0]||Math.floor(target.node/5)!==session.route_points.at(-1)[1])||session.pending||Date.parse(session.arrives_at)>now||Date.parse(data.ready_at??'')>now||Date.parse(target.ready_at??'')>now)return{error:'Search unavailable.'};
+   if(!target||(Math.abs(target.node%5-session.route_points.at(-1)[0])+Math.abs(Math.floor(target.node/5)-session.route_points.at(-1)[1])>.08)||session.pending||Date.parse(session.arrives_at)>now||Date.parse(data.ready_at??'')>now||Date.parse(target.ready_at??'')>now)return{error:'Search unavailable.'};
    if(target.kind==='car'){const item=game.inventory.find(g=>g.good_id==='lockpick');if(!item?.quantity)return{error:'Carry a lockpick.'};item.quantity--;}
    session.pending={id:p.request_id,target_id:target.id,kind:target.kind,started_at:new Date(now).toISOString(),ready_at:new Date(now+300).toISOString(),success_percent:100,xp:25};if(action==='steal')session.pending.mode='theft';target.ready_at=new Date(now+600000).toISOString();result={message:'Searching.'};
   }else if(action==='finish'){
@@ -47,5 +55,5 @@ export function scavWorld(game,bins,skills,onArrest=()=>{}){
   if(resolve())result={caught:true,message:"Caught by a police patrol."};
   requests.set(p.request_id,result);return result;
  }
- return{read,action,setup,resolve,vehicleRead};
+ return{read,action,setup,resolve,vehicleRead,motion};
 }
