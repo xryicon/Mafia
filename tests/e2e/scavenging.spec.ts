@@ -13,7 +13,7 @@ test('walk to cars, require a tool, consume it once and award Lockpicking XP',as
  await expect(page.locator('.scav-desk-actions')).toContainText('0 lockpicks carried');
  await page.reload();await expect(page.getByRole('button',{name:'Collect search'})).toBeVisible();await page.getByRole('button',{name:'Collect search'}).click();
  await expect(page.locator('.bin-notice')).toContainText('+25 Lockpicking XP');await expect(page.locator('.scav-target.searched')).toHaveCount(2);
- await page.goto('/skills');await expect(page.locator('.skills-workspace')).toContainText('Lockpicking');
+ await page.goto('/skills');await expect(page.locator('.skills-workspace')).toContainText('Lockpicking');await expect(page.locator('.skill-card.scavenging')).toContainText('20 XP earned');await page.getByRole('tab',{name:/Scavenging/}).click();await expect(page.getByRole('link',{name:'Go scavenging'})).toHaveAttribute('href','/bin-diving');
 });
 test('named streets, keyboard movement, map zoom and phone layout',async({page})=>{
  await page.setViewportSize({width:1440,height:1000});await page.goto('/bin-diving?district=the-waterfront');await page.getByRole('button',{name:'Enter The Waterfront'}).click();

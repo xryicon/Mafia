@@ -97,6 +97,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/telegrams.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/telegram_groups.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/market_auctions.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/market_buy_orders.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/mining.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bin_diving.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging.sql

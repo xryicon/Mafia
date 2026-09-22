@@ -73,3 +73,21 @@ test("an interrupted auction creation retries the same request without duplicati
  await expect(page.locator(".market-auction")).toHaveCount(1);
  await expect(ticket.locator(".market-stock-note")).toContainText("3 units available");
 });
+
+test('buy orders show ten per page, accept partial sales and retry safely',async({page,request})=>{
+ await request.post('http://127.0.0.1:54329/__buy_orders_setup',{headers:{Authorization:'Bearer '+token},data:{count:12}});
+ await page.goto('/market?view=orders');const book=page.locator('.district-order-book');await expect(book.locator('.local-market-order')).toHaveCount(10);
+ const pages=page.getByRole('navigation',{name:'Buy orders pages'});await pages.getByRole('button',{name:'Next',exact:true}).click();await expect(book.locator('.local-market-order')).toHaveCount(2);await pages.getByRole('button',{name:'Previous',exact:true}).click();
+ let original='';await page.route('**/rest/v1/rpc/district_market_order',async route=>{if(!original){original=route.request().postData()!;await route.fetch();await route.abort();}else{expect(route.request().postData()).toBe(original);await route.continue();}});
+ const first=book.locator('.local-market-order').first();await first.getByLabel('Quantity to sell').fill('2');await first.getByRole('button',{name:'Sell to this order'}).click();await book.getByRole('button',{name:'Retry same order request'}).click();await expect(first).toContainText('2 of 5 filled');await expect(first).toContainText('3 remaining');await expect(first).toContainText('$300 reserved');
+ await page.reload();await expect(book.locator('.local-market-order').first()).toContainText('2 of 5 filled');
+});
+test('buy orders can be funded from all districts and cancelled for a refund',async({page})=>{
+ await page.goto('/market?view=orders');const book=page.locator('.district-order-book');await book.getByLabel('Units wanted').fill('3');await book.getByLabel('Your unit price').fill('100');await book.getByRole('button',{name:'Fund buy order'}).click();await expect(book).toContainText('0 of 3 filled');await expect(page.locator('.market-wallet-stats')).toContainText('$9,700');await book.getByRole('button',{name:'Cancel & refund $300'}).click();await expect(page.locator('.market-wallet-stats')).toContainText('$10,000');
+});
+
+test('fixed-price market lists ten offers and resets pagination with filters',async({page,request})=>{
+ await request.post('http://127.0.0.1:54329/__buy_orders_setup',{headers:{Authorization:'Bearer '+token},data:{listings:12}});
+ await page.goto('/market');await expect(page.locator('.market-lot')).toHaveCount(10);const pages=page.getByRole('navigation',{name:'Fixed-price offers pages'});await pages.getByRole('button',{name:'Next',exact:true}).click();await expect(page.locator('.market-lot')).toHaveCount(2);await page.getByRole('textbox',{name:'Search goods or seller'}).fill('Silk');await expect(page.locator('.market-lot')).toHaveCount(10);
+ await page.setViewportSize({width:390,height:844});await page.goto('/market?view=orders');await expect(page.locator('.local-market-order')).toHaveCount(10);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('.district-order-book').screenshot({path:'test-results/buy-orders-mobile.png'});
+});

@@ -11,6 +11,7 @@ const actions=[
  {id:"production",label:"Production",icon:"tools",dialog:"production"},
  {id:"jobs",label:"Find a Job",icon:"briefcase",dialog:"jobs"},
  {id:"inventory",label:"Inventory",icon:"inventory",href:"/inventory"},
+ {id:"warehouses",label:"Warehouses",icon:"inventory",href:"/warehouses"},
  {id:"market",label:"Market",icon:"trade",href:"/market"},
  {id:"bank",label:"Bank",icon:"bank",href:"/bank"},
  {id:"gangs",label:"Gangs",icon:"people",href:"/gangs"},

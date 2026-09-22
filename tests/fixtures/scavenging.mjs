@@ -50,7 +50,7 @@ export function scavWorld(game,bins,skills,onArrest=()=>{}){
    }
    result=bins().action('dive',{...p,district_id:session.district_id});if(result.error)return result;
    if(session.pending.kind==='car'){skills().award('lockpicking',session.pending.id,25,'Opened a parked car');result={...result,message:'Car opened. +25 Lockpicking XP.'};}
-   recent.push({kind:session.pending.kind,opened:true,xp:session.pending.kind==='car'?25:0,created_at:new Date().toISOString()});session.pending=null;
+   skills().award('scavenging',session.pending.id,10,'Completed a street search');recent.push({kind:session.pending.kind,opened:true,xp:session.pending.kind==='car'?25:0,created_at:new Date().toISOString()});session.pending=null;
   }else if(action==='cancel'){session.pending=null;result={message:'Search abandoned.'};}else return{error:'Unknown action.'};
   if(resolve())result={caught:true,message:"Caught by a police patrol."};
   requests.set(p.request_id,result);return result;

@@ -41,6 +41,9 @@ begin
  perform pg_temp.check_scav((select cash from public.game_players where id=u)=cash_before+77,'Cash amount trusts client or missing');
  perform pg_temp.check_scav(public.scavenging_action('finish',q)=first,'Replay returned a different reward');
  perform pg_temp.check_scav((select count(*) from game_private.scav_results where player_id=u)=1,'Replay duplicated a result');
+ perform pg_temp.check_scav((select count(*) from game_private.skill_xp_ledger where player_id=u and skill_id='scavenging')=1,'Search replay duplicated Scavenging XP');
+ perform pg_temp.check_scav((select sum(delta) from game_private.skill_xp_ledger where player_id=u and skill_id='scavenging')=game_private.setting('scavenging_skill_xp_per_search'),'Completed bin did not earn configured Scavenging XP');
+ perform pg_temp.check_scav(not has_function_privilege('authenticated','game_private.scavenging_skill_award()','execute'),'Players can invoke the award trigger directly');
  perform pg_temp.check_scav(exists(select 1 from public.game_ledger where player_id=u and delta=77),'Cash ledger missing');
  r:=public.scavenging_action('search',jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'target_id',site->>'id'));perform pg_temp.check_scav(r?'error','Searched site reused');
  -- Car flow with an isolated player and no inherited cooldown.
