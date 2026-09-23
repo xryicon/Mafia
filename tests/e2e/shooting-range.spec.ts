@@ -13,7 +13,7 @@ async function equipM4(request:APIRequestContext,n=35){
 }
 async function start(page:Page){await page.goto("/shooting-range");await page.getByRole("button",{name:/Start session/}).click();await expect(page.locator(".range-intro")).toHaveCount(0);await expect(page.locator(".range-action-state")).toHaveText("Ready to fire");}
 async function aim(page:Page,lane:number){const el=page.getByRole("button",{name:"Shooting lane",exact:true});await el.scrollIntoViewIfNeeded();const b=await el.boundingBox();const t=await page.locator(`[data-lane="${lane}"]`).getAttribute("transform");const xy=t!.match(/[\d.]+/g)!.map(Number);await page.mouse.click(b!.x+xy[0]/1000*b!.width,b!.y+xy[1]/600*b!.height);}
-test.beforeEach(async({context,request})=>{await context.addInitScript(()=>localStorage.setItem("blackwater:range-view","2d"));test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixtures");await request.post(base+"/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
+test.beforeEach(async({context,request})=>{test.skip(process.env.GAME_TEST_FIXTURE!=="1","Isolated fixtures");await request.post(base+"/__reset_world",{headers});await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);});
 
 test("range shares game HUD, requires equipment and is reachable from dashboard",async({page})=>{
  await page.goto("/dashboard");await page.locator(".command-quick").getByRole("link",{name:/Shooting Range/i}).click();await expect(page).toHaveURL(/shooting-range/);
@@ -119,30 +119,30 @@ test("a delayed range recording respects mute, and missing audio cannot block sh
  await page.locator(".range-lane").click({position:{x:8,y:100},force:true});await expect(page.locator(".range-firebar strong")).toHaveText("2");
 });
 
-test("Beginner and Advanced selection controls target distance, speed and XP on desktop and mobile",async({page,request})=>{
+test("Original range defaults to Advanced only on desktop and mobile",async({page,request})=>{
  await equip(request,12);await page.setViewportSize({width:1536,height:1180});await page.goto('/shooting-range');
  const beginner=page.getByRole('radio',{name:/Beginner/}),advanced=page.getByRole('radio',{name:/Advanced/});
- await expect(beginner).toHaveAttribute('aria-checked','true');await expect(beginner).toContainText('Up to 50 XP');await expect(advanced).toContainText('Up to 150 XP');
- const width=Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'));
- await advanced.click();await expect(advanced).toHaveAttribute('aria-checked','true');expect(Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'))).toBeCloseTo(width*.65);
+ await expect(beginner).toHaveCount(0);await expect(page.locator('.range-targets')).toBeVisible();await expect(advanced).toContainText('Up to 150 XP');
+ const state=await rpc(request,"range_state");
+ await advanced.click();await expect(advanced).toHaveAttribute('aria-checked','true');expect(Number(await page.locator('[data-lane="0"] ellipse').first().getAttribute('rx'))).toBeCloseTo(state.config.radius_x*10*.65);
  await capture(page,'range-difficulty-desktop');await page.getByRole('button',{name:/Start session/}).click();
  let d=await rpc(request,'range_state');expect(d.session.difficulty).toBe('advanced');expect(d.session.config.move_speed).toBe(d.config.move_speed*2.5);expect(d.session.config.completion_xp).toBe(150);await expect(page.locator('.range-difficulties')).toBeHidden();
  await page.getByRole('button',{name:'End session',exact:true}).click();await expect(page.locator('.range-session-result')).toContainText('+0 XP');
  await expect(page.getByRole('timer',{name:'Range cooldown'})).toContainText(/09:5|10:00/);await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
- await beginner.click();await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();await page.reload();await expect(page.getByRole('timer',{name:'Range cooldown'})).toBeVisible();
- await page.setViewportSize({width:390,height:1100});await page.locator('.range-entry').scrollIntoViewIfNeeded();await expect(beginner).toBeVisible();await expect(advanced).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,'range-difficulty-mobile');
+ await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();await page.reload();await expect(page.getByRole('timer',{name:'Range cooldown'})).toBeVisible();
+ await page.setViewportSize({width:390,height:1100});await page.locator('.range-entry').scrollIntoViewIfNeeded();await expect(beginner).toHaveCount(0);await expect(advanced).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,'range-difficulty-mobile');
 });
 
 test("completed sessions show earned XP once and recovery expiry enables the next attempt",async({page,request})=>{
  await equip(request,8);await request.post(base+'/__range_setup',{headers,data:{config:{rounds:1,round_seconds:4,move_amplitude:0,move_vertical:0,cooldown_seconds:3}}});
  await start(page);await aim(page,1);await expect(page.locator('.range-entry')).toContainText('1 / 1 rounds practised');
  await expect(page.getByRole('button',{name:/Record session/})).toBeVisible();await page.getByRole('button',{name:/Record session/}).click();
- await expect(page.locator('.range-session-result')).toContainText('+16 XP');await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
- let d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(16);expect(d.session.xp_awarded).toBe(16);
- await page.reload();d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(16);
+ await expect(page.locator('.range-session-result')).toContainText('+50 XP');await expect(page.getByRole('button',{name:/Start session/})).toBeDisabled();
+ let d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(50);expect(d.session.xp_awarded).toBe(50);
+ await page.reload();d=await rpc(request,'range_state');expect(d.stats.xp_earned).toBe(50);
  await expect(page.getByRole('button',{name:/Start session/})).toBeEnabled({timeout:7000});await page.getByRole('radio',{name:/Advanced/}).click();await page.getByRole('button',{name:/Start session/}).click();
  await aim(page,1);await expect(page.getByRole('button',{name:/Record session/})).toBeVisible();await page.getByRole('button',{name:/Record session/}).click();
- await expect(page.locator('.range-session-result')).toContainText('+50 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(66);expect((await rpc(request,'skills_state')).skills.find((s:any)=>s.id==='sharpshooting').xp).toBe(66);
+ await expect(page.locator('.range-session-result')).toContainText('+50 XP');expect((await rpc(request,'range_state')).stats.xp_earned).toBe(100);expect((await rpc(request,'skills_state')).skills.find((s:any)=>s.id==='sharpshooting').xp).toBe(100);
 });
 
 test("bullseye precision drives live accuracy, saved Advanced averages and score XP",async({page,request})=>{
