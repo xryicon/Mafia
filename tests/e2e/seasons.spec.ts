@@ -1,7 +1,8 @@
 import {test,expect} from "@playwright/test";
-import {cookie} from "../fixtures/identity.mjs";
-test("mobile rankings, profile and Owner season controls",async({page,context})=>{
+import {cookie,token} from "../fixtures/identity.mjs";
+test("mobile rankings, profile and Owner season controls",async({page,context,request})=>{
  test.skip(process.env.GAME_TEST_FIXTURE!=="1","Requires isolated fixture");
+ await request.post("http://127.0.0.1:54329/__reset_world",{headers:{Authorization:"Bearer "+token}});
  await context.addCookies([{name:"sb-127-auth-token",value:cookie,domain:"localhost",path:"/"}]);
  await page.setViewportSize({width:390,height:844});
  await page.goto("/seasons");
