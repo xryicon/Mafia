@@ -15,3 +15,12 @@ test('text choices remain readable on desktop and phone',async({page})=>{
 test('police still arrest players caught searching',async({page,request})=>{
  await request.post(base+'/__patrol_setup',{headers,data:{enabled:true,catchSearch:true}});await page.goto('/bin-diving');await page.getByRole('button',{name:/^Enter /}).click();await expect(page.locator('.simple-risk')).toContainText('1 police patrols');await page.getByRole('button',{name:'Search bin',exact:true}).first().click();await expect(page).toHaveURL(/districts\/blackwater-island/);
 });
+
+test('heat and skill are readable while supporting panels stay collapsed',async({page})=>{
+ await page.route('**/rest/v1/rpc/bin_diving_state',async route=>{const response=await route.fetch();const data=await response.json();data.scavenging.district_risk=Object.fromEntries(data.districts.map((d:{id:string})=>[d.id,{level:10,heat:48,searches:6,skill_reduction_percent:23.7,detection_multiplier:1.12,heat_per_search:8,cooling_per_minute:1}]));await route.fulfill({response,json:data});});
+ await page.goto('/bin-diving');await expect(page.getByLabel('District heat and skill')).toContainText('Level 10');await expect(page.getByLabel('District heat',{exact:true})).toHaveAttribute('value','48');
+ await expect(page.locator('.street-loot-guide[open]')).toHaveCount(0);
+ await page.getByRole('button',{name:/^Enter /}).click();await expect(page.getByRole('button',{name:'Search bin',exact:true}).first()).toBeVisible();
+ await page.setViewportSize({width:360,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/scavenging-heat-mobile.png'});
+ await page.locator('summary').filter({hasText:'Loot guide & current chances'}).click();await expect(page.locator('.bin-odds')).toBeVisible();
+});
