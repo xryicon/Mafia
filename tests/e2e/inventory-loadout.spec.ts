@@ -61,3 +61,15 @@ test("broken weapon scrapping confirms destruction and safely retries without du
  page.once("dialog",d=>d.accept());await page.getByRole("button",{name:"Scrap weapon",exact:true}).click();await page.getByRole("button",{name:"Retry safely",exact:true}).click();await expect(page.getByRole("button",{name:"Secondary weapon, empty",exact:true})).toBeVisible();
  await expect(page.locator(".inv-slot .inv-item").filter({hasText:"Scrap metal"})).toContainText("×1");await page.reload();await expect(page.locator(".inv-slot .inv-item").filter({hasText:"Scrap metal"})).toContainText("×1");
 });
+
+test("inventory coalesces refresh bursts and ignores an older read after equipment changes",async({page,request})=>{
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{full:true,storage:true}});await page.goto("/inventory");
+ let reads=0,captured=false;let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});
+ await page.route("**/rest/v1/rpc/inventory_state",async route=>{reads++;if(reads===1){const response=await route.fetch();const json=await response.json();captured=true;await hold;await route.fulfill({response,json});}else await route.continue();});
+ await page.getByRole("button",{name:"Refresh inventory",exact:true}).click();await expect.poll(()=>captured).toBe(true);
+ await page.evaluate(()=>{for(let i=0;i<8;i++)window.dispatchEvent(new Event('focus'));});expect(reads).toBe(1);
+ await page.locator(".inv-slot .inv-item").filter({hasText:"Pickaxe"}).click();await page.getByRole("button",{name:"Equip pickaxe",exact:true}).click();await page.getByRole("button",{name:"Confirm equipment",exact:true}).click();
+ await expect(page.getByRole("button",{name:"Utility: Pickaxe",exact:true})).toBeVisible();expect(reads).toBe(2);
+ const oldResponse=page.waitForResponse(r=>r.url().endsWith('/rpc/inventory_state'));release();await (await oldResponse).finished();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await expect(page.getByRole("button",{name:"Utility: Pickaxe",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Refresh inventory",exact:true})).toBeEnabled();
+});
