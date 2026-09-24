@@ -1,5 +1,5 @@
-export type LootItem="pickaxe"|"lockpick"|"pistol_blueprint"|"bullet_blueprint"|"bandages_blueprint";
-export type BinRules={enabled:boolean;cooldown_seconds:number;cash_min:number;cash_max:number;cash_chance:number;pickaxe_chance:number;lockpick_chance:number;pistol_blueprint_chance:number;bullet_blueprint_chance:number;bandages_blueprint_chance:number;version:number};
+export type LootItem="pickaxe"|"lockpick"|"pistol_blueprint"|"bullet_blueprint"|"bandages_blueprint"|"reinforced_jacket_blueprint"|"kevlar_vest_blueprint";
+export type BinRules={enabled:boolean;cooldown_seconds:number;cash_min:number;cash_max:number;cash_chance:number;pickaxe_chance:number;lockpick_chance:number;pistol_blueprint_chance:number;bullet_blueprint_chance:number;bandages_blueprint_chance:number;reinforced_jacket_blueprint_chance:number;kevlar_vest_blueprint_chance:number;version:number};
 export type BinReceipt={id:string;district_id:string;district_name:string;outcome:LootItem|"cash"|"nothing";cash:number;created_at:string;ready_at:string};
 export type BinState={
  scavenging?:import('./scavenging').ScavengingState;
@@ -14,6 +14,8 @@ export const loot=[
  {id:"pistol_blueprint",name:"Homemade pistol blueprint",icon:"blueprint",description:"Learn it for this season, then craft at your property station."},
  {id:"bullet_blueprint",name:"Homemade bullet blueprint",icon:"blueprint",description:"Learn it for this season, then craft at your property station."}
  ,{id:"bandages_blueprint",name:"Bandages blueprint",icon:"blueprint",description:"Learn it for this season, then craft bandages at your property station."}
+, {id:"reinforced_jacket_blueprint",name:"Reinforced jacket blueprint",icon:"blueprint",description:"Learn to craft reinforced jackets at your property station."}
+ ,{id:"kevlar_vest_blueprint",name:"Kevlar vest blueprint",icon:"blueprint",description:"Learn to craft Kevlar vests at your property station."}
 ] as const;
-export const emptyChance=(r:BinRules)=>Math.max(0,Math.round((100-r.cash_chance-r.pickaxe_chance-r.lockpick_chance-r.pistol_blueprint_chance-r.bullet_blueprint_chance-r.bandages_blueprint_chance)*100)/100);
+export const emptyChance=(r:BinRules)=>Math.max(0,Math.round((100-r.cash_chance-r.pickaxe_chance-r.lockpick_chance-r.pistol_blueprint_chance-r.bullet_blueprint_chance-r.bandages_blueprint_chance-(r.reinforced_jacket_blueprint_chance??0)-(r.kevlar_vest_blueprint_chance??0))*100)/100);
 export const binCountdown=(seconds:number)=>Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");

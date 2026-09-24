@@ -9,11 +9,11 @@ function VehicleForm({model,busy,save}:{model:import("@/lib/street-operations").
 }
 function RulesForm({initial,busy,save}:{initial:BinRules;busy:boolean;save:(rules:BinRules,reason:string)=>Promise<boolean>}){
  const [rules,setRules]=useState(initial),[reason,setReason]=useState("");
- const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance+rules.bandages_blueprint_chance;
+ const total=rules.cash_chance+rules.pickaxe_chance+rules.lockpick_chance+rules.pistol_blueprint_chance+rules.bullet_blueprint_chance+rules.bandages_blueprint_chance+(rules.reinforced_jacket_blueprint_chance??0)+(rules.kevlar_vest_blueprint_chance??0);
  const number=(key:keyof BinRules,value:string)=>setRules(r=>({...r,[key]:Number(value)}));
  return <form className="bin-rules-form" onSubmit={async e=>{e.preventDefault();if(await save(rules,reason.trim()||"Updated city-wide bin diving rules"))setReason("");}}>
  <label className="bin-enabled"><input type="checkbox" checked={rules.enabled} onChange={e=>setRules(r=>({...r,enabled:e.target.checked}))}/> Open bin diving across the city</label>
- <div className="bin-rules-grid">{loot.map(l=><label key={l.id}>{l.name} chance (%)<input type="number" min="0" max="100" step="0.01" required value={rules[(l.id+"_chance") as keyof BinRules] as number} onChange={e=>number((l.id+"_chance") as keyof BinRules,e.target.value)}/></label>)}</div>
+ <div className="bin-rules-grid">{loot.map(l=><label key={l.id}>{l.name} chance (%)<input type="number" min="0" max="100" step="0.01" required value={(rules[(l.id+"_chance") as keyof BinRules] as number)??0} onChange={e=>number((l.id+"_chance") as keyof BinRules,e.target.value)}/></label>)}</div>
  <p className={total>100?"error":""}>{total>100?"The total cannot exceed 100%.":emptyChance(rules)+"% chance of finding nothing."} One result is rolled for each dive.</p>
  <div className="bin-rules-grid">{[["cooldown_seconds","Cooldown (seconds)",1,86400],["cash_min","Minimum cash find",1,1000000],["cash_max","Maximum cash find",rules.cash_min,1000000]].map(([key,label,min,max])=><label key={key}>{label}<input type="number" required min={min} max={max} step="1" value={rules[key as keyof BinRules] as number} onChange={e=>number(key as keyof BinRules,e.target.value)}/></label>)}</div>
  <label>Reason for this change (optional)<textarea minLength={5} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} placeholder="Describe the balance change for your audit history."/></label>

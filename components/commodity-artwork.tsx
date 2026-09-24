@@ -24,6 +24,8 @@ const commodityArt:Record<string,string>={
 
 // These images accompany the database commodity name, so they are decorative.
 export function CommodityArtwork({goodId,size=56}:{goodId:string;size?:number}){
+ if(["reinforced_jacket_blueprint","kevlar_vest_blueprint"].includes(goodId))return <span className="commodity-art" style={{width:size,height:size,background:"#152b34",border:"1px solid #ba9d69"}} aria-hidden="true"><GameIcon name="blueprint" size={size*.7}/></span>;
+ if(goodId==="reinforced-jacket"||goodId==="kevlar-vest")return <span className="commodity-art" style={{width:size,height:size}} aria-hidden="true"><svg viewBox="0 0 100 100" width="100%" height="100%"><path d={goodId==="reinforced-jacket"?"M32 15L20 22L8 60L23 66L29 47L27 88H73L71 47L77 66L92 60L80 22L68 15L50 24Z":"M30 12L19 25L24 48L23 87Q50 94 77 87L76 48L81 25L70 12L62 14Q61 30 50 30Q39 30 38 14Z"} fill={goodId==="reinforced-jacket"?"#544934":"#293a39"} stroke="#bea477" strokeWidth="2"/><path d="M50 30V87M30 40H44V56H30ZM56 40H70V56H56ZM31 67H44V80H31ZM56 67H69V80H56Z" fill="none" stroke="#b79e71" strokeWidth="1.4"/><path d="M32 18L43 34L50 25L57 34L68 18" fill="none" stroke="#d7bd8e"/></svg></span>;
  const art=commodityArt[goodId];
  const arsenalArt=goodId==="m4-carbine"||goodId==="556x45mm-ammo";
  return <picture className={`commodity-art${arsenalArt?" m4-arsenal-art":""}`} style={{width:size,height:size}} aria-hidden="true">

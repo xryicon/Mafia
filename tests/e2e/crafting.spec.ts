@@ -48,3 +48,20 @@ test("Owner recipe changes appear at the crafting table",async({page})=>{
  await page.goto("/owner?section=crafting");await page.getByLabel("Edit crafting recipe").selectOption("homemade-bullets");await page.getByLabel("Output units per batch").fill("18");await page.getByLabel("Craft time per batch (seconds)").fill("90");await page.getByLabel("Recipe audit reason").fill("Adjust ammunition production for this season");await page.getByRole("button",{name:"Save crafting recipe"}).click();await expect(page.locator(".cf-owner [role=status]")).toContainText("Recipe saved");
  await page.goto("/crafting?recipe=homemade-bullets");await expect(page.locator(".cf-output")).toContainText("18");await expect(page.locator(".cf-output")).toContainText("1m 30s");
 });
+
+
+test("armour blueprints unlock craftable jackets and vests",async({page,request})=>{
+ await request.post(base+"/__crafting_setup",{headers,data:{grant:{reinforced_jacket_blueprint:1,kevlar_vest_blueprint:1,silk:9,steel:6,"copper-ingot":2}}});
+ await openTable(page);
+ for(const name of ["Reinforced jacket","Kevlar vest"]){
+  await page.getByRole("button",{name:name+" Blueprint required",exact:true}).click();
+  await expect(page.getByRole("button",{name:/Add to crafting queue/})).toBeDisabled();
+  await page.getByRole("button",{name:/Learn recipe/}).click();await page.getByRole("button",{name:"Confirm learning"}).click();
+  await expect(page.locator(".cf-tag")).toHaveText("Recipe learned");
+  await page.getByRole("button",{name:/Add to crafting queue/}).click();await page.getByRole("button",{name:"Confirm crafting"}).click();
+  await request.post(base+"/__crafting_setup",{headers,data:{ready:true}});await page.getByRole("button",{name:"Refresh crafting"}).click();
+  await page.getByLabel("Crafted item destination").selectOption("carried");await page.locator(".cf-job").getByRole("button",{name:"Collect",exact:true}).click();await page.getByRole("button",{name:"Confirm collection"}).click();
+  await expect(page.locator(".cf-stock-grid").first()).toContainText(name);
+ }
+ await page.setViewportSize({width:390,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,"armour-crafting-mobile");
+});
