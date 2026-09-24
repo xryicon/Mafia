@@ -1,3 +1,4 @@
+import {SalvageArtwork} from "./salvage-artwork";
 import {GameIcon} from "@/components/game-icon";
 
 const commodityArt:Record<string,string>={
@@ -30,6 +31,8 @@ const commodityArt:Record<string,string>={
 
 // These images accompany the database commodity name, so they are decorative.
 export function CommodityArtwork({goodId,size=56}:{goodId:string;size?:number}){
+ const salvage:Record<string,string>={"salvaged-wheels":"wheels","salvaged-doors":"doors","car-battery":"battery","salvaged-engine":"engine"};
+ if(salvage[goodId])return <span className="commodity-art" style={{width:size,height:size}} aria-hidden="true"><SalvageArtwork part={salvage[goodId]}/></span>;
  const art=commodityArt[goodId];
  const arsenalArt=goodId==="m4-carbine"||goodId==="556x45mm-ammo";
  return <picture className={`commodity-art${arsenalArt?" m4-arsenal-art":""}`} style={{width:size,height:size}} aria-hidden="true">

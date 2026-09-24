@@ -1,3 +1,4 @@
+import "./chop-shop.css";
 import "./tutorial.css";
 import "./travel.css";
 import type {Metadata} from "next";

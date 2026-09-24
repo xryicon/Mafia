@@ -206,3 +206,6 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/skills.sql
           bash supabase/tests/range_rewards_races.sh
           bash supabase/tests/shooting_range_races.sh
+
+      - name: Active chop shops, shared bays and salvage rewards
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/chop_shops.sql
