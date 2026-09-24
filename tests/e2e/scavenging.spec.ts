@@ -24,3 +24,16 @@ test('heat and skill are readable while supporting panels stay collapsed',async(
  await page.setViewportSize({width:360,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/scavenging-heat-mobile.png'});
  await page.locator('summary').filter({hasText:'Loot guide & current chances'}).click();await expect(page.locator('.bin-odds')).toBeVisible();
 });
+
+test('target filters preserve searches and show restock timers',async({page,request})=>{
+ await page.goto('/bin-diving');await page.getByRole('button',{name:/^Enter /}).click();
+ const grid=page.locator('.simple-scav-grid');await expect(grid.locator('article')).toHaveCount(10);
+ await page.getByRole('button',{name:'Cars · 3',exact:true}).click();await expect(grid.locator('article')).toHaveCount(3);await expect(grid.getByRole('button',{name:'Search bin',exact:true})).toHaveCount(0);
+ await page.getByLabel('Filter by street').selectOption('Harbor Road');await expect(grid.locator('article')).toHaveCount(1);
+ await page.getByRole('button',{name:'Bins · 7',exact:true}).click();await expect(grid.locator('article')).toHaveCount(3);
+ await request.post(base+'/__bin_setup',{headers,data:{next:'lockpick',ready:true}});await grid.getByRole('button',{name:'Search bin',exact:true}).first().click();
+ await expect(page.locator('.bin-result')).toContainText('Lockpick');await expect(page.locator('.bin-result').getByRole('link',{name:'Open inventory'})).toBeVisible();
+ await expect(grid.locator('.restocking')).toHaveCount(1);await expect(grid.locator('.restocking')).toContainText(/Search again in/);
+ await page.getByLabel('Hide searched targets').check();await expect(grid.locator('article')).toHaveCount(2);
+ await page.setViewportSize({width:360,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/scavenging-filters-mobile.png'});
+});
