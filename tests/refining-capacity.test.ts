@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {refiningCapacity,refiningShortages,refiningQuote,type Refinery,type Recipe,type RefineryState} from '../lib/refineries';
 const recipe:Recipe={id:'iron',name:'Iron refining',input_good_id:'iron-ore',output_good_id:'iron-ingot',fuel_good_id:'coal',input_units:20,output_units:10,fuel_units:5,enabled:true,version:1};
-const refinery={fee_mode:'cash',cash_fee:20,output_percent:15,fuel:{coal:30}} as Refinery;
+const refinery:Refinery={id:'refinery',plot_id:'plot',business_id:'business',name:'Refinery',description:'',owner_id:'owner',owner_type:'player',owner_name:'Owner',district_id:'district',district_name:'Waterfront',district_slug:'waterfront',code:'W01',status:'open',locked:false,for_sale:false,auction:false,price:3500,tax_rate:3,version:1,plot_version:1,fee_mode:'cash',cash_fee:20,output_percent:15,fuel:{coal:30},my_cash_revenue:0,my_output_revenue:{}};
 const state={cash:100,inventory:{'iron-ore':200},settings:{refinery_max_batches:100},goods:[{id:'iron-ore',name:'Iron ore'},{id:'coal',name:'Coal'}]} as unknown as RefineryState;
 test('maximum respects the tightest ore, fuel, cash and configured batch limit',()=>{
  assert.equal(refiningCapacity(refinery,recipe,state,false),5);
