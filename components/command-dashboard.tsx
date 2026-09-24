@@ -127,7 +127,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
    <Link href="/profile" className="command-portrait-link" aria-label="View your player profile"><PlayerAvatar className="command-portrait" src={data.city?.avatar_url} name={data.game.player.handle} size={512}/></Link>
    <div className="command-player-name"><h2>{data.city?.username??game.player.handle}</h2><Link href="/account" aria-label="Edit account"><GameIcon name="edit" size={15}/></Link></div>
    <p className="command-player-rank"><GameIcon name="shield" size={15}/>{playerRank}</p><p className="command-player-quote">“Power moves people.”</p>
-   <div className="command-level"><div><span>Lv. {player?.level??"—"}</span><small>{game.player.xp.toLocaleString("en-US")} {progress.next?"/ "+progress.next.value.toLocaleString("en-US"):""} power</small></div><Meter value={progress.percent} label="Progress to next power rank"/><small>{progress.next?"Next rank: "+progress.next.name:"Highest configured rank"}</small></div>
+   <div className="command-level"><div><small>{game.player.xp.toLocaleString("en-US")} {progress.next?"/ "+progress.next.value.toLocaleString("en-US"):""} power</small></div><Meter value={progress.percent} label="Progress to next power rank"/><small>{progress.next?"Next rank: "+progress.next.name:"Highest configured rank"}</small></div>
    <dl className="command-player-stats">
     <div><dt><GameIcon name="coins"/>Cash</dt><dd>{money(game.player.cash)}</dd></div>
     
