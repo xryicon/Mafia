@@ -76,6 +76,16 @@ declare f jsonb;u uuid;s uuid;d uuid;q jsonb;r jsonb;first jsonb;cash0 bigint;ca
  perform pg_temp.street_check((select quantity from public.game_inventory_gear where id=(weapon->>'ammo_id')::uuid)=17,'Wrong equipped ammo consumed');
  perform pg_temp.street_check((select condition from public.game_inventory_gear where id=(weapon->>'id')::uuid)=97,'Weapon wear incorrect');
  perform pg_temp.street_check((select health=80 and armour=0 from public.game_season_players where player_id=u and season_id=s),'Damage ignored armour or trusted client');
+ -- Equipped vest protection is consumed once by actual street combat.
+ f:=pg_temp.street_player(true);u:=(f->>'u')::uuid;perform pg_temp.street_steal(f);
+ insert into public.game_inventory_gear(season_id,player_id,good_id,quantity,location,equipment_slot) values(s,u,'kevlar-vest',1,'equipped','armor');
+ perform pg_temp.street_check((public.vitals_state()->>'armour')::numeric=35,'Vest absent from dashboard vitals');
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid());first:=public.scavenging_action('fight',q);
+ perform pg_temp.street_check(not first?'error','Armoured fight failed '||first::text);
+ perform pg_temp.street_check((public.vitals_state()->>'health')::numeric=100,'Vest failed to absorb street damage');
+ r:=public.vitals_state();perform pg_temp.street_check((r->>'armour')::numeric between 0 and 5,'Vest protection did not wear');
+ perform pg_temp.street_check(public.scavenging_action('fight',q)=first,'Armoured combat retry changed result');
+ perform pg_temp.street_check((public.vitals_state()->>'armour')::numeric=(r->>'armour')::numeric,'Retry damaged armour twice');
  -- Incapacitation seizes the car, gives no sale, and creates a prison sentence.
  f:=pg_temp.street_player(true);u:=(f->>'u')::uuid;perform pg_temp.street_steal(f);update public.game_season_players set health=5 where player_id=u and season_id=s;
  r:=public.scavenging_action('fight',jsonb_build_object('season_id',s,'request_id',gen_random_uuid()));perform pg_temp.street_check((r->>'caught')::boolean,'Injured player escaped');
