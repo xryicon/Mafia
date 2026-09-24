@@ -63,7 +63,7 @@ test("Owner grants reach the stash and both market sale formats, with matching a
  await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
  const ticket=page.locator(".market-ticket");
  await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByLabel("Price per unit ($)",{exact:true}).fill("150");await ticket.getByRole("button",{name:"Post market offer"}).click();await expect(page.locator(".market-notice")).toContainText("Offer posted");
- await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
+ await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await page.locator("summary").filter({hasText:"Equipment & recent finds"}).click();await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
  await page.goto("/market?view=mine&good=pickaxe");await page.getByRole("button",{name:"Withdraw",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Offer withdrawn");
  for(const item of ["pistol_blueprint","bullet_blueprint"]){
   await ticket.getByLabel("Commodity").selectOption(item);await ticket.getByRole("button",{name:"Auction",exact:true}).click();await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByRole("button",{name:"Start auction",exact:true}).click();await expect(page.locator(".market-notice")).toContainText("Auction opened");
