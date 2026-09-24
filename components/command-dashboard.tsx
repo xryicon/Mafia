@@ -73,6 +73,9 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   const id=++version.current;selected.current=slug;loading.current=true;setRefreshing(true);
   try{
    const client=createClient();
+   const location=await client.rpc("travel_state");
+   if(location.error||!location.data?.current?.slug)throw new Error("Your current district could not be refreshed. Please try again.");
+   slug=location.data.current.slug;selected.current=slug;
    const [game,city,district,season,mailbox,vitals]=await Promise.all([client.rpc("game_state"),client.rpc("city_status"),client.rpc("district_state",{p_slug:slug}),client.rpc("season_state",{p_metric:"respect"}),client.rpc("telegram_state"),client.rpc("vitals_state")]);
    if(game.error||!game.data||district.error)throw new Error("The city could not be refreshed. Your last saved figures are shown.");
    if(!alive.current||id!==version.current)return false;
@@ -88,8 +91,8 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
   const timer=setInterval(()=>setNow(Date.now()+offset.current),1000);
   const poll=setInterval(()=>{if(!document.hidden&&!lock.current)void refresh(selected.current,true);},30000);
   const visible=()=>{if(!document.hidden&&!lock.current)void refresh(selected.current,true);};
-  document.addEventListener("visibilitychange",visible);
-  return()=>{alive.current=false;++version.current;loading.current=false;clearInterval(timer);clearInterval(poll);document.removeEventListener("visibilitychange",visible);};
+  document.addEventListener("visibilitychange",visible);window.addEventListener("focus",visible);window.addEventListener("blackwater:location",visible);
+  return()=>{alive.current=false;++version.current;loading.current=false;clearInterval(timer);clearInterval(poll);document.removeEventListener("visibilitychange",visible);window.removeEventListener("focus",visible);window.removeEventListener("blackwater:location",visible);};
  },[refresh]);
  useEffect(()=>{
   const frame=requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent("blackwater:dashboard",{detail:{unread:data.mailbox?.unread??null}})));return()=>cancelAnimationFrame(frame);
@@ -136,7 +139,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
     <div><dt><GameIcon name="bolt"/>Operations</dt><dd><span className={cooldown?"":"command-green"}>{cooldown?until(game.player.job_ready_at,now):playing?"Ready":"Paused"}</span></dd></div>
     <DashboardTravelHeat/>
    </dl>
-   <div className="command-location"><GameIcon name="pin" size={23}/><span>Viewing district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
+   <div className="command-location"><GameIcon name="pin" size={23}/><span>Current district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
    <DashboardQuickActions playerId={game.player.id} onAction={setDialog}/>
    <div className="command-player-art"><img src="/art/harbor-small.webp" alt="" width={640} height={360}/><p>Every fortune<br/>has a dark side.</p></div>
    <p className="command-player-signature">BLACKWATER <small>A PLAYER-DRIVEN CRIME ECONOMY</small></p>

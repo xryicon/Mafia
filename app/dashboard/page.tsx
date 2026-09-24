@@ -8,8 +8,10 @@ export const metadata={title:"Dashboard"};
 export default async function Dashboard(){
  await requireUser("/dashboard");
  const client=await createClient();
- const [game,city,district,season,mailbox,vitals]=await Promise.all([
-  client.rpc("game_state"),client.rpc("city_status"),client.rpc("district_state",{p_slug:"the-waterfront"}),
+ const game=await client.rpc("game_state");
+ const location=await client.rpc("travel_state");
+ const [city,district,season,mailbox,vitals]=await Promise.all([
+  client.rpc("city_status"),location.data?.current?.slug?client.rpc("district_state",{p_slug:location.data.current.slug}):Promise.resolve({data:null,error:true}),
   client.rpc("season_state",{p_metric:"respect"}),client.rpc("telegram_state"),client.rpc("vitals_state")
  ]);
  if(game.error||!game.data)return <section className="control-layout"><h1>Your dashboard could not be loaded</h1><p>Reconnect to Blackwater to see your empire.</p><Link className="button" href="/dashboard">Try again</Link></section>;
