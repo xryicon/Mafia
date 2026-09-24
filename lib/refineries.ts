@@ -6,3 +6,22 @@ export function refiningQuote(r:Refinery,recipe:Recipe,batches:number,own:boolea
  const output=batches*recipe.output_units,share=!own&&r.fee_mode==="output"?Math.ceil(output*Math.round(r.output_percent*100)/10000):0;
  return {input:batches*recipe.input_units,output,fuel:batches*recipe.fuel_units,share,take:output-share,cash:!own&&r.fee_mode==="cash"?r.cash_fee*batches:0};
 }
+
+// Guidance only: the server revalidates the full quote, ownership and inventory space.
+export function refiningCapacity(r:Refinery,recipe:Recipe,data:RefineryState,own:boolean){
+ const perBatchFee=!own&&r.fee_mode==="cash"?r.cash_fee:0;
+ const max=Math.max(0,Math.floor(Math.min(data.settings.refinery_max_batches,
+  recipe.input_units>0?(data.inventory[recipe.input_good_id]??0)/recipe.input_units:0,
+  recipe.fuel_units>0?(r.fuel[recipe.fuel_good_id]??0)/recipe.fuel_units:Infinity,
+  perBatchFee>0?data.cash/perBatchFee:Infinity)));
+ return Number.isSafeInteger(max)&&max>0&&refiningQuote(r,recipe,max,own).take>0?max:0;
+}
+export function refiningShortages(r:Refinery,recipe:Recipe,batches:number,data:RefineryState,own:boolean){
+ if(!Number.isSafeInteger(batches)||batches<1||batches>data.settings.refinery_max_batches)return [`Choose 1–${data.settings.refinery_max_batches.toLocaleString()} whole batches.`];
+ const q=refiningQuote(r,recipe,batches,own),issues:string[]=[],name=(id:string)=>data.goods.find(g=>g.id===id)?.name??id;
+ if(q.input>(data.inventory[recipe.input_good_id]??0))issues.push(`You need ${(q.input-(data.inventory[recipe.input_good_id]??0)).toLocaleString()} more ${name(recipe.input_good_id)}.`);
+ if(q.fuel>(r.fuel[recipe.fuel_good_id]??0))issues.push(`The owner needs to load ${(q.fuel-(r.fuel[recipe.fuel_good_id]??0)).toLocaleString()} more ${name(recipe.fuel_good_id)}.`);
+ if(q.cash>data.cash)issues.push(`You need $${(q.cash-data.cash).toLocaleString()} more for the service fee.`);
+ if(q.take<=0)issues.push('The output fee leaves no goods for you. Increase the batch size or choose another refinery.');
+ return issues;
+}
