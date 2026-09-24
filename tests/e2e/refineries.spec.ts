@@ -29,3 +29,17 @@ test("Owner edits recipe fuel and yield with audited reason; players have no acc
  await page.getByRole("link",{name:"Fee limits & economy settings"}).click();await expect(page.locator(".ref-owner")).toHaveCount(0);
  await request.post("http://127.0.0.1:54329/__refinery_setup",{headers,data:{player:true}});await page.goto("/owner?section=refineries");await expect(page.locator(".ref-owner")).toContainText("Owner permission required");
 });
+
+test("refining maximum and shortages explain ore, fuel and fees",async({page,request})=>{
+ await request.post("http://127.0.0.1:54329/__refinery_setup",{headers,data:{customer:true}});await page.goto("/refineries");
+ await page.getByLabel("Batches",{exact:true}).fill("11");await expect(page.getByLabel("Order readiness")).toContainText("20 more Iron ore");await expect(page.getByRole("button",{name:"Review refining order"})).toBeDisabled();
+ await page.getByRole("button",{name:"Use maximum",exact:true}).click();await expect(page.getByLabel("Batches",{exact:true})).toHaveValue("10");await expect(page.getByLabel("Order readiness")).toContainText("Ready to refine");await expect(page.locator(".ref-order-summary")).toContainText("$200");
+ await page.getByRole("button",{name:"Review refining order"}).click();await expect(page.getByRole("dialog")).toContainText("100 Iron ingots");await page.getByRole("button",{name:"Close order"}).click();
+ await request.post("http://127.0.0.1:54329/__refinery_setup",{headers,data:{empty:true}});await page.reload();await expect(page.getByLabel("Order readiness")).toContainText("load 5 more Coal");await expect(page.getByRole("button",{name:"Use maximum",exact:true})).toBeDisabled();
+ await page.setViewportSize({width:360,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator(".ref-service").scrollIntoViewIfNeeded();await page.screenshot({path:'test-results/refinery-readiness-mobile.png'});
+});
+test("owner bunker quick actions use carried fuel and show the current stock",async({page})=>{
+ await page.goto("/refineries");await page.getByRole("button",{name:"Buy refinery"}).click();await page.getByRole("button",{name:"Confirm purchase"}).click();await page.getByRole("button",{name:"Manage refinery",exact:true}).click();
+ await page.getByRole("button",{name:"Load maximum",exact:true}).click();await expect(page.getByLabel("Fuel quantity")).toHaveValue("100");await page.getByRole("button",{name:"Load fuel",exact:true}).click();await expect(page.getByLabel("Fuel bunker capacity")).toHaveAttribute("value","100");await expect(page.getByRole("button",{name:"Load maximum",exact:true})).toBeDisabled();
+ await page.getByRole("button",{name:"Withdraw maximum",exact:true}).click();await expect(page.getByLabel("Fuel quantity")).toHaveValue("100");
+});
