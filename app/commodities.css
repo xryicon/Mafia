@@ -1,7 +1,7 @@
 /* Shared commodity illustrations, sized for both inventory cards and compact HUD rows. */
-.commodity-art{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;max-width:100%;overflow:hidden;border:1px solid #a48b515c;background:#080f11;color:#c8ac78;vertical-align:middle;border-radius:2px}
+.commodity-art{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;position:relative;aspect-ratio:1;max-width:100%;max-height:100%;overflow:hidden;border:1px solid #a48b515c;background:#080f11;color:#c8ac78;vertical-align:middle;border-radius:2px}
 .m4-arsenal-art{isolation:isolate}
-.commodity-art img{display:block;width:100%;height:100%;object-fit:cover}
+.commodity-art img{position:absolute;inset:0;display:block;width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;object-position:center}
 .market-stock-preview{display:flex;align-items:center;gap:13px;padding:10px 0;border-bottom:1px solid #a18b4d40}
 .market-stock-preview>div{min-width:0}.market-stock-preview small{display:block;font-size:12px;letter-spacing:1px;color:#929c8d}
 .market-stock-preview strong{display:block;margin-top:7px;font:18px/1.35 Georgia,serif;color:#e2cca3;overflow-wrap:anywhere}

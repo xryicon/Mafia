@@ -262,7 +262,7 @@
  .command-dashboard .command-quick { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 .inv-slot-grid .inv-item-art { height:165px; aspect-ratio:auto; }
-.inv-slot-grid .inv-item-art .commodity-art { max-width:calc(100% - 16px); }
+.inv-slot-grid .inv-item-art .commodity-art { max-width:100%; }
 .inv-item img,.inv-gear-slot img { pointer-events:none; user-select:none; }
 @media(min-width:1450px) {
  .inv-slot-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
