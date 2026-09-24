@@ -6,6 +6,9 @@ do $$declare users uuid[]:=array[gen_random_uuid(),gen_random_uuid(),gen_random_
  perform set_config('request.jwt.claim.sub',users[1]::text,true);r:=public.chop_shop_state();select id into city from game_private.chop_shops where season_id=s and owner_id is null;
  -- Own a ready garage and open a two-bay business.
  select b.id,p.id into bid,pid from public.game_district_buildings b join public.game_district_plots p on p.id=b.plot_id where p.season_id=s and p.code='W25';
+ -- Earlier integration fixtures can occupy W25. Vacate only this rolled-back test property, preserving the live transfer guards.
+ update public.game_property_leases set released_at=clock_timestamp() where plot_id=pid and released_at is null;
+ update public.game_property_stations set removed_at=clock_timestamp() where building_id=bid and removed_at is null;
  update public.game_district_plots set owner_type='player',owner_id=users[1],asking_price=null where id=pid;update public.game_district_buildings set owner_type='player',owner_id=users[1] where id=bid;
  req:=jsonb_build_object('season_id',s,'building_id',bid,'request_id',gen_random_uuid());
  set local role authenticated;first:=public.chop_shop_action('open',req);reset role;perform pg_temp.verify(not first?'error','Open failed '||first::text);perform pg_temp.verify(public.chop_shop_action('open',req)=first,'Open replay failed');
