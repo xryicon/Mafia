@@ -53,3 +53,11 @@ test("choose ammunition quantity, top up by drag, and restack on mobile",async({
  await rounds().click();await page.getByRole("button",{name:"Move",exact:true}).click();await page.getByRole("button",{name:"Ammo, empty",exact:true}).click();await page.getByRole("button",{name:"Use maximum",exact:true}).click();await expect(page.getByLabel("Amount to equip")).toHaveValue("100");await page.getByRole("button",{name:"Confirm equipment",exact:true}).click();await expect(ammo).toContainText("×100 equipped");await expect(rounds()).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test("broken weapon scrapping confirms destruction and safely retries without duplicate scrap",async({page,request})=>{
+ await request.post("http://127.0.0.1:54329/__inventory_setup",{headers,data:{brokenWeapon:true}});await page.goto("/inventory");await page.getByRole("button",{name:"Secondary weapon: Homemade pistol",exact:true}).click();
+ page.once("dialog",d=>d.dismiss());await page.getByRole("button",{name:"Scrap weapon",exact:true}).click();await expect(page.getByRole("button",{name:"Secondary weapon: Homemade pistol",exact:true})).toBeVisible();
+ let first=true;await page.route("**/rest/v1/rpc/inventory_action",async route=>{if(route.request().postDataJSON().p_action==="scrap_weapon"&&first){first=false;await route.fetch();await route.abort();}else await route.continue();});
+ page.once("dialog",d=>d.accept());await page.getByRole("button",{name:"Scrap weapon",exact:true}).click();await page.getByRole("button",{name:"Retry safely",exact:true}).click();await expect(page.getByRole("button",{name:"Secondary weapon, empty",exact:true})).toBeVisible();
+ await expect(page.locator(".inv-slot .inv-item").filter({hasText:"Scrap metal"})).toContainText("×1");await page.reload();await expect(page.locator(".inv-slot .inv-item").filter({hasText:"Scrap metal"})).toContainText("×1");
+});

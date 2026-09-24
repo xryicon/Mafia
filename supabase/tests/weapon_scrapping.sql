@@ -1,0 +1,36 @@
+begin;
+create function pg_temp.scrap_check(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception '%',msg;end if;end$$;
+select set_config('game.reason','CI broken weapon scrapping',true);
+do $$
+declare u uuid:=gen_random_uuid();other_u uuid:=gen_random_uuid();s uuid:=game_private.current_season();g uuid;working uuid;foreign_g uuid;q jsonb;r jsonb;first jsonb;
+begin
+ insert into auth.users(id) values(u),(other_u);perform set_config('request.jwt.claim.sub',other_u::text,true);perform public.game_state();perform set_config('request.jwt.claim.sub',u::text,true);perform public.game_state();
+ update public.game_settings set value=100000 where key='inventory_weight_limit_grams';
+ insert into public.game_inventory_gear(season_id,player_id,good_id,quantity,condition,location,equipment_slot) values(s,u,'homemade-pistol',1,0,'equipped','secondary') returning id into g;
+ insert into public.game_inventory_gear(season_id,player_id,good_id,quantity,condition,location) values(s,u,'homemade-pistol',1,1,'carried') returning id into working;
+ insert into public.game_inventory_gear(season_id,player_id,good_id,quantity,condition,location) values(s,other_u,'homemade-pistol',1,0,'carried') returning id into foreign_g;
+ q:=jsonb_build_object('season_id',s,'request_id',gen_random_uuid(),'item_key','gear:'||working,'condition',0,'quantity',100);
+ set local role authenticated;
+ r:=public.inventory_action('scrap_weapon',q);perform pg_temp.scrap_check(r?'error','Usable gun scrapped using forged condition');
+ r:=public.inventory_action('scrap_weapon',q||jsonb_build_object('item_key','gear:'||foreign_g));perform pg_temp.scrap_check(r?'error','Another player weapon scrapped');
+ reset role;
+ update public.game_settings set value=1000 where key='weapon_scrap_units';
+ q:=q||jsonb_build_object('item_key','gear:'||g);
+ r:=public.inventory_action('scrap_weapon',q);perform pg_temp.scrap_check(r?'error','Overweight scrap bypassed capacity');
+ perform pg_temp.scrap_check((select quantity=1 and location='equipped' from public.game_inventory_gear where id=g),'Capacity failure consumed weapon');
+ perform pg_temp.scrap_check(not exists(select 1 from public.game_inventory where player_id=u and good_id='scrap-metal' and quantity>0),'Capacity failure paid scrap');
+ update public.game_settings set value=3 where key='weapon_scrap_units';
+ set local role authenticated;
+ first:=public.inventory_action('scrap_weapon',q);perform pg_temp.scrap_check(not first?'error' and (first->>'scrap_units')::int=3,'Scrap failed or trusted client yield: '||first::text);
+ r:=public.inventory_action('scrap_weapon',q);perform pg_temp.scrap_check(r=first,'Interrupted-response retry changed result');
+ r:=public.inventory_action('scrap_weapon',q||jsonb_build_object('request_id',gen_random_uuid()));perform pg_temp.scrap_check(r?'error','Consumed weapon scrapped twice');
+ r:=public.inventory_state(0);perform pg_temp.scrap_check((r->>'weapon_scrap_units')::int=3,'Scrap yield missing from inventory');
+ reset role;
+ perform pg_temp.scrap_check((select quantity=3 from public.game_inventory where player_id=u and good_id='scrap-metal'),'Wrong scrap payout');
+ perform pg_temp.scrap_check((select quantity=0 and location='retired' and equipment_slot is null from public.game_inventory_gear where id=g),'Weapon history deleted or equipment not cleared');
+ perform pg_temp.scrap_check((select sum(delta)=-1 from public.game_inventory_ledger where player_id=u and gear_id=g and request_id=(q->>'request_id')::uuid),'Weapon ledger debit missing');
+ perform pg_temp.scrap_check((select sum(delta)=3 from public.game_inventory_ledger where player_id=u and good_id='scrap-metal' and request_id=(q->>'request_id')::uuid),'Scrap ledger credit missing');
+ perform pg_temp.scrap_check(not has_function_privilege('authenticated','game_private.inventory_action_before_scrapping(text,jsonb)','execute'),'Legacy action bypass exposed');
+end$$;
+select 'PASS: broken-only, ownership, server yield, capacity rollback, retry safety and ledger preservation';
+rollback;

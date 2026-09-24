@@ -105,6 +105,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging_patrols.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/scavenging_heat.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/weapon_scrapping.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/tradable_loot.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/refineries.sql
       - name: Street theft, garage ownership and police combat
