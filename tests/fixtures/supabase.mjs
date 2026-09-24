@@ -1,3 +1,4 @@
+import {travelWorld} from "./travel.mjs";
 // Isolated browser-test service. Never imported by the application.
 import http from "node:http";
 import {skillsWorld} from "./skills.mjs";
@@ -51,6 +52,7 @@ const publicAttempt=()=>prisonAttempt?{id:prisonAttempt.id,sentence_id:prisonAtt
 const expirePrisonAttempt=()=>{if(prisonAttempt&&Date.parse(prisonAttempt.expires_at)<=Date.now()){const inmate=prisonInmates.find(i=>i.sentence_id===prisonAttempt.sentence_id&&Date.parse(i.release_at)>Date.now());if(inmate)prisonSentence={id:"caught-timeout",reason:`Caught trying to break ${inmate.handle} out of prison`,started_at:new Date().toISOString(),release_at:inmate.release_at};prisonAttempt=null;}};
 const prisonRead=()=>{scavenging.resolve();expirePrisonAttempt();return {season_id:season.id,player_id:playerId,jailed:!!prisonSentence&&Date.parse(prisonSentence.release_at)>Date.now(),sentence:prisonSentence&&Date.parse(prisonSentence.release_at)>Date.now()?prisonSentence:null,district_slug:"blackwater-island",server_time:new Date().toISOString(),can_manage:state.permissions.includes("roles.manage"),reward_power:prisonReward,lockpicks:lockpicks(),inmates:prisonInmates.filter(i=>Date.parse(i.release_at)>Date.now()),attempt:publicAttempt(),leaderboard:prisonBreakouts?[{player_id:playerId,handle:state.player.handle,breakouts:prisonBreakouts,rank:1}]:[],my_breakouts:prisonBreakouts,my_rank:prisonBreakouts?1:null};};
 let robberies=robberyWorld(state);
+let travel=travelWorld(state,()=>mining.catalog);
 const initialState=structuredClone(state);
 let buyOrderRequests=new Map();let alertPreferences={purchases:true,sales:true};
 const resetWorld=()=>{alertPreferences={purchases:true,sales:true};buyOrderRequests.clear();Object.assign(state,structuredClone(initialState));prisonSentence=null;prisonInmates=[];prisonAttempt=null;prisonBreakouts=0;prisonReward=50;delete state.profile_archived;market=marketWorld(state,playerId);districts=districtWorld(playerId,season,state.goods);telegrams=telegramWorld(playerId,season,districts.plots.find(p=>p.code==="W06").id);mining=miningWorld(state,districts,playerId);bins=binWorld(state,mining);scavenging=scavWorld(state,()=>bins,()=>skills,()=>{prisonSentence={id:"patrol-sentence",reason:"Caught by a police patrol while scavenging",started_at:new Date().toISOString(),release_at:new Date(Date.now()+300000).toISOString()};});refineries=refineryWorld(state,playerId);bank=bankWorld(state);gangs=gangWorld(state,(...args)=>telegrams.recruitmentNotice(...args));inventory=inventoryWorld(state,()=>bins.read(),value=>mining.setDurability(value));properties=propertyWorld(districts,state,inventory);skills=skillsWorld(state);crafting=craftingWorld(state,districts,inventory,skills.award,skills.rate);range=rangeWorld(state,inventory,skills.award);robberies=robberyWorld(state);};
@@ -96,6 +98,8 @@ const server = http.createServer(async(req,res) => {
   if(a==="jail")prisonSentence={id:"prison-owner",reason:p.reason,started_at:new Date().toISOString(),release_at:new Date(Date.now()+Number(p.minutes)*60000).toISOString()};
   if(a==="release")prisonSentence=null;send(200,{message:a==="release"?"Player released from Blackwater Island Prison.":"Player transferred to Blackwater Island Prison."});return;
  }
+ if(url.pathname==="/__travel_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;travel.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
+ if(url.pathname.startsWith("/rest/v1/rpc/travel_")){let raw="";for await(const chunk of req)raw+=chunk;const p=JSON.parse(raw||"{}");send(200,url.pathname.endsWith("travel_state")?travel.read():travel.action(p.p_action,p.p_payload));return;}
  if(url.pathname==="/rest/v1/rpc/vitals_state"){send(200,{season_id:season.id,health:100,health_max:100,health_cap:120,armour:0,armour_max:100,decay_seconds:60,server_time:new Date().toISOString()});return;}
  if(url.pathname==="/__skills_setup"&&process.env.GAME_TEST_FIXTURE==="1"){let raw="";for await(const chunk of req)raw+=chunk;skills.setup(JSON.parse(raw||"{}"));send(200,{ok:true});return;}
  if(url.pathname==="/rest/v1/rpc/skills_state"){send(200,skills.read());return;}
@@ -181,7 +185,7 @@ const server = http.createServer(async(req,res) => {
  if(url.pathname==="/rest/v1/rpc/profile_description"){let raw="";for await(const chunk of req)raw+=chunk;send(200,saveDescription(state,JSON.parse(raw)));return;}
  if(url.pathname==="/rest/v1/rpc/season_profile"){send(200,{is_self:true,avatar_url:state.player.avatar_url||"/art/command-portrait.jpg",handle:state.player.handle,current_season:season.name,current:[{metric:"cash",label:"Cash",score:state.player.cash,rank:1}],previous:[],hall_of_fame:[]});return;}
  if(url.pathname==="/rest/v1/rpc/staff_state"){send(200,staff());return;}
- if(url.pathname==="/__reset_world"&&process.env.GAME_TEST_FIXTURE==="1"){resetWorld();send(200,{ok:true});return;}
+ if(url.pathname==="/__reset_world"&&process.env.GAME_TEST_FIXTURE==="1"){resetWorld();travel=travelWorld(state,()=>mining.catalog);send(200,{ok:true});return;}
  if(url.pathname==="/__visual_world"&&process.env.GAME_TEST_FIXTURE==="1"){
  resetWorld();state.player.cash=2480000;state.player.xp=1247;
  state.inventory=[{good_id:"whiskey",quantity:340},{good_id:"silk",quantity:120},{good_id:"steel",quantity:80}];

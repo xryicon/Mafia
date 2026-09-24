@@ -1,4 +1,5 @@
 import "./tutorial.css";
+import "./travel.css";
 import type {Metadata} from "next";
 import {SiteChrome} from "@/components/site-chrome";
 import "./globals.css";

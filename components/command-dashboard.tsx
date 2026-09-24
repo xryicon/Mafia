@@ -1,4 +1,5 @@
 "use client";
+import {DashboardTravelHeat} from "./district-travel";
 import {powerText} from "@/lib/power-text";
 import Link from "next/link";
 import {DashboardTutorial} from "./dashboard-tutorial";
@@ -133,7 +134,7 @@ export function CommandDashboard({initial}:{initial:DashboardData}){
     
     <PlayerVitalBars vitals={data.vitals?.season_id===game.season.id?data.vitals:null} now={now}/>
     <div><dt><GameIcon name="bolt"/>Operations</dt><dd><span className={cooldown?"":"command-green"}>{cooldown?until(game.player.job_ready_at,now):playing?"Ready":"Paused"}</span></dd></div>
-    <div><dt><GameIcon name="flame"/>District heat</dt><dd>{d?<><Meter value={d.police_heat} label="District police heat" color="#b26050"/><small>{d.police_heat} / 100</small></>:"—"}</dd></div>
+    <DashboardTravelHeat/>
    </dl>
    <div className="command-location"><GameIcon name="pin" size={23}/><span>Viewing district</span><strong>{d?.name??"City map"}<small>Blackwater</small></strong></div>
    <DashboardQuickActions playerId={game.player.id} onAction={setDialog}/>

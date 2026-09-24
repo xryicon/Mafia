@@ -86,7 +86,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
           psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
       - name: Configure bulk economy fixtures
-        run: psql -v ON_ERROR_STOP=1 -c "select set_config('game.reason','CI bulk economy fixture capacity',false); update public.game_settings set value=1000000000 where key='inventory_weight_limit_grams'; update public.game_settings set value=0 where key in ('scavenging_patrol_enabled','scavenging_event_chance','scavenging_search_chase_enabled'); update public.game_bin_rules set bandages_blueprint_chance=0,reinforced_jacket_blueprint_chance=0,kevlar_vest_blueprint_chance=0;"
+        run: psql -v ON_ERROR_STOP=1 -c "select set_config('game.reason','CI bulk economy fixture capacity',false); update public.game_settings set value=1000000000 where key='inventory_weight_limit_grams'; update public.game_settings set value=0 where key in ('scavenging_patrol_enabled','scavenging_event_chance','scavenging_search_chase_enabled','travel_enabled'); update public.game_bin_rules set bandages_blueprint_chance=0,reinforced_jacket_blueprint_chance=0,kevlar_vest_blueprint_chance=0;"
       - name: Economic and authorization regression tests
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/player_economy.sql
@@ -166,6 +166,7 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/tests/crafting.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/armour.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/travel.sql
           bash supabase/tests/crafting_races.sh
 
       - name: Prison custody, release and breakouts
