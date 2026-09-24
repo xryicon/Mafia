@@ -24,8 +24,8 @@ $$;
 create function game_private.scav_risk(s uuid,u uuid,d uuid) returns jsonb
 language sql volatile security definer set search_path='' as $$
  select jsonb_build_object('level',l.level,'heat',round(h.heat,1),'searches',h.searches,
- 'skill_reduction_percent',round((l.level-1)*game_private.setting('scavenging_skill_detection_reduction_percent')/19,1),
- 'detection_multiplier',(1+h.heat*game_private.setting('scavenging_heat_detection_bonus_percent')/10000)*(1-(l.level-1)*game_private.setting('scavenging_skill_detection_reduction_percent')/1900),
+ 'skill_reduction_percent',round((l.level-1)*game_private.setting('scavenging_skill_detection_reduction_percent')/19.0,1),
+ 'detection_multiplier',(1+h.heat*game_private.setting('scavenging_heat_detection_bonus_percent')/10000)*(1-(l.level-1)*game_private.setting('scavenging_skill_detection_reduction_percent')/1900.0),
  'heat_per_search',game_private.setting('scavenging_heat_per_search'),'cooling_per_minute',game_private.setting('scavenging_heat_decay_per_minute'))
  from (select game_private.skill_level(coalesce((select sum(delta)::bigint from game_private.skill_xp_ledger where season_id=s and player_id=u and skill_id='scavenging'),0),xp_to_20) level from public.game_skill_definitions where id='scavenging')l
  cross join lateral(select coalesce((select game_private.scav_heat_value(heat,updated_at,statement_timestamp()) from game_private.scav_district_heat where season_id=s and player_id=u and district_id=d),0) heat,
