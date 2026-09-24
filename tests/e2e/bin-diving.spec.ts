@@ -57,9 +57,10 @@ test("Owner grants reach the stash and both market sale formats, with matching a
   await grant.getByRole("button",{name:"Save asset grant"}).click();await expect(page.locator(".game-notice")).toContainText("Saved");await expect(grant.getByRole("button",{name:"Save asset grant"})).toBeEnabled();
  }
  await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0"]);
+ await page.locator("summary").filter({hasText:"Equipment & recent finds"}).click();await page.locator(".bin-stash").scrollIntoViewIfNeeded();
  await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===4&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
  await capture(page,"bin-loot-desktop");
- await page.locator("summary").filter({hasText:"Equipment & recent finds"}).click();await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
+ await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
  const ticket=page.locator(".market-ticket");
  await ticket.getByLabel("Quantity",{exact:true}).fill("1");await ticket.getByLabel("Price per unit ($)",{exact:true}).fill("150");await ticket.getByRole("button",{name:"Post market offer"}).click();await expect(page.locator(".market-notice")).toContainText("Offer posted");
  await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["0","0","1","1","0"]);await expect(page.getByRole("button",{name:"Equip pickaxe",exact:false})).toBeDisabled();
