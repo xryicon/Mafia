@@ -58,7 +58,7 @@ test("Owner grants reach the stash and both market sale formats, with matching a
  }
  await page.goto("/bin-diving");await expect(page.locator(".bin-stash-row>b")).toHaveText(["1","0","1","1","0","0","0"]);
  await page.locator("summary").filter({hasText:"Equipment & recent finds"}).click();await page.locator(".bin-stash").scrollIntoViewIfNeeded();
- await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===4&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
+ await expect.poll(()=>page.locator(".bin-stash-row img").evaluateAll(imgs=>imgs.length===7&&imgs.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
  await capture(page,"bin-loot-desktop");
  await page.getByRole("link",{name:"Trade Pickaxe",exact:true}).click();await expect(page.locator(".market-ticket").getByLabel("Commodity")).toHaveValue("pickaxe");
  const ticket=page.locator(".market-ticket");

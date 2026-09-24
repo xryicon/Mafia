@@ -1,0 +1,131 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-09-24",
+  "assets": [
+    {
+      "id": "kevlar-vest",
+      "path": "/art/armour/kevlar-vest.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: one dark olive charcoal Kevlar protective vest, empty garment, front three-quarter view, broad padded protective panels, woven fabric, heavy stitching, shoulder straps. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "m4-carbine",
+      "path": "/art/weapons/m4-carbine.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: one complete M4 carbine with black metal receiver, polymer stock and handguard and inserted curved magazine, diagonal three-quarter side view, entire barrel and stock visible. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "556x45mm-ammo",
+      "path": "/art/weapons/556x45mm-ammo.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a compact cluster of five brass 5.56x45mm rifle cartridges with pointed copper projectiles, three standing and two lying, realistic proportions. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "homemade-pistol",
+      "path": "/art/crafting/homemade-pistol.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: one fictional rough handmade-looking compact pistol with worn steel exterior and dark wooden grip, exterior only, diagonal three-quarter side view. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "homemade-bullets",
+      "path": "/art/crafting/homemade-bullets.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a compact cluster of six short brass pistol cartridges with rounded copper projectiles. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "bandages",
+      "path": "/art/medical/bandages.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: two clean off-white cotton gauze bandage rolls, one partly unfurled, detailed woven fibers. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "whiskey",
+      "path": "/art/commodities/whiskey.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a small aged wooden crate holding amber whiskey bottles with plain blank cream labels. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "silk",
+      "path": "/art/commodities/silk.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three folded bolts of luxurious ivory and muted burgundy silk fabric. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "steel",
+      "path": "/art/commodities/steel.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a compact bundle of dark silver steel rectangular bars strapped together. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "pickaxe",
+      "path": "/art/loot/pickaxe.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: one mining pickaxe, worn wooden handle and forged iron pointed head, diagonal. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "lockpick",
+      "path": "/art/loot/lockpick.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: one slender steel hook lockpick with a dark textured handle beside a small tension wrench. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "scrap-metal",
+      "path": "/art/resources/scrap-metal.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a compact pile of salvaged rusty sheet metal offcuts, bent brackets and worn metal fragments. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "iron-ore",
+      "path": "/art/resources/iron-ore.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three jagged iron ore rocks with rusty red hematite and dark metallic mineral veins. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "copper-ore",
+      "path": "/art/resources/copper-ore.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three jagged copper ore rocks with green malachite patches and copper mineral veins. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "coal",
+      "path": "/art/resources/coal.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: a compact cluster of jagged jet black coal chunks with subtle shiny fractured surfaces. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "stone",
+      "path": "/art/resources/stone.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three rough gray granite quarry stones, visibly speckled coarse grains. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "limestone",
+      "path": "/art/resources/limestone.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three chalky cream limestone chunks with pale sedimentary layers. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "iron-ingot",
+      "path": "/art/resources/iron-ingot.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three cast dark silver iron ingots stacked together, rough casting texture. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "copper-ingot",
+      "path": "/art/resources/copper-ingot.webp",
+      "prompt": "Use case: product-mockup. Square premium inventory artwork for Blackwater Mafia. Subject: three refined reddish copper ingots stacked together, warm metallic surfaces. Photorealistic high-end 3D rendered game asset. Centered fully visible subject, 12% padding, clear silhouette readable at 96px. Seamless dark charcoal teal background, soft warm gold rim lighting, neutral key light, detailed realistic materials. No people, text, logos, borders, watermarks, UI or unrelated props."
+    },
+    {
+      "id": "pistol_blueprint",
+      "path": "/art/loot/pistol_blueprint.webp",
+      "prompt": "Square video game inventory collectible card artwork. An aged teal paper card with curled corners and a single simple solid ivory pictogram of a pistol in its center. Flat solid icon, no mechanical detail, no schematics, no assembly information, no measurements, no text. Realistic paper texture, dark charcoal background, warm gold edge lighting. Whole card visible with margins. Premium dark mafia game aesthetic. This is an abstract UI symbol printed on paper."
+    },
+    {
+      "id": "bullet_blueprint",
+      "path": "/art/loot/bullet_blueprint.webp",
+      "prompt": "Square video game inventory collectible card artwork. An aged teal paper card with curled corners and a single simple solid ivory pictogram of three cartridges in its center. Flat solid icon, no mechanical detail, no schematics, no assembly information, no measurements, no text. Realistic paper texture, dark charcoal background, warm gold edge lighting. Whole card visible with margins. Premium dark mafia game aesthetic. This is an abstract UI symbol printed on paper."
+    },
+    {
+      "id": "bandages_blueprint",
+      "path": "/art/medical/bandages-blueprint.webp",
+      "prompt": "Use case: stylized-concept. Square premium blueprint inventory artwork for Blackwater Mafia. One aged teal-blue drafting paper sheet with gently curled corners, viewed nearly from above at a subtle angle, bearing a large warm ivory drawing of two rolled gauze bandages, clear illustrative outlines. Faint subtle grid, no text or numbers. Paper fully visible centered with 10% padding, main drawing bold and readable at 96px. Realistic paper fibers and slightly worn edges, dark charcoal teal seamless background, soft warm gold rim lighting. Consistent premium realistic game asset style. No props, hands, logos, watermarks, UI or borders around image. Decorative game collectible, no functional fabrication plans."
+    },
+    {
+      "id": "reinforced_jacket_blueprint",
+      "path": "/art/armour/reinforced-jacket-blueprint.webp",
+      "prompt": "Use case: stylized-concept. Square premium blueprint inventory artwork for Blackwater Mafia. One aged teal-blue drafting paper sheet with gently curled corners, viewed nearly from above at a subtle angle, bearing a large warm ivory drawing of a reinforced leather jacket with sleeves, collar and padded shoulders, clear illustrative front-view outline. Faint subtle grid, no text or numbers. Paper fully visible centered with 10% padding, main drawing bold and readable at 96px. Realistic paper fibers and slightly worn edges, dark charcoal teal seamless background, soft warm gold rim lighting. Consistent premium realistic game asset style. No props, hands, logos, watermarks, UI or borders around image. Decorative game collectible, no functional fabrication plans."
+    },
+    {
+      "id": "kevlar_vest_blueprint",
+      "path": "/art/armour/kevlar-vest-blueprint.webp",
+      "prompt": "Use case: stylized-concept. Square premium blueprint inventory artwork for Blackwater Mafia. One aged teal-blue drafting paper sheet with gently curled corners, viewed nearly from above at a subtle angle, bearing a large warm ivory drawing of a sleeveless protective Kevlar vest with shoulder straps and broad padded panels, clear illustrative front-view outline. Faint subtle grid, no text or numbers. Paper fully visible centered with 10% padding, main drawing bold and readable at 96px. Realistic paper fibers and slightly worn edges, dark charcoal teal seamless background, soft warm gold rim lighting. Consistent premium realistic game asset style. No props, hands, logos, watermarks, UI or borders around image. Decorative game collectible, no functional fabrication plans."
+    },
+    {
+      "id": "reinforced-jacket",
+      "path": "/art/armour/reinforced-jacket.webp",
+      "prompt": "Square photorealistic reinforced brown leather jacket, detailed stitching and padded panels; dark charcoal teal background, warm gold rim lighting, fully visible centered, no person, text or logos."
+    }
+  ]
+}
